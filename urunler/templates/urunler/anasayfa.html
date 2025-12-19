@@ -1,0 +1,28 @@
+{% extends 'urunler/base.html' %}
+
+{% block title %}Ana Sayfa | ALCERÜÇINAR{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 style="text-align:center; font-size:2.1em; font-weight:800; color:#e6be10; letter-spacing:1px; margin-bottom:28px;">SİZİ UYGUN ÜRÜNLERLE BULUŞTURUYORUZ </h1>
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; justify-content: center;">
+    {% for urun in urunler %}
+        <div class="product" style="width: 320px; min-height: 340px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 18px; padding: 18px 10px 16px 10px; transition: box-shadow 0.2s;">
+            <div class="product-title" style="text-align:center; font-weight:600; font-size:1.15em; margin-bottom:8px;">{{ urun.isim }}</div>
+            {% if urun.resim %}
+                <img src="{{ urun.resim.url }}" alt="{{ urun.isim }}" style="max-width:400px; max-height:200px; margin-bottom:14px; display:block; margin-left:auto; margin-right:auto; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.07);" />
+            {% endif %}
+            <div class="stores" style="flex-direction:column; width:100%; margin-top:8px;">
+                {% for fiyat in urun.fiyatlar.all %}
+                <div class="store" style="margin-bottom:10px; background:#f6f8ff; border-radius:6px; padding:10px 8px 8px 8px; box-shadow:0 1px 4px rgba(60,100,200,0.04); text-align:center;">
+                    <div style="font-weight:500; color:#374151; margin-bottom:2px;">{{ fiyat.magaza.isim }}</div>
+                    <div style="color:#6366f1; font-size:1.08em; font-weight:600; margin-bottom:4px;">Fiyat: {{ fiyat.fiyat }} TL</div>
+                    <a href="{{ fiyat.affiliate_link }}" target="_blank" style="display:inline-block; background:#6366f1; color:#fff; padding:6px 16px; border-radius:4px; text-decoration:none; font-weight:500; font-size:0.98em; transition:background 0.2s;">MAĞAZAYA GİT</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+</div>
+{% endblock %}
