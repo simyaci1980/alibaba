@@ -1,14 +1,20 @@
 from django.contrib import admin
-from .models import Magaza, Urun, Fiyat
+from .models import Magaza, Urun, Fiyat, UrunResim
+
 
 class FiyatInline(admin.TabularInline):
 	model = Fiyat
 	extra = 1
 
+class UrunResimInline(admin.TabularInline):
+	model = UrunResim
+	extra = 1
+
+
 @admin.register(Urun)
 class UrunAdmin(admin.ModelAdmin):
 	list_display = ("isim", "resim_goster")
-	inlines = [FiyatInline]
+	inlines = [FiyatInline, UrunResimInline]
 	readonly_fields = ("resim_goster",)
 
 	def resim_goster(self, obj):
