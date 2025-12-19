@@ -9,7 +9,38 @@
     {% for urun in urunler %}
         <div class="product" style="width: 320px; min-height: 340px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 18px; padding: 18px 10px 16px 10px; transition: box-shadow 0.2s;">
             <div class="product-title" style="text-align:center; font-weight:600; font-size:1.15em; margin-bottom:8px;">{{ urun.isim }}</div>
-            {% if urun.resim %}
+
+            {% if urun.resimler.all|length > 0 %}
+                <div class="slider" style="position:relative; width:100%; max-width:400px; margin-bottom:14px;">
+                    <img src="{{ urun.resimler.all.0.resim.url }}" alt="{{ urun.isim }}" class="slider-img" style="width:100%; max-height:200px; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.07);" />
+                    {% if urun.resimler.all|length > 1 %}
+                        <button class="slider-prev" style="position:absolute; left:0; top:50%; transform:translateY(-50%); background:#6366f1; color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2em; cursor:pointer;">&#8592;</button>
+                        <button class="slider-next" style="position:absolute; right:0; top:50%; transform:translateY(-50%); background:#6366f1; color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2em; cursor:pointer;">&#8594;</button>
+                    {% endif %}
+                    <script>
+                        (function() {
+                            var slider = document.currentScript.parentElement;
+                            var images = [
+                                {% for resim in urun.resimler.all %}'{{ resim.resim.url }}',{% endfor %}
+                            ];
+                            var img = slider.querySelector('.slider-img');
+                            var prev = slider.querySelector('.slider-prev');
+                            var next = slider.querySelector('.slider-next');
+                            var idx = 0;
+                            if (prev && next) {
+                                prev.onclick = function() {
+                                    idx = (idx - 1 + images.length) % images.length;
+                                    img.src = images[idx];
+                                };
+                                next.onclick = function() {
+                                    idx = (idx + 1) % images.length;
+                                    img.src = images[idx];
+                                };
+                            }
+                        })();
+                    </script>
+                </div>
+            {% elif urun.resim %}
                 <img src="{{ urun.resim.url }}" alt="{{ urun.isim }}" style="max-width:400px; max-height:200px; margin-bottom:14px; display:block; margin-left:auto; margin-right:auto; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.07);" />
             {% endif %}
             <div class="stores" style="flex-direction:column; width:100%; margin-top:8px;">
