@@ -56,4 +56,40 @@
     {% endfor %}
     </div>
 </div>
+<div style="max-width: 500px; margin: 40px auto 0 auto;">
+    <button id="yorumAcBtn" style="width:100%; background:#6366f1; color:#fff; border:none; border-radius:8px; padding:12px 0; font-size:1.1em; font-weight:700; cursor:pointer; margin-bottom:10px;">Yorum Bırakmak İster misiniz?</button>
+    <div id="yorumFormKapsayici" style="display:none; padding: 24px; background: #f9fafb; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+        <h2 style="text-align:center; color:#6366f1; font-size:1.3em; margin-bottom:18px;">Yorum Bırakın</h2>
+        <form method="post" style="display:flex; flex-direction:column; gap:12px;">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" style="background:#6366f1; color:#fff; border:none; border-radius:5px; padding:10px 0; font-size:1.1em; font-weight:600; cursor:pointer;">Gönder</button>
+        </form>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var btn = document.getElementById('yorumAcBtn');
+        var formDiv = document.getElementById('yorumFormKapsayici');
+        btn.addEventListener('click', function() {
+            if (formDiv.style.display === 'none') {
+                formDiv.style.display = 'block';
+                btn.style.display = 'none';
+            }
+        });
+    });
+</script>
+
+<div style="max-width: 600px; margin: 32px auto 0 auto;">
+    <h2 style="text-align:center; color:#e08206; font-size:1.15em; margin-bottom:12px;">Son Yorumlar</h2>
+    {% for yorum in yorumlar %}
+        <div style="background:#fff; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.06); padding:14px 18px; margin-bottom:14px;">
+            <div style="font-weight:600; color:#374151;">{{ yorum.isim }}</div>
+            <div style="color:#444; margin:6px 0 2px 0;">{{ yorum.yorum }}</div>
+            <div style="font-size:0.92em; color:#888; text-align:right;">{{ yorum.eklenme_tarihi|date:"d.m.Y H:i" }}</div>
+        </div>
+    {% empty %}
+        <div style="text-align:center; color:#888;">Henüz yorum yok.</div>
+    {% endfor %}
+</div>
 {% endblock %}

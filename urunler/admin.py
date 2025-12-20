@@ -1,5 +1,10 @@
 from django.contrib import admin
-from .models import Magaza, Urun, Fiyat, UrunResim
+from .models import Magaza, Urun, Fiyat, UrunResim, Yorum
+
+# Yorum modelini admin paneline ekle
+@admin.register(Yorum)
+class YorumAdmin(admin.ModelAdmin):
+	list_display = ("isim", "yorum", "eklenme_tarihi")
 
 
 class FiyatInline(admin.TabularInline):
