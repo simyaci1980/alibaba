@@ -39,4 +39,4 @@ class FiyatAdmin(admin.ModelAdmin):
 	list_display = ("urun", "magaza", "fiyat", "affiliate_link")
 @admin.register(ClickLog)
 class ClickLogAdmin(admin.ModelAdmin):
-    list_display = ("id", "timestamp", "user", "link_type")
+	list_display = ("id", "timestamp", "user", "link_type", "urun")

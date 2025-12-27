@@ -1,3 +1,12 @@
+from django.shortcuts import get_object_or_404
+def urun_affiliate_redirect(request, urun_id):
+	urun = get_object_or_404(Urun, id=urun_id)
+	ClickLog.objects.create(
+		user=request.user if request.user.is_authenticated else None,
+		link_type='urun_affiliate',
+		urun=urun
+	)
+	return redirect(urun.fiyatlar.first().affiliate_link)
 def aliexpress_redirect(request):
 	ClickLog.objects.create(
 		user=request.user if request.user.is_authenticated else None,

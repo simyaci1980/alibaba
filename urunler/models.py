@@ -52,8 +52,9 @@ class Yorum(models.Model):
     
 class ClickLog(models.Model):
 	user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
-	link_type = models.CharField(max_length=20)  # 'amazon' veya 'aliexpress'
+	link_type = models.CharField(max_length=20)  # 'amazon', 'aliexpress', 'urun_affiliate' vb.
+	urun = models.ForeignKey(Urun, null=True, blank=True, on_delete=models.SET_NULL)
 	timestamp = models.DateTimeField(auto_now_add=True)
 
 	def __str__(self):
-		return f"{self.link_type} - {self.timestamp}"
+		return f"{self.link_type} - {self.urun} - {self.timestamp}"
