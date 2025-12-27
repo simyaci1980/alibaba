@@ -20,7 +20,7 @@ def amazon_redirect(request):
 		link_type='amazon',
 		timestamp=timezone.now()
 	)
-	return redirect('https://www.amazon.com/your-affiliate-link')
+	return redirect('https://www.amazon.com/b?node=53629917011&linkCode=ll2&tag=kolaybulekspr-20&linkId=8150ea1ccd7fe92bfd1f94652a6d69e4&language=en_US&ref_=as_li_ss_tl')
 
 
 from .models import Urun, Yorum
