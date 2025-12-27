@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import Magaza, Urun, Fiyat, UrunResim, Yorum
+from .models import ClickLog
 
 # Yorum modelini admin paneline ekle
 @admin.register(Yorum)
@@ -36,3 +37,6 @@ class MagazaAdmin(admin.ModelAdmin):
 @admin.register(Fiyat)
 class FiyatAdmin(admin.ModelAdmin):
 	list_display = ("urun", "magaza", "fiyat", "affiliate_link")
+@admin.register(ClickLog)
+class ClickLogAdmin(admin.ModelAdmin):
+	list_display = ("id", "timestamp", "user")  # Adjust fields as necessary

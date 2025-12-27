@@ -1,5 +1,6 @@
 
 from django.db import models
+from django.contrib.auth.models import User
 
 class Magaza(models.Model):
 	isim = models.CharField(max_length=100)
@@ -48,3 +49,11 @@ class Yorum(models.Model):
 
 	def __str__(self):
 		return f"{self.isim} - {self.eklenme_tarihi:%Y-%m-%d}" 
+    
+class ClickLog(models.Model):
+	user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+	link_type = models.CharField(max_length=20)  # 'amazon' veya 'aliexpress'
+	timestamp = models.DateTimeField(auto_now_add=True)
+
+	def __str__(self):
+		return f"{self.link_type} - {self.timestamp}"

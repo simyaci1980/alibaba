@@ -1,9 +1,26 @@
-from django.shortcuts import render
-from .models import Urun
+def aliexpress_redirect(request):
+	ClickLog.objects.create(
+		user=request.user if request.user.is_authenticated else None,
+		link_type='aliexpress',
+		timestamp=timezone.now()
+	)
+	return redirect('https://rzekl.com/g/1e8d114494454bdb5abc16525dc3e8/')
+from django.shortcuts import render, redirect
+from .models import Urun, ClickLog, Yorum
+from django.utils import timezone
 
 def urun_listesi(request):
 	urunler = Urun.objects.prefetch_related('fiyatlar__magaza').all()
 	return render(request, 'urunler/urun_listesi.html', {'urunler': urunler})
+
+
+def amazon_redirect(request):
+	ClickLog.objects.create(
+		user=request.user if request.user.is_authenticated else None,
+		link_type='amazon',
+		timestamp=timezone.now()
+	)
+	return redirect('https://www.amazon.com/your-affiliate-link')
 
 
 from .models import Urun, Yorum
