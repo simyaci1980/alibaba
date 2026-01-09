@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('urunler', '0007_urun_resim_url_urunresim_resim_url_and_more'),
+        ('urunler', '0007_urun_resim_url_UrunResim_resim_url_and_more'),
     ]
 
     operations = [
