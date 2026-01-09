@@ -1,9 +1,6 @@
 # Django ve ortam dosyaları için .gitignore
 __pycache__/
 *.py[cod]
-*.sqlite3
-*.db
-*.log
 venv/
 env/
 .venv/
