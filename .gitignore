@@ -10,7 +10,7 @@ env/
 .DS_Store
 staticfiles/
 media/
-db.sqlite3
+
 
 # Credential ve token dosyaları
 .env
