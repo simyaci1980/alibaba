@@ -21,12 +21,12 @@ class Migration(migrations.Migration):
             field=models.URLField(blank=True, help_text='Resim URL (yer kaplamaz)', max_length=500, null=True),
         ),
         migrations.AddField(
-            model_name='urunresim',
+            model_name='UrunResim',
             name='resim_url',
             field=models.URLField(blank=True, help_text='Resim URL (yer kaplamaz)', max_length=500, null=True),
         ),
         migrations.AlterField(
-            model_name='urunresim',
+            model_name='UrunResim',
             name='resim',
             field=models.ImageField(blank=True, null=True, upload_to='urun_resimleri/'),
         ),
