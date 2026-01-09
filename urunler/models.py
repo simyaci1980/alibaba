@@ -13,7 +13,8 @@ class Magaza(models.Model):
 class Urun(models.Model):
 	isim = models.CharField(max_length=200)
 	aciklama = models.TextField(blank=True)
-	resim = models.ImageField(upload_to='urun_resimleri/', blank=True, null=True)  # Tek resim desteği devam etsin
+	resim = models.ImageField(upload_to='urun_resimleri/', blank=True, null=True)  # Dosya yükleme için
+	resim_url = models.URLField(max_length=500, blank=True, null=True, help_text='Resim URL (yer kaplamaz)')  # URL için
 
 	def __str__(self):
 		return self.isim
@@ -22,7 +23,8 @@ class Urun(models.Model):
 # Çoklu resim desteği
 class UrunResim(models.Model):
 	urun = models.ForeignKey(Urun, on_delete=models.CASCADE, related_name='resimler')
-	resim = models.ImageField(upload_to='urun_resimleri/')
+	resim = models.ImageField(upload_to='urun_resimleri/', blank=True, null=True)  # Dosya yükleme için
+	resim_url = models.URLField(max_length=500, blank=True, null=True, help_text='Resim URL (yer kaplamaz)')  # URL için
 	sira = models.PositiveIntegerField(default=0, help_text="Resim sırası (isteğe bağlı)")
 
 	def __str__(self):
@@ -30,13 +32,20 @@ class UrunResim(models.Model):
 
 
 class Fiyat(models.Model):
+	PARA_BIRIMI_CHOICES = [
+		('TL', 'Türk Lirası (₺)'),
+		('USD', 'ABD Doları ($)'),
+	]
+	
 	urun = models.ForeignKey(Urun, on_delete=models.CASCADE, related_name='fiyatlar')
 	magaza = models.ForeignKey(Magaza, on_delete=models.CASCADE)
 	fiyat = models.DecimalField(max_digits=10, decimal_places=2)
+	para_birimi = models.CharField(max_length=3, choices=PARA_BIRIMI_CHOICES, default='TL', help_text='Fiyat hangi para biriminde')
 	affiliate_link = models.URLField()
 
 	def __str__(self):
-		return f"{self.urun.isim} - {self.magaza.isim}"
+		sembol = '₺' if self.para_birimi == 'TL' else '$'
+		return f"{self.urun.isim} - {self.magaza.isim} ({self.fiyat} {sembol})"
 
 # Kullanıcı yorumları için model
 class Yorum(models.Model):

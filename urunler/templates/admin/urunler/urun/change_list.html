@@ -1,0 +1,15 @@
+{% extends "admin/change_list.html" %}
+
+{% block object-tools-items %}
+    <li>
+        <a href="{% url 'admin:urun_link_ekle' %}" class="addlink" style="background: #28a745; padding: 10px 15px; color: white; border-radius: 4px; text-decoration: none; font-weight: bold; margin-right: 10px;">
+            🔗 AliExpress Linki ile Ürün Ekle
+        </a>
+    </li>
+    <li>
+        <a href="{% url 'admin:urun_amazon_link_ekle' %}" class="addlink" style="background: #FF9900; padding: 10px 15px; color: white; border-radius: 4px; text-decoration: none; font-weight: bold;">
+            🔗 Amazon Linki ile Ürün Ekle
+        </a>
+    </li>
+    {{ block.super }}
+{% endblock %}

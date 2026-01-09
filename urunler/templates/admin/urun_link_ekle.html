@@ -1,0 +1,313 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    .form-container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0;
+    }
+    
+    .form-header {
+        margin-bottom: 35px;
+    }
+    
+    .form-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+        padding-bottom: 15px;
+    }
+    
+    .instructions-box {
+        background: #f0f4ff;
+        border-left: 4px solid #4f46e5;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 35px;
+    }
+    
+    .instructions-box h3 {
+        color: #1f2937;
+        font-size: 18px;
+        font-weight: 600;
+        margin-top: 0;
+        margin-bottom: 15px;
+    }
+    
+    .instructions-box ol {
+        color: #374151;
+        line-height: 1.8;
+        margin: 0;
+        padding-left: 20px;
+    }
+    
+    .instructions-box li {
+        margin-bottom: 8px;
+    }
+    
+    .instructions-box ul {
+        color: #374151;
+        margin-top: 8px;
+    }
+    
+    .form-wrapper {
+        background: #ffffff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .messages {
+        margin-bottom: 25px;
+    }
+    
+    .message {
+        padding: 14px 16px;
+        margin-bottom: 15px;
+        border-radius: 6px;
+        border-left: 4px solid;
+        font-weight: 500;
+    }
+    
+    .message.success {
+        background: #d1fae5;
+        color: #065f46;
+        border-left-color: #10b981;
+    }
+    
+    .message.error {
+        background: #fee2e2;
+        color: #7f1d1d;
+        border-left-color: #ef4444;
+    }
+    
+    .message.warning {
+        background: #fef3c7;
+        color: #92400e;
+        border-left-color: #f59e0b;
+    }
+    
+    .form-group {
+        margin-bottom: 28px;
+    }
+    
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 10px;
+        font-size: 15px;
+    }
+    
+    .form-group label .required {
+        color: #dc2626;
+        margin-left: 4px;
+    }
+    
+    .form-group input {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 15px;
+        color: #1f2937;
+        background: #ffffff;
+        box-sizing: border-box;
+        transition: border-color 0.2s;
+    }
+    
+    .form-group input:focus {
+        outline: none;
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+    
+    .form-group input::placeholder {
+        color: #9ca3af;
+    }
+    
+    .form-help {
+        display: block;
+        margin-top: 8px;
+        color: #6b7280;
+        font-size: 14px;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border-radius: 6px;
+        font-size: 15px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .btn-submit {
+        flex: 1;
+        background: #4f46e5;
+        color: white;
+    }
+    
+    .btn-submit:hover {
+        background: #4338ca;
+        box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+    }
+    
+    .btn-back {
+        background: #e5e7eb;
+        color: #1f2937;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .btn-back:hover {
+        background: #d1d5db;
+    }
+    
+    .info-box {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        padding: 16px;
+        border-radius: 6px;
+        margin-top: 30px;
+    }
+    
+    .info-box strong {
+        color: #92400e;
+    }
+    
+    .info-box ul {
+        color: #92400e;
+        margin: 10px 0;
+        padding-left: 20px;
+    }
+    
+    .info-box li {
+        margin-bottom: 6px;
+    }
+</style>
+
+<div class="form-container">
+    <div class="form-header">
+        <h1>🔗 AliExpress Linkinden Ürün Ekle</h1>
+    </div>
+    
+    <div class="instructions-box">
+        <h3>📋 Nasıl Kullanılır:</h3>
+        <ol>
+            <li>AliExpress'te istediğiniz ürünü bulun</li>
+            <li>Ürün linkini kopyalayın (örn: https://www.aliexpress.com/item/...)</li>
+            <li>Aşağıdaki forma yapıştırın</li>
+            <li>"Ürün Ekle" butonuna tıklayın</li>
+            <li>Sistem otomatik olarak:
+                <ul>
+                    <li>✓ Ürün başlığını çeker</li>
+                    <li>✓ Fiyatı çeker</li>
+                    <li>✓ Resim URL'sini kaydeder</li>
+                    <li>✓ Affiliate link oluşturur</li>
+                    <li>✓ Veritabanına ekler</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+
+    <div class="form-wrapper">
+        <form method="post">
+            {% csrf_token %}
+            
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="message {% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <div class="form-group">
+                <label for="aliexpress_url">
+                    AliExpress Ürün Linki
+                    <span class="required">*</span>
+                </label>
+                <input 
+                    type="url" 
+                    id="aliexpress_url" 
+                    name="aliexpress_url" 
+                    value="{{ aliexpress_url }}"
+                    placeholder="https://www.aliexpress.com/item/1005007084770135.html"
+                    required
+                >
+                <small class="form-help">
+                    Ürün linkini buraya yapıştırın (tr.aliexpress.com veya www.aliexpress.com)
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label for="subid">
+                    Takip Kodu (İsteğe Bağlı)
+                </label>
+                <input 
+                    type="text" 
+                    id="subid" 
+                    name="subid" 
+                    value="{{ subid }}"
+                    placeholder="kulaklık, saat, vb."
+                >
+                <small class="form-help">
+                    Admitad'da bu ürünü takip etmek için benzersiz kod
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label for="fiyat">
+                    Fiyat (İsteğe Bağlı)
+                </label>
+                <input 
+                    type="number" 
+                    id="fiyat" 
+                    name="fiyat" 
+                    step="0.01"
+                    min="0"
+                    value="{{ fiyat }}"
+                    placeholder="Örn: 45.99 (boş bırakırsa sistem otomatik çeker)"
+                >
+                <small class="form-help">
+                    Fiyat otomatik çekilemezse manuel girin. Boş bırakılırsa fallback: 199.99 TL
+                </small>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-submit">
+                    ➕ Ürün Ekle
+                </button>
+                <a href="{% url 'admin:urunler_urun_changelist' %}" class="btn btn-back">
+                    ← Geri Dön
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <div class="info-box">
+        <strong>💡 Bilgi:</strong>
+        <ul>
+            <li><strong>Admitad API:</strong> Sadece affiliate link oluşturmak için kullanılıyor</li>
+            <li><strong>Ürün Bilgileri:</strong> AliExpress sayfasından otomatik çekiliyor</li>
+            <li><strong>Fiyat:</strong> Otomatik çekilip 1.60 ile çarpılıyor (vergi ekleniyor)</li>
+            <li><strong>Para Birimi:</strong> TL veya USD otomatik tespit ediliyor</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

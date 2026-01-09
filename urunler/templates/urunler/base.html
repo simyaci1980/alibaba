@@ -3,6 +3,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}KOLAY BUL EKSPRES{% endblock %}</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #e0e7ff 0%, #f4f4f4 100%); margin: 0; padding: 0; }
@@ -10,23 +11,54 @@
             width: 100%;
             background: linear-gradient(90deg, #e08206 0%, #60a5fa 100%);
             color: #f0ec09;
-            padding: 0px 0 0px 0;
+            padding: 8px 0;
             text-align: center;
-            font-size: 1.4em;
+            font-size: 1.2em;
             font-weight: 600;
             letter-spacing: 1px;
             box-shadow: 0 2px 8px rgba(60,60,120,0.08);
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 50%;
+            gap: 8px;
         }
         .navbar span {
-            font-size: 3em;
+            font-size: 1.5em;
             font-weight: 800;
-            flex-basis: 80%;
             text-align: center;
-            letter-spacing: 2.5px;
+            letter-spacing: 1px;
+        }
+        .navbar a {
+            margin: 0;
+            background: #ff4747;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 0.9em;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 44px;
+        }
+        @media (min-width: 768px) {
+            .navbar {
+                flex-direction: row;
+                padding: 0;
+                height: 50%;
+            }
+            .navbar span {
+                font-size: 3em;
+                flex-basis: 80%;
+                letter-spacing: 2.5px;
+            }
+            .navbar a {
+                margin-left: 32px;
+                font-size: 0.8em;
+            }
         }
         .footer {
             width: 100%;
@@ -45,10 +77,10 @@
 <body>
     <div class="navbar">
             <span>KOLAY BUL EKSPRES</span>
-            <a href="{% url 'aliexpress_redirect' %}" target="_blank" style="margin-left:32px; background:#ff4747; color:#fff; padding:8px 18px; border-radius:6px; font-weight:600; text-decoration:none; font-size:0.8em; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:inline-flex; align-items:center; gap:8px;">
+            <a href="{% url 'aliexpress_redirect' %}" target="_blank">
                 <img src="{% static 'urunler/aliexpress-logo.png' %}" alt="AliExpress" style="height:24px; width:auto; vertical-align:middle; background:#fff;" />
                 AliExpress'te Bul
-            </a>
+            </a> 
             <a href="{% url 'amazon_redirect' %}" target="_blank" style="margin-left:16px; background:#232f3e; color:#fff; padding:8px 18px; border-radius:6px; font-weight:600; text-decoration:none; font-size:0.8em; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:inline-flex; align-items:center; gap:8px; align-items:center;">
                 <img src="{% static 'urunler/amazon-logo.png' %}" alt="Amazon" style="height:24px; width:auto; vertical-align:middle; background:#fff;" />
                 Amazon'da Bul
