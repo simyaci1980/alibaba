@@ -54,6 +54,7 @@ def amazon_redirect(request):
 	ClickLog.objects.create(
 		user=request.user if request.user.is_authenticated else None,
 		link_type='amazon',
+		subid='navbar',
 		timestamp=timezone.now()
 	)
 	return redirect('https://www.amazon.com/b?node=53629917011&linkCode=ll2&tag=kolaybulekspr-20&linkId=8150ea1ccd7fe92bfd1f94652a6d69e4&language=en_US&ref_=as_li_ss_tl')
@@ -64,6 +65,7 @@ def aliexpress_redirect(request):
 	ClickLog.objects.create(
 		user=request.user if request.user.is_authenticated else None,
 		link_type='aliexpress',
+		subid='navbar',
 		timestamp=timezone.now()
 	)
 	return redirect('https://rzekl.com/g/1e8d11449462ceef436f16525dc3e8/')
