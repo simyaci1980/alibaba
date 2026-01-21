@@ -12,6 +12,7 @@ class Command(BaseCommand):
         parser.add_argument('--subid', type=str, default='auto', help='Tracking için subid')
 
     def handle(self, *args, **options):
+        import random, string
         csv_path = options['csv_path']
         subid = options['subid']
         base_link = config('ADMITAD_BASE_LINK', default='')
@@ -24,26 +25,34 @@ class Command(BaseCommand):
             defaults={'web_adresi': 'https://www.aliexpress.com'}
         )
 
+        def generate_unique_code(length=5):
+            while True:
+                code = ''.join(random.choices(string.digits, k=length))
+                if not Urun.objects.filter(urun_kodu=code).exists():
+                    return code
+
         with open(csv_path, newline='', encoding='utf-8') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 try:
                     name = row['Ad']
-                    price = float(row['Fiyat'].replace(',', '.')) * 1.65 if row['Fiyat'] else 199.99
+                    price = float(row['Fiyat'].replace(',', '.')) * 1 if row['Fiyat'] else 0
                     image_url = row['Resim']
                     product_url = row['URL']
 
-                    # Affiliate link oluştur
+                    urun_kodu = generate_unique_code()
+                    # Affiliate link oluştur (subid olarak ürün kodu gönder)
                     affiliate_link = build_admitad_deeplink(
                         base_link=base_link,
                         product_url=product_url,
-                        subid=subid
+                        subid=urun_kodu
                     )
 
                     urun = Urun.objects.create(
                         isim=name,
                         aciklama='CSV ile eklendi',
-                        resim_url=image_url
+                        resim_url=image_url,
+                        urun_kodu=urun_kodu
                     )
                     Fiyat.objects.create(
                         urun=urun,
@@ -52,6 +61,6 @@ class Command(BaseCommand):
                         para_birimi='TL',
                         affiliate_link=affiliate_link
                     )
-                    self.stdout.write(self.style.SUCCESS(f'✓ {name} eklendi (Fiyat: {round(price,2)} TL)'))
+                    self.stdout.write(self.style.SUCCESS(f'✓ {name} eklendi (Fiyat: {round(price,2)} TL, Kod: {urun_kodu})'))
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f'❌ Hata: {row.get("Ad", "Bilinmiyor")} - {e}'))

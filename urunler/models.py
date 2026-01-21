@@ -15,9 +15,10 @@ class Urun(models.Model):
 	aciklama = models.TextField(blank=True)
 	resim = models.ImageField(upload_to='urun_resimleri/', blank=True, null=True)  # Dosya yükleme için
 	resim_url = models.URLField(max_length=500, blank=True, null=True, help_text='Resim URL (yer kaplamaz)')  # URL için
+	urun_kodu = models.CharField(max_length=12, unique=True, blank=True, null=True, help_text='Kısa arama kodu (otomatik)')
 
 	def __str__(self):
-		return self.isim
+		return f"{self.isim} ({self.urun_kodu})" if self.urun_kodu else self.isim
 
 
 # Çoklu resim desteği

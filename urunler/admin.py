@@ -43,6 +43,14 @@ class UrunAdmin(admin.ModelAdmin):
 	inlines = [FiyatInline, UrunResimInline]
 	readonly_fields = ("resim_goster",)
 
+	def changelist_view(self, request, extra_context=None):
+		from .models import Urun
+		toplam_urun = Urun.objects.count()
+		if extra_context is None:
+			extra_context = {}
+		extra_context['toplam_urun'] = toplam_urun
+		return super().changelist_view(request, extra_context=extra_context)
+
 	def resim_goster(self, obj):
 		if obj.resim:
 			return f'<img src="{obj.resim.url}" style="max-height:80px; max-width:120px;" />'

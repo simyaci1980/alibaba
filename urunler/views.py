@@ -13,15 +13,18 @@ def anasayfa(request):
 	search_query = request.GET.get('q', '').strip()
 	
 	if search_query:
-		# Arama yapılıyorsa - ürün ismine göre filtrele
+		# Arama yapılıyorsa - ürün ismine veya urun_kodu'na göre filtrele
 		urunler = Urun.objects.prefetch_related('fiyatlar__magaza').filter(
-			Q(isim__icontains=search_query) | Q(aciklama__icontains=search_query)
+			Q(isim__icontains=search_query) |
+			Q(aciklama__icontains=search_query) |
+			Q(urun_kodu__icontains=search_query)
 		).annotate(
 			# Tam eşleşme öncelikli sıralama
 			relevance=Case(
 				When(isim__iexact=search_query, then=1),
 				When(isim__istartswith=search_query, then=2),
 				When(isim__icontains=search_query, then=3),
+				When(urun_kodu__iexact=search_query, then=0),
 				default=4,
 				output_field=IntegerField()
 			)
