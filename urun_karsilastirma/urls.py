@@ -24,6 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('urunler.urls')),
     path('favicon.ico', RedirectView.as_view(url='/static/urunler/favicon.ico', permanent=True)),
+    path('robots.txt', RedirectView.as_view(url='/static/robots.txt', permanent=True)),
 ]
 
 if settings.DEBUG:
