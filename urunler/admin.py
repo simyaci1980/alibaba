@@ -26,6 +26,14 @@ from .utils.deeplink import build_admitad_deeplink
 class FiyatInline(admin.TabularInline):
 	model = Fiyat
 	extra = 1
+	fields = ('magaza', 'fiyat', 'para_birimi', 'gonderim_ucreti', 'gonderim_yerinden', 'gonderim_durumu', 'affiliate_link')
+	readonly_fields = ('toplam_fiyat_goster',)
+	
+	def toplam_fiyat_goster(self, obj):
+		if obj.id:
+			return f"{obj.toplam_fiyat:.2f} {obj.para_birimi}"
+		return "-"
+	toplam_fiyat_goster.short_description = "Toplam (Fiyat + Gönderim)"
 
 class UrunResimInline(admin.TabularInline):
 	model = UrunResim

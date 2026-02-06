@@ -43,10 +43,20 @@ class Fiyat(models.Model):
 	fiyat = models.DecimalField(max_digits=10, decimal_places=2)
 	para_birimi = models.CharField(max_length=3, choices=PARA_BIRIMI_CHOICES, default='TL', help_text='Fiyat hangi para biriminde')
 	affiliate_link = models.URLField()
+	
+	# Gönderim bilgileri
+	gonderim_ucreti = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text='Kargo ücreti')
+	gonderim_yerinden = models.CharField(max_length=100, default='Çin', help_text='Hangi ülkeden gönderiliyor')
+	gonderim_durumu = models.BooleanField(default=True, help_text='Gönderilebiliyor mu?')
 
 	def __str__(self):
 		sembol = '₺' if self.para_birimi == 'TL' else '$'
 		return f"{self.urun.isim} - {self.magaza.isim} ({self.fiyat} {sembol})"
+	
+	@property
+	def toplam_fiyat(self):
+		"""Ürün fiyatı + Gönderim ücreti"""
+		return self.fiyat + self.gonderim_ucreti
 
 # Kullanıcı yorumları için model
 class Yorum(models.Model):

@@ -35,10 +35,20 @@ class Command(BaseCommand):
             reader = csv.DictReader(csvfile)
             for row in reader:
                 try:
-                    name = row['Ad']
-                    price = float(row['Fiyat'].replace(',', '.')) * 1 if row['Fiyat'] else 0
-                    image_url = row['Resim']
-                    product_url = row['URL']
+                    name = row.get('title', row.get('Ad', ''))
+                    description = row.get('description', 'CSV ile eklendi')
+                    price_str = row.get('totalPrice', row.get('Fiyat', '0'))
+                    price = float(price_str.replace(',', '.')) if price_str else 0
+                    
+                    # Gönderim bilgileri
+                    shipping_fee_str = row.get('shippingFee', '0')
+                    shipping_fee = float(shipping_fee_str.replace(',', '.')) if shipping_fee_str else 0
+                    shipping_from = row.get('shippingFrom', 'Çin')
+                    shipping_status = row.get('status', 'Gönderilebiliyor ✅')
+                    can_deliver = '✅' in shipping_status or 'Gönderilebiliyor' in shipping_status
+                    
+                    image_url = row.get('imageUrl', row.get('Resim', ''))
+                    product_url = row.get('productLink', row.get('URL', ''))
 
                     urun_kodu = generate_unique_code()
                     # Affiliate link oluştur (subid olarak ürün kodu gönder)
@@ -50,7 +60,7 @@ class Command(BaseCommand):
 
                     urun = Urun.objects.create(
                         isim=name,
-                        aciklama='CSV ile eklendi',
+                        aciklama=description,
                         resim_url=image_url,
                         urun_kodu=urun_kodu
                     )
@@ -59,8 +69,14 @@ class Command(BaseCommand):
                         magaza=magaza,
                         fiyat=round(price, 2),
                         para_birimi='TL',
-                        affiliate_link=affiliate_link
+                        affiliate_link=affiliate_link,
+                        gonderim_ucreti=round(shipping_fee, 2),
+                        gonderim_yerinden=shipping_from,
+                        gonderim_durumu=can_deliver
                     )
-                    self.stdout.write(self.style.SUCCESS(f'✓ {name} eklendi (Fiyat: {round(price,2)} TL, Kod: {urun_kodu})'))
+                    toplam = price + shipping_fee
+                    self.stdout.write(self.style.SUCCESS(
+                        f'✓ {name[:50]} eklendi (Fiyat: {price:.2f} + Gönderim: {shipping_fee:.2f} = {toplam:.2f} TL, Kod: {urun_kodu})'
+                    ))
                 except Exception as e:
-                    self.stdout.write(self.style.ERROR(f'❌ Hata: {row.get("Ad", "Bilinmiyor")} - {e}'))
+                    self.stdout.write(self.style.ERROR(f'❌ Hata: {row.get("title", row.get("Ad", "Bilinmiyor"))} - {e}'))
