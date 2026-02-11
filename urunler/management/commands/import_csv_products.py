@@ -50,33 +50,65 @@ class Command(BaseCommand):
                     image_url = row.get('imageUrl', row.get('Resim', ''))
                     product_url = row.get('productLink', row.get('URL', ''))
 
-                    urun_kodu = generate_unique_code()
+                    # Ürünü tekilleştir: önce kaynak URL, yoksa isim+resim_url, en son isim
+                    urun = None
+                    if product_url:
+                        urun = Urun.objects.filter(source_url=product_url).first()
+
+                    if not urun and name and image_url:
+                        urun = Urun.objects.filter(isim__iexact=name, resim_url=image_url).first()
+
+                    if not urun and name:
+                        urun = Urun.objects.filter(isim__iexact=name).first()
+
+                    created = False
+                    if urun:
+                        if not urun.urun_kodu:
+                            urun.urun_kodu = generate_unique_code()
+                        urun.isim = name or urun.isim
+                        urun.aciklama = description or urun.aciklama
+                        urun.resim_url = image_url or urun.resim_url
+                        if product_url and not urun.source_url:
+                            urun.source_url = product_url
+                        urun.save()
+                    else:
+                        urun_kodu = generate_unique_code()
+                        urun = Urun.objects.create(
+                            isim=name,
+                            aciklama=description,
+                            resim_url=image_url,
+                            source_url=product_url or None,
+                            urun_kodu=urun_kodu
+                        )
+                        created = True
+
                     # Affiliate link oluştur (subid olarak ürün kodu gönder)
                     affiliate_link = build_admitad_deeplink(
                         base_link=base_link,
                         product_url=product_url,
-                        subid=urun_kodu
+                        subid=urun.urun_kodu or 'auto'
                     )
 
-                    urun = Urun.objects.create(
-                        isim=name,
-                        aciklama=description,
-                        resim_url=image_url,
-                        urun_kodu=urun_kodu
-                    )
-                    Fiyat.objects.create(
+                    Fiyat.objects.update_or_create(
                         urun=urun,
                         magaza=magaza,
-                        fiyat=round(price, 2),
-                        para_birimi='TL',
-                        affiliate_link=affiliate_link,
-                        gonderim_ucreti=round(shipping_fee, 2),
-                        gonderim_yerinden=shipping_from,
-                        gonderim_durumu=can_deliver
+                        defaults={
+                            'fiyat': round(price, 2),
+                            'para_birimi': 'TL',
+                            'affiliate_link': affiliate_link,
+                            'gonderim_ucreti': round(shipping_fee, 2),
+                            'gonderim_yerinden': shipping_from,
+                            'gonderim_durumu': can_deliver,
+                        }
                     )
                     toplam = price + shipping_fee
-                    self.stdout.write(self.style.SUCCESS(
-                        f'✓ {name[:50]} eklendi (Fiyat: {price:.2f} + Gönderim: {shipping_fee:.2f} = {toplam:.2f} TL, Kod: {urun_kodu})'
-                    ))
+                    if created:
+                        self.stdout.write(self.style.SUCCESS(
+                            f'✓ {name[:50]} eklendi (Fiyat: {price:.2f} + Gönderim: {shipping_fee:.2f} = {toplam:.2f} TL, Kod: {urun.urun_kodu})'
+                        ))
+                    else:
+                        self.stdout.write(self.style.WARNING(
+                            f'⚠ {name[:50]} zaten vardı, güncellendi (Fiyat: {price:.2f} + Gönderim: {shipping_fee:.2f} = {toplam:.2f} TL, Kod: {urun.urun_kodu})'
+                        ))
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f'❌ Hata: {row.get("title", row.get("Ad", "Bilinmiyor"))} - {e}'))

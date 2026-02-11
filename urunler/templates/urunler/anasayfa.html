@@ -5,7 +5,111 @@
 
 {% block content %}
 <div class="container" style="padding: 0 8px;">
-    <h1 style="text-align:center; font-size:1.2em; font-weight:800; color:#e6be10; letter-spacing:0.5px; margin:12px 0 16px 0;">SİZİ UYGUN ÜRÜNLERLE BULUŞTURUYORUZ </h1>
+    
+    
+    <!-- Biz Ne Yapıyoruz Butonu -->
+    <div style="padding: 0 8px; margin-bottom: 20px;">
+        <button id="toggleAboutBtn" style="width: auto; max-width: 400px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; border: none; border-radius: 6px; padding: 6px 10px; font-size: 0.75em; font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2);" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 3px 10px rgba(245, 158, 11, 0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 6px rgba(245, 158, 11, 0.2)'">
+            🎯 Sitemiz Ne İşe Yarıyor Bizim Karımız Nedir?  <span id="toggleIcon" style="float:right; font-size:0.9em; transition: transform 0.3s; margin-left: 4px;">▼</span>
+        </button>
+    </div>
+    
+    <!-- Açıklayıcı Kart ve Hakkımızda (Başlangıçta Gizli) -->
+    <div id="aboutSection" style="display: none; animation: slideDown 0.3s ease-out;">
+        <!-- Açıklayıcı Kart -->
+        <div style="max-width: 700px; margin: 0 auto 20px auto; padding: 16px; background: linear-gradient(135deg, #f0f4ff 0%, #fff5f7 100%); border-radius: 12px; border-left: 4px solid #6366f1; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);">
+            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                <div style="font-size: 1.5em;">🔍</div>
+                <div>
+                    <h2 style="margin: 0 0 8px 0; color: #1f2937; font-size: 1em; font-weight: 700;">AliExpress Ürünlerini Hızlı Bulun</h2>
+                    <p style="margin: 0 0 8px 0; color: #4b5563; font-size: 0.95em; line-height: 1.5;">Milyonlarca ürün içinden aradığınızı saniyeler içinde keşfedin. Popüler ürünler, en ucuz seçenekler ve en çok satanları görmek kolay.</p>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                <div style="font-size: 1.5em;">💵</div>
+                <div>
+                    <h2 style="margin: 0 0 8px 0; color: #1f2937; font-size: 1em; font-weight: 700;">Gerçek Fiyatları Görerek Karar Verin</h2>
+                    <p style="margin: 0 0 8px 0; color: #4b5563; font-size: 0.95em; line-height: 1.5;">Her ürün için net fiyatı (ürün fiyatı + kargo ücreti) görün. Hangi deposundan gönderileceğini önceden bilin. Örnek: Avrupa deposundan çok daha hızlı gelir!</p>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                <div style="font-size: 1.5em;">🚚</div>
+                <div>
+                    <h2 style="margin: 0 0 8px 0; color: #1f2937; font-size: 1em; font-weight: 700;">Kargo Ücretini Önceden Bilin</h2>
+                    <p style="margin: 0 0 8px 0; color: #4b5563; font-size: 0.95em; line-height: 1.5;">Gönderildiği yerden haberdar olursunuz. Avrupa deposundan gelirse 7-15 gün(Türkiye gönderimli ürünlerle aynı süre), Çin'den gelirse 20-40 gün arası beklemeyi öngörün.</p>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 12px;">
+                <div style="font-size: 1.5em;">⚡</div>
+                <div>
+                    <h2 style="margin: 0 0 8px 0; color: #1f2937; font-size: 1em; font-weight: 700;">Tek Tıkla Satın Alın</h2>
+                    <p style="margin: 0; color: #4b5563; font-size: 0.95em; line-height: 1.5;">Beğendiğiniz ürüne tıklayın ve doğrudan AliExpress'e yönlenin. Güvenli ödeme ve satıcı garantisi AliExpress tarafından sağlanır.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hakkımızda Bölümü -->
+        <div style="max-width: 700px; margin: 0 auto 20px auto; padding: 16px; background: #fff9e6; border-radius: 12px; border-left: 4px solid #f59e0b; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);">
+            <h2 style="text-align: center; color: #d97706; font-size: 1em; font-weight: 700; margin: 0 0 12px 0;">📌 Biz Kimiz?</h2>
+            
+            <p style="margin: 0 0 12px 0; color: #4b5563; font-size: 0.95em; line-height: 1.6;">
+                <strong>Kolay Bul Ekspres</strong>, AliExpress'teki binlerce ürünü kataloglayan ve Türk kullanıcılar için arama sürecini kolaylaştıran bağımsız bir platformdur. Hiçbir resmî bağlantımız yok, sadece kullanıcılarımızın zamanını tasarruf etmek istiyoruz.
+            </p>
+            
+            <p style="margin: 0 0 12px 0; color: #4b5563; font-size: 0.95em; line-height: 1.6;">
+                <strong>💡 Neden Buradan Gitmelisiz?</strong> AliExpress'i ziyaret etmek istediğinizde, ürün bulmak dakikalar alabilir. Biz ürünleri önceden taradık, fiyatları ve kargo bilgilerini güncelledik. Aradığınız şeyi saniyeler içinde bulun.
+            </p>
+            
+            <p style="margin: 0; color: #4b5563; font-size: 0.95em; line-height: 1.6;">
+                <strong>🤝 Bizim Karımız Nedir?</strong> AliExpress'in affiliate programı üzerinden küçük bir komisyon kazanıyoruz. <u>Sizin ödediğiniz fiyat değişmiyor</u> - aynı fiyattan alıyorsunuz. Sadece siz satın aldığınızda, AliExpress bize ufak bir komisyon ödüyor. Bu da paranın ufak bir kısmı da olsa ülkede kalması anlamına geliyor.
+            </p>
+        </div>
+    </div>
+    
+    <style>
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+    </style>
+    
+    <script>
+        document.getElementById('toggleAboutBtn').addEventListener('click', function() {
+            const section = document.getElementById('aboutSection');
+            const icon = document.getElementById('toggleIcon');
+            
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+                section.style.animation = 'slideDown 0.3s ease-out';
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                section.style.animation = 'slideUp 0.3s ease-out';
+                setTimeout(function() {
+                    section.style.display = 'none';
+                }, 300);
+                icon.style.transform = 'rotate(0deg)';
+            }
+        });
+    </script>
 
     <style>
         .product-row {
@@ -14,6 +118,23 @@
             gap: 12px;
             justify-content: center;
             align-items: stretch;
+        }
+        .product-row-scrollable {
+            display: flex;
+            overflow-x: auto;
+            gap: 6px;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 12px;
+            padding: 0 8px 8px 8px;
+            width: 100%;
+        }
+        .product-row-scrollable::-webkit-scrollbar {
+            height: 6px;
+        }
+        .product-row-scrollable::-webkit-scrollbar-thumb {
+            background: #6366f1;
+            border-radius: 3px;
         }
         .product-link {
             display: flex;
@@ -48,11 +169,12 @@
         }
         .product-text {
             width: 100%;
-            min-height: 56px;
-            max-height: 56px;
+            flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
+            min-height: auto;
+            max-height: none;
         }
         .shipping-line {
             min-height: 18px;
@@ -62,58 +184,89 @@
             -webkit-line-clamp: 1;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            font-weight: 600;
+            font-size: 0.6em;
+            line-height: 1.2;
         }
         .product-desc {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
+            flex: 1;
+            display: flex;
+            align-items: flex-start;
             overflow: hidden;
-            font-size: 0.9em;
-            line-height: 1.3;
+            font-size: 0.5em;
+            line-height: 1.25;
+            word-wrap: break-word;
+            white-space: normal;
         }
         @media (max-width: 768px) {
             .product-row {
-                flex-wrap: wrap;
-                overflow-x: visible;
-                scroll-snap-type: none;
-                justify-content: center;
-                gap: 8px;
-                padding-bottom: 0;
+                display: block;
+            }
+            .product-row-scrollable {
+                display: flex;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                gap: 6px;
+                padding-bottom: 8px;
+                margin-bottom: 12px;
             }
             .product-link {
-                flex: 0 0 calc(50% - 8px);
-                min-width: 150px;
-                max-width: 190px;
+                flex: 0 0 auto;
+                min-width: 130px;
+                max-width: 165px;
+                scroll-snap-align: start;
             }
             .product {
                 min-height: 0;
-                padding: 6px 8px 8px 8px !important;
+                padding: 3px 4px 4px 4px !important;
+                font-size: 0.95em;
             }
             .product-media {
-                margin-left: -10px;
-                margin-right: -10px;
+                margin-left: -4px;
+                margin-right: -4px;
+                margin-bottom: 4px !important;
+                overflow: hidden;
+                width: calc(100% + 8px);
+                height: 100px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
             .product img {
-                height: 140px !important;
-                max-width: 100% !important;
+                height: auto !important;
+                max-height: 100px !important;
+                width: 100% !important;
+                object-fit: contain !important;
             }
             .product .slider-img {
-                max-height: 140px !important;
+                height: auto !important;
+                max-height: 100px !important;
+                width: 100% !important;
+                object-fit: contain !important;
             }
             .product-text {
-                max-height: 52px;
+                flex: 1;
+                min-height: auto;
+                max-height: none;
                 display: flex;
                 flex-direction: column;
             }
             .product-desc {
-                -webkit-line-clamp: 2;
-                font-size: 0.75em;
+                flex: 1;
+                font-size: 0.45em;
+                line-height: 1.2;
+                word-wrap: break-word;
+                white-space: normal;
+            }
+            .product-title {
+                font-size: 0.55em;
+                line-height: 1.15;
             }
             .price-total {
-                font-size: 0.78em !important;
+                font-size: 0.7em !important;
             }
             .shipping-line {
-                min-height: 16px;
+                min-height: 14px;
             }
             .stores {
                 padding-top: 4px !important;
@@ -150,8 +303,184 @@
     <div style="text-align: center; margin-bottom: 16px; color: #6366f1; font-weight: 600;">"{{ search_query }}" için {{ urunler|length }} sonuç bulundu</div>
     {% endif %}
     
+    <!-- Ürün Resim Carousel -->
+    <div class="carousel-wrapper" style="overflow: hidden; margin: 0 0 20px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 16px 0; border-radius: 12px;">
+        <div class="carousel-container" id="productCarousel" style="display: flex; will-change: transform;">
+            {% for urun in urunler %}
+            <a href="{% url 'urun_affiliate_redirect' urun.id %}" target="_blank" class="carousel-item" style="flex: 0 0 auto; margin: 0 8px; text-decoration: none; cursor: pointer;" data-urun-id="{{ urun.id }}">
+                <div class="carousel-circle" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background: #fff; transition: transform 0.2s, box-shadow 0.2s;">
+                    {% if urun.resim_url %}
+                    <img src="{{ urun.resim_url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% elif urun.resimler.all|length > 0 %}
+                    <img src="{{ urun.resimler.all.0.resim.url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% elif urun.resim %}
+                    <img src="{{ urun.resim.url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; font-size: 0.7em; text-align: center; padding: 4px;">{{ urun.isim|truncatewords:2 }}</div>
+                    {% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    <style>
+        .carousel-item:hover .carousel-circle {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+        .carousel-container:hover {
+            animation-play-state: paused !important;
+        }
+        @media (max-width: 768px) {
+            .carousel-item {
+                margin: 0 4px !important;
+            }
+            .carousel-circle {
+                width: 60px !important;
+                height: 60px !important;
+                border: 2px solid #fff !important;
+            }
+            .carousel-wrapper {
+                padding: 12px 0 !important;
+            }
+        }
+    </style>
+    <script>
+    (function() {
+        const carousel = document.getElementById('productCarousel');
+        const wrapper = carousel.parentElement;
+        const items = Array.from(carousel.children);
+        
+        // Orijinal içeriği sakla ve karıştır
+        const originalItems = Array.from(carousel.children);
+        
+        // Fisher-Yates shuffle algoritması
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+        
+        let animationId = null;
+        let translateX = 0;
+        
+        function initCarousel() {
+            // Temizle ve karıştır
+            carousel.innerHTML = '';
+            const shuffledItems = shuffleArray(originalItems);
+            shuffledItems.forEach(item => carousel.appendChild(item.cloneNode(true)));
+            translateX = 0;
+            
+            // Tek bir item'ın genişliğini hesapla
+            const firstItem = carousel.children[0];
+            if (!firstItem) return;
+            
+            const itemWidth = firstItem.offsetWidth;
+            const itemMargin = parseInt(window.getComputedStyle(firstItem).marginLeft) + 
+                              parseInt(window.getComputedStyle(firstItem).marginRight);
+            const totalItemWidth = itemWidth + itemMargin;
+            
+            // Container ve wrapper genişliği
+            const wrapperWidth = wrapper.offsetWidth;
+            const contentWidth = totalItemWidth * shuffledItems.length;
+            
+            // Ekranı doldurmak için kaç kopya gerekli? (minimum 3 ekran dolusu)
+            const copies = Math.ceil((wrapperWidth * 3) / contentWidth) + 2;
+            
+            // Kopyaları ekle (karıştırılmış listeyi tekrarla)
+            const currentHTML = carousel.innerHTML;
+            for (let i = 0; i < copies; i++) {
+                carousel.innerHTML += currentHTML;
+            }
+            
+            // Animasyon hızı (piksel/saniye)
+            const speed = 30; // Daha yavaş ve düzgün
+            const distance = contentWidth;
+            
+            // Animasyonu başlat
+            let lastTime = performance.now();
+            
+            function animate(currentTime) {
+                const deltaTime = (currentTime - lastTime) / 1000;
+                lastTime = currentTime;
+                
+                translateX -= speed * deltaTime;
+                
+                // Bir set tamamlandığında sıfırla
+                if (Math.abs(translateX) >= distance) {
+                    translateX = translateX % distance;
+                }
+                
+                carousel.style.transform = `translateX(${translateX}px)`;
+                animationId = requestAnimationFrame(animate);
+            }
+            
+            animationId = requestAnimationFrame(animate);
+        }
+        
+        // İlk yükleme
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initCarousel);
+        } else {
+            initCarousel();
+        }
+        
+        // Ekran boyutu değişince yeniden başlat
+        let resizeTimer;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                if (animationId) cancelAnimationFrame(animationId);
+                initCarousel();
+            }, 250);
+        });
+        
+        // Hover durumunda durdur
+        let isPaused = false;
+        carousel.addEventListener('mouseenter', function() {
+            isPaused = true;
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        });
+        
+        carousel.addEventListener('mouseleave', function() {
+            if (!animationId && !isPaused) {
+                let lastTime = performance.now();
+                const speed = 30;
+                const firstItem = carousel.children[0];
+                const itemWidth = firstItem.offsetWidth;
+                const itemMargin = parseInt(window.getComputedStyle(firstItem).marginLeft) + 
+                                  parseInt(window.getComputedStyle(firstItem).marginRight);
+                const distance = (itemWidth + itemMargin) * shuffledItems.length;
+                
+                function animate(currentTime) {
+                    const deltaTime = (currentTime - lastTime) / 1000;
+                    lastTime = currentTime;
+                    translateX -= speed * deltaTime;
+                    if (Math.abs(translateX) >= distance) {
+                        translateX = translateX % distance;
+                    }
+                    carousel.style.transform = `translateX(${translateX}px)`;
+                    animationId = requestAnimationFrame(animate);
+                }
+                animationId = requestAnimationFrame(animate);
+            }
+            isPaused = false;
+        });
+    })();
+    </script>
+    
     <div class="product-row">
     {% for urun in urunler %}
+        {% if forloop.counter0|divisibleby:15 %}
+            {% if not forloop.first %}</div>{% endif %}
+            <div class="product-row-scrollable">
+        {% endif %}
         <a class="product-link" href="{% url 'urun_affiliate_redirect' urun.id %}" target="_blank">
         <div class="product" style="min-height: 280px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 8px; padding: 8px 12px 12px 12px; transition: box-shadow 0.2s; justify-content: flex-start;">
             <div class="product-body">
@@ -202,10 +531,10 @@
                 {% endif %}
 
                 {% if urun.aciklama and urun.aciklama != 'CSV ile eklendi' %}
-                <div class="product-title" style="text-align:center; font-weight:600; font-size:0.82em; margin-bottom:6px; line-height:1.25; color:#1f2937; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%;">{{ urun.isim }}</div>
-                <div class="product-desc" style="text-align:center; font-size:0.9em; font-weight:600; color:#4b5563; margin-bottom:10px; line-height:1.45;">{{ urun.aciklama }}</div>
+                <div class="product-title" style="text-align:center; font-weight:600; margin-bottom:6px; color:#1f2937; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%;">{{ urun.isim }}</div>
+                <div class="product-desc" style="text-align:center; font-weight:600; color:#4b5563; margin-bottom:10px;">{{ urun.aciklama }}</div>
                 {% else %}
-                <div class="product-title" style="text-align:center; font-weight:600; font-size:0.88em; margin-bottom:6px; line-height:1.35; color:#1f2937; word-break:break-word;">{{ urun.isim }}</div>
+                <div class="product-title" style="text-align:center; font-weight:600; margin-bottom:6px; color:#1f2937; word-break:break-word;">{{ urun.isim }}</div>
                 {% endif %}
             </div>
             </div>
@@ -241,6 +570,7 @@
             </div>
         </div>
         </a>
+        {% if forloop.last %}</div>{% endif %}
     {% endfor %}
     </div>
 </div>
