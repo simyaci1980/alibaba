@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "AliExpress Ürün Analizi (Fetch)",
+  "version": "1.0",
+  "description": "AliExpress ürünlerini fetch ile hızlı analiz eder",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "*://*.aliexpress.com/*",
+    "*://*.aliexpress.us/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "AliExpress Fetch Analizi"
+  }
+}

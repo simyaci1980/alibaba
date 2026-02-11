@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Ürün Bilgisi Çek</title>
+    <meta charset="UTF-8">
+  </head>
+  <body style="width:340px; min-width:340px; max-width:340px; padding: 12px; font-size: 1em; font-family: Arial, sans-serif; background: #fff; box-sizing: border-box;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+      <img src="icon.svg" alt="A" width="36" height="36" style="background: #fff; border-radius: 6px; border: 1px solid #eee;"/>
+      <span style="font-size: 1.25em; font-weight: bold;">Ürün Bilgisi</span>
+    </div>
+    <div id="product-info" style="margin-bottom: 12px; line-height: 1.5; word-break: break-word;"></div>
+    <div style="margin-bottom: 12px;">
+      <label for="manual-price" style="font-size:0.98em;">Fiyat (manuel): </label>
+      <input type="number" id="manual-price" step="0.01" placeholder="Fiyat girin" style="width:110px; padding:2px 6px; font-size:1em;" />
+      <span style="font-size:0.95em;color:#888;">TL</span>
+    </div>
+    <div style="display: flex; gap: 10px; margin-bottom: 8px;">
+      <button id="add-product" style="flex:1; padding:7px 0; font-size:1em; background:#2d72d9; color:#fff; border:none; border-radius:4px; cursor:pointer;">Ürünü Ekle</button>
+      <button id="download-csv" style="flex:1; padding:7px 0; font-size:1em; background:#4caf50; color:#fff; border:none; border-radius:4px; cursor:pointer;">CSV olarak indir</button>
+    </div>
+    <button id="clear-all" style="width:100%; padding:7px 0; font-size:1em; background:#e53935; color:#fff; border:none; border-radius:4px; cursor:pointer; margin-bottom:8px;">Tümünü Temizle</button>
+    <div id="ekle-bilgi" style="color: green; font-size: 1em; margin-top: 6px; min-height: 20px;"></div>
+    <script src="popup.js"></script>
+  </body>
+</html>

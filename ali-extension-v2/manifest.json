@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Ali Ürün Analiz V2",
+  "version": "1.0",
+  "permissions": ["tabs", "scripting", "storage", "activeTab"],
+  "host_permissions": ["https://*.aliexpress.com/*"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.aliexpress.com/*"],
+      "js": ["content.js"]
+    }
+  ]
+}

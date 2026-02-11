@@ -1,3 +1,18 @@
+# Yerelde Sanal Ortam (Virtual Environment) Oluşturma
+
+Projeyi izole bir ortamda çalıştırmak için sanal ortam kullanmanız önerilir. Windows için komutlar:
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+Linux/Mac için:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
 # Ürün Karşılaştırma Platformu (Django)
 
 Bu proje, farklı mağazalardaki ürünlerin fiyatlarını karşılaştırabileceğiniz ve affiliate linklerle gelir elde edebileceğiniz bir Django tabanlı web uygulamasıdır.
@@ -9,18 +24,41 @@ Bu proje, farklı mağazalardaki ürünlerin fiyatlarını karşılaştırabilec
 - Ana sayfada ürünlerin ve mağazalara göre fiyatlarının listelenmesi
 - Responsive ve modern arayüz
 - Medya (resim) ve statik dosya yönetimi
-- **Admitad API entegrasyonu** - AliExpress deeplink oluşturma
-- **Admin Panel Link Üzerinden Otomatik Ürün Ekleme** - AliExpress linkini yapıştırınız, sistem otomatik bilgileri çeker
   - Başlık, fiyat, resim otomatik çekme
   - İsteğe bağlı manuel fiyat girebilme
   - Affiliate link otomatik oluşturma
-- Çoklu resim desteği, kullanıcı yorumları
-- Tıklama loglama (Amazon, AliExpress, ürün affiliate)
+
+## CSV'den Toplu Ürün Ekleme
+
+Chrome uzantısı ile çektiğiniz ürünleri CSV olarak kaydedip, aşağıdaki komutla Django'ya toplu olarak ekleyebilirsiniz:
+
+```bash
+python manage.py import_csv_products chrome_eklenti/urunler.csv
+```
+
+Bu komut, CSV dosyasındaki ürünleri veritabanına ekler, fiyatı otomatik olarak 1.65 ile çarpar ve affiliate link oluşturur.
 
 ## Canlı Site
 
 **Durum:** Site şu an PythonAnywhere'de çalışıyor (https://kolaybulexpres.pythonanywhere.com)
 **Deployment:** `PYTHONANYWHERE_DEPLOYMENT.md` dosyasındaki adımları takip edin.
+
+## SQLite3 Veritabanını GitHub'a Aktarma
+
+Projede ürünleri veya veritabanı içeriğini doğrudan paylaşmak için db.sqlite3 dosyasını GitHub'a gönderebilirsiniz. Aşağıdaki adımları izleyin:
+
+1. db.sqlite3 dosyanızda değişiklik yaptıysanız (ör. yeni ürün eklediniz), dosyanın güncel olduğundan emin olun.
+2. Terminalde şu komutları çalıştırın:
+   ```bash
+   git add db.sqlite3
+   git commit -m "Güncel veritabanı eklendi"
+   git push
+   ```
+3. GitHub'da db.sqlite3 dosyanız güncel olarak saklanacaktır. Sunucuya (ör. PythonAnywhere) aktarmak için orada da `git pull` komutunu kullanın.
+
+> Not: db.sqlite3 dosyasını paylaşmak, tüm veritabanı içeriğini (kullanıcılar, ürünler, vs.) herkese açık hale getirir. Gizli veri varsa dikkatli olun.
+
+---
 
 ## Kurulum
 
@@ -217,6 +255,7 @@ Admin panelinde "Ürün Ekle" (+ buton) ile klasik şekilde ürün ekleyebilirsi
 SONRA :
 
 1. **CI/CD** - GitHub Actions ile otomatik deploy
+2. 
 
 ## Lisans
 

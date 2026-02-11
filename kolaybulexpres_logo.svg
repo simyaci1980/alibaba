@@ -1,0 +1,10 @@
+<svg width="320" height="80" viewBox="0 0 320 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="320" height="80" rx="18" fill="#f8faff"/>
+  <text x="40" y="52" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="bold" fill="#6366f1">kolaybul</text>
+  <text x="200" y="52" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="bold" fill="#e08206">expres</text>
+  <g>
+    <circle cx="28" cy="40" r="14" fill="#6366f1"/>
+    <rect x="22" y="34" width="12" height="4" rx="2" fill="#fff"/>
+    <rect x="28" y="40" width="8" height="4" rx="2" fill="#fff"/>
+  </g>
+</svg>

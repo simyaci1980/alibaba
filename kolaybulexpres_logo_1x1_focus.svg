@@ -1,0 +1,13 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="64" fill="#f8faff"/>
+  <!-- Sembol üstte, biraz daha küçük ve yukarıda -->
+  <g>
+    <circle cx="256" cy="70" r="48" fill="#6366f1"/>
+    <rect x="236" y="60" width="32" height="8" rx="4" fill="#fff"/>
+    <rect x="256" y="76" width="20" height="8" rx="4" fill="#fff"/>
+  </g>
+  <!-- kolaybul yazısı, daha ortalı ve yakın -->
+  <text x="256" y="200" font-family="Segoe UI, Arial, sans-serif" font-size="88" font-weight="bold" fill="#6366f1" text-anchor="middle">kolaybul</text>
+  <!-- expres yazısı, daha yakın ve ortalı -->
+  <text x="256" y="300" font-family="Segoe UI, Arial, sans-serif" font-size="88" font-weight="bold" fill="#e08206" text-anchor="middle">expres</text>
+</svg>

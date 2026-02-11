@@ -37,6 +37,9 @@ SECRET_KEY = 'django-insecure-kq^nh-!au^gi4pt^d*il_ho=3*zvli04j#n@itv(z8q&r#mmtv
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    'www.kolaybulexpres.com',
+    'kolaybulexpres.com',
+    # varsa diğer domainleriniz
     'kolaybulexpres.pythonanywhere.com',
     'www.kolaybulexpres.pythonanywhere.com',
     '127.0.0.1',
@@ -147,3 +150,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+#SECURE_SSL_REDIRECT = True  # Tüm HTTP isteklerini otomatik olarak HTTPS'ye yönlendirir
+#SESSION_COOKIE_SECURE = True
+#CSRF_COOKIE_SECURE = True

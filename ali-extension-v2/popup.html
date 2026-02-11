@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { width: 400px; padding: 15px; font-family: Arial; margin: 0; }
+    
+    #searchSection { display: block; }
+    #resultsSection { display: none; }
+    
+    button { width: 100%; padding: 10px; cursor: pointer; margin: 5px 0; }
+    
+    .result-card {
+      background: #f5f5f5;
+      border: 2px solid #ddd;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+    
+    .result-header {
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    
+    .result-item {
+      margin: 8px 0;
+      font-size: 13px;
+    }
+    
+    .label { color: #666; font-weight: bold; }
+    .value { color: #191919; margin-left: 5px; }
+    
+    .status-ok { color: #28a745; }
+    .status-error { color: #dc3545; }
+    
+    .navigation {
+      display: flex;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    
+    .navigation button {
+      flex: 1;
+      margin: 0;
+    }
+    
+    .page-info {
+      text-align: center;
+      margin: 10px 0;
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div id="searchSection">
+    <button id="findBtn">Ürünleri Bul ve Çerçevele</button>
+    <div id="totalCount" style="margin-top: 8px; font-size: 12px; color: #333;">
+      Sayfadaki ürün sayısı: -
+    </div>
+    <div style="margin-top: 10px; display: flex; gap: 6px;">
+      <input id="rangeStart" type="number" min="1" placeholder="Başlangıç (örn 10)" style="flex:1; padding: 6px;" />
+      <input id="rangeEnd" type="number" min="1" placeholder="Bitiş (örn 20)" style="flex:1; padding: 6px;" />
+    </div>
+    <div style="font-size: 11px; color: #666; margin-top: 4px;">
+      Boş bırakırsan ilk 20 ürün kontrol edilir.
+    </div>
+  </div>
+  
+  <div id="resultsSection">
+    <button id="backBtn">← Aramaya Dön</button>
+    <div id="progressMsg" style="text-align: center; color: #666; padding: 10px; display: none;">İlk 20 ürün kontrol ediliyor...</div>
+    <div id="notification" style="text-align: center; background: #d4edda; color: #155724; padding: 8px; border-radius: 4px; margin-bottom: 10px; display: none; font-size: 13px;"></div>
+    <div id="resultsList" style="max-height: 300px; overflow-y: auto;"></div>
+    <div class="page-info">
+      <span id="pageInfo">1 / 20</span>
+    </div>
+    <div class="navigation">
+      <button id="prevBtn">← Önceki</button>
+      <button id="addBtn">+ Ekle</button>
+      <button id="downloadBtn" style="background-color: #28a745; color: white; display: none;">📥 CSV İndir</button>
+      <button id="nextBtn">Sonraki →</button>
+    </div>
+  </div>
+  
+  <div id="logsSection" style="display: none; background: #222; color: #0f0; padding: 10px; font-family: monospace; font-size: 11px; max-height: 200px; overflow-y: auto; margin-top: 10px; border-radius: 3px;">
+    <div id="logs"></div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

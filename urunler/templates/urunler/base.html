@@ -2,53 +2,8 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-        <link rel="icon" type="image/png" href="{% static 'urunler/kolaybulexpres-logo.png' %}">
-    <meta name="description" content="AliExpress’teki en uygun fiyatlı ürünleri karşılaştır, güvenle alışveriş yap. Güncel indirimler ve fırsatlar KolaybulEkspres’te!">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Meta Pixel Code -->
-    <!-- Google tag (gtag.js) -->
-    <!-- Google tag (gtag.js) event -->
-    <!-- Google tag (gtag.js) -->
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-JQRG6KHXG5"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-JQRG6KHXG5');
-</script>
-<script>
-  gtag('event', 'conversion_event_outbound_click', {
-    // <event_parameters>
-  });
-</script>
-
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-16694853975">
-</script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'AW-16694853975');
-</script>
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '431764861802318');
-fbq('track', 'PageView');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=431764861802318&ev=PageView&noscript=1"
-/></noscript>
-<!-- End Meta Pixel Code -->
     <title>{% block title %}KOLAY BUL EKSPRES{% endblock %}</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #e0e7ff 0%, #f4f4f4 100%); margin: 0; padding: 0; }
@@ -120,23 +75,13 @@ src="https://www.facebook.com/tr?id=431764861802318&ev=PageView&noscript=1"
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-
     <div class="navbar">
-        
-        <span>KOLAY BUL EKSPRES</span>
-
+            <span>KOLAY BUL EKSPRES</span>
             <a href="{% url 'aliexpress_redirect' %}" target="_blank">
                 <img src="{% static 'urunler/aliexpress-logo.png' %}" alt="AliExpress" style="height:24px; width:auto; vertical-align:middle; background:#fff;" />
                 AliExpress'te Bul
-            </a>
-            <a href="{% url 'amazon_redirect' %}" target="_blank" style="margin-left:16px; background:#232f3e; color:#fff; padding:8px 18px; border-radius:6px; font-weight:600; text-decoration:none; font-size:0.8em; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:inline-flex; align-items:center; gap:8px; align-items:center;">
-                <img src="{% static 'urunler/amazon-logo.png' %}" alt="Amazon" style="height:24px; width:auto; vertical-align:middle; background:#fff;" />
-                Amazon'da Bul
-            </a>
-            <a href="https://rzekl.com/g/pm1aev55cl62ceef436f219aa26f6f/" target="_blank" style="margin-left:16px; background:#1677ff; color:#fff; padding:8px 18px; border-radius:6px; font-weight:600; text-decoration:none; font-size:0.8em; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:inline-flex; align-items:center; gap:8px; align-items:center;">
-                <img src="{% static 'urunler/alibaba-logo.png' %}" alt="Alibaba" style="height:24px; width:auto; vertical-align:middle; background:#fff; border-radius:3px;" />
-                Alibaba'da Bul
-            </a>
+            </a> 
+            
 
                 <!-- Tıklamaları kaydeden link -->
                 <a href="{% url 'amazon_redirect' %}" target="_blank" style="display:none;">
