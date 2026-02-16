@@ -15,5 +15,11 @@
       "matches": ["https://*.aliexpress.com/*"],
       "js": ["content.js"]
     }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["fullscreen.html", "fullscreen.js"],
+      "matches": ["<all_urls>"]
+    }
   ]
 }

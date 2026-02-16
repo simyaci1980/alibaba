@@ -36,19 +36,23 @@ class Command(BaseCommand):
             for row in reader:
                 try:
                     name = row.get('title', row.get('Ad', ''))
-                    description = row.get('description', 'CSV ile eklendi')
+                    description = row.get('description', row.get('Açıklama', 'CSV ile eklendi'))
+                    ana_baslik = row.get('ana_baslik', row.get('Ana Başlık', ''))
+                    alt_baslik = row.get('alt_baslik', row.get('Alt Başlık', ''))
+                    etiketler = row.get('etiketler', row.get('Etiketler', ''))
+                    ozellikler = row.get('ozellikler', row.get('Özellikler', ''))
                     price_str = row.get('totalPrice', row.get('Fiyat', '0'))
                     price = float(price_str.replace(',', '.')) if price_str else 0
-                    
+
                     # Gönderim bilgileri
-                    shipping_fee_str = row.get('shippingFee', '0')
+                    shipping_fee_str = row.get('shippingFee', row.get('Gönderim Ücreti', '0'))
                     shipping_fee = float(shipping_fee_str.replace(',', '.')) if shipping_fee_str else 0
-                    shipping_from = row.get('shippingFrom', 'Çin')
-                    shipping_status = row.get('status', 'Gönderilebiliyor ✅')
+                    shipping_from = row.get('shippingFrom', row.get('Gönderim Yeri', 'Çin'))
+                    shipping_status = row.get('status', '') or row.get('Gönderim Durumu', 'Gönderilebiliyor ✅')
                     can_deliver = '✅' in shipping_status or 'Gönderilebiliyor' in shipping_status
-                    
-                    image_url = row.get('imageUrl', row.get('Resim', ''))
-                    product_url = row.get('productLink', row.get('URL', ''))
+
+                    image_url = row.get('imageUrl', row.get('Resim', row.get('Resim URL', '')))
+                    product_url = row.get('productLink', row.get('Link', row.get('URL', '')))
 
                     # Ürünü tekilleştir: önce kaynak URL, yoksa isim+resim_url, en son isim
                     urun = None
@@ -67,6 +71,10 @@ class Command(BaseCommand):
                             urun.urun_kodu = generate_unique_code()
                         urun.isim = name or urun.isim
                         urun.aciklama = description or urun.aciklama
+                        urun.ana_baslik = ana_baslik or urun.ana_baslik
+                        urun.alt_baslik = alt_baslik or urun.alt_baslik
+                        urun.etiketler = etiketler or urun.etiketler
+                        urun.ozellikler = ozellikler or urun.ozellikler
                         urun.resim_url = image_url or urun.resim_url
                         if product_url and not urun.source_url:
                             urun.source_url = product_url
@@ -76,6 +84,10 @@ class Command(BaseCommand):
                         urun = Urun.objects.create(
                             isim=name,
                             aciklama=description,
+                            ana_baslik=ana_baslik,
+                            alt_baslik=alt_baslik,
+                            etiketler=etiketler,
+                            ozellikler=ozellikler,
                             resim_url=image_url,
                             source_url=product_url or None,
                             urun_kodu=urun_kodu

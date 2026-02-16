@@ -131,21 +131,32 @@ document.getElementById("findBtn").addEventListener("click", async () => {
     // Ara sayfayı gizle, işleniyor mesajı göster
     document.getElementById("searchSection").style.display = "none";
     document.getElementById("resultsSection").style.display = "block";
-    const progressMsg = document.getElementById("progressMsg");
-    if (progressMsg) {
-      progressMsg.style.display = "block";
-      progressMsg.textContent = "Ürünler kontrol ediliyor...";
-    }
     
     addLog("[Popup] Kontrol başladı");
     
-    // 2. Aralık belirle
-    let startIndex = rangeStart ? Math.max(1, rangeStart) : 1;
-    let endIndex = rangeEnd ? Math.max(startIndex, rangeEnd) : Math.min(20, data.cardLinks.length);
+    // 2. Aralık kontrol et
+    if (!rangeStart || !rangeEnd) {
+      alert("⚠️ Lütfen başlangıç ve bitiş aralığını giriniz! Örnek: 1-20");
+      addLog("[Popup] Hata: Aralık girilmedi");
+      document.getElementById("searchSection").style.display = "block";
+      document.getElementById("resultsSection").style.display = "none";
+      return;
+    }
+    
+    // Aralığı valide et
+    let startIndex = Math.max(1, rangeStart);
+    let endIndex = Math.max(startIndex, rangeEnd);
     startIndex = Math.min(startIndex, data.cardLinks.length);
     endIndex = Math.min(endIndex, data.cardLinks.length);
 
     addLog(`[Popup] Aralık: ${startIndex}-${endIndex}`);
+    
+    // progressMsg'i güncelle
+    const progressMsg = document.getElementById("progressMsg");
+    if (progressMsg) {
+      progressMsg.style.display = "block";
+      progressMsg.textContent = `Ürünler kontrol ediliyor (${startIndex}-${endIndex})...`;
+    }
 
     const results = [];
     
@@ -345,13 +356,29 @@ function addCurrentToCsv() {
   selectedResults.push(current);
   addLog(`[CSV] Ürün eklendi: ${current.index} (Toplam: ${selectedResults.length})`);
   
+  // Seçili sayısını güncelle
+  const selectedCountDiv = document.getElementById("selectedCount");
+  const selectedNum = document.getElementById("selectedNum");
+  if (selectedCountDiv && selectedNum) {
+    selectedNum.textContent = selectedResults.length;
+    selectedCountDiv.style.display = "block";
+  }
+  
   // İndir butonunu göster
   const downloadBtn = document.getElementById("downloadBtn");
   if (downloadBtn) {
     downloadBtn.style.display = "block";
+    downloadBtn.classList.remove("hidden"); // Eğer hidden class varsa kaldır
+    addLog("[UI] İndir butonu gösterildi");
+    
+    // Butona otomatik scroll
+    setTimeout(() => {
+      downloadBtn.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 100);
   }
   
-  showNotification(`✅ Ürün eklendi! (Toplam: ${selectedResults.length})`);
+  // Daha belirgin bildirim
+  showNotification(`✅ Eklendi! (${selectedResults.length}/${allResults.length})`);
 }
 
 function showResults(results, tab, cardCount) {
@@ -487,8 +514,31 @@ document.addEventListener("DOMContentLoaded", () => {
   const prevBtn = document.getElementById("prevBtn");
   const nextBtn = document.getElementById("nextBtn");
   const addBtn = document.getElementById("addBtn");
+  const expandBtn = document.getElementById("expandBtn");
   const backBtn = document.getElementById("backBtn");
   const totalCountEl = document.getElementById("totalCount");
+  
+  // Detaylı Görünüm butonu
+  if (expandBtn) {
+    expandBtn.addEventListener("click", () => {
+      if (!allResults || allResults.length === 0) {
+        alert("❌ Henüz ürün bulunamadı! Lütfen önce 'Ürünleri Bul' düğmesini tıklayın.");
+        return;
+      }
+      
+      addLog("[EXPAND] Detaylı görünüm açılıyor...");
+      
+      // Verileri localStorage'a kaydet
+      localStorage.setItem("aliExtensionResults", JSON.stringify(allResults));
+      localStorage.setItem("aliExtensionSelected", JSON.stringify(selectedResults));
+      localStorage.setItem("aliExtensionIndex", currentIndex);
+      
+      // fullscreen.html'i yeni tab'da aç
+      chrome.tabs.create({
+        url: chrome.runtime.getURL("fullscreen.html")
+      });
+    });
+  }
 
   // Popup açıldığında ürün sayısını göster
   (async () => {
@@ -532,7 +582,9 @@ document.addEventListener("DOMContentLoaded", () => {
   
   if (addBtn) {
     addBtn.addEventListener("click", () => {
+      addLog("[USER] Ekle butonguna tıklandı");
       addCurrentToCsv();
+      addLog("[USER] addCurrentToCsv() tamamlandı");
     });
   }
   
@@ -546,6 +598,16 @@ document.addEventListener("DOMContentLoaded", () => {
       const csv = buildCsv(selectedResults);
       downloadCsv(csv);
       showNotification(`✅ CSV indirildi! (${selectedResults.length} ürün)`);
+      
+      // İndirme sonrası reset et
+      selectedResults = [];
+      const selectedCountDiv = document.getElementById("selectedCount");
+      const selectedNum = document.getElementById("selectedNum");
+      if (selectedCountDiv && selectedNum) {
+        selectedNum.textContent = "0";
+        selectedCountDiv.style.display = "none";
+      }
+      downloadBtn.style.display = "none";
     });
   }
   
@@ -554,6 +616,12 @@ document.addEventListener("DOMContentLoaded", () => {
       currentIndex = 0;
       allResults = [];
       selectedResults = [];
+      
+      // Seçilen sayısını gizle
+      const selectedCountDiv = document.getElementById("selectedCount");
+      if (selectedCountDiv) {
+        selectedCountDiv.style.display = "none";
+      }
       
       // İndir butonunu gizle
       const downloadBtn = document.getElementById("downloadBtn");

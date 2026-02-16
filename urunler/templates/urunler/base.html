@@ -5,11 +5,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}KOLAY BUL EKSPRES{% endblock %}</title>
+    
+    <!-- Favicon - Tüm Cihazlar İçin -->
+    <link rel="icon" type="image/x-icon" href="{% static 'urunler/favicon.ico' %}">
+    <link rel="shortcut icon" type="image/x-icon" href="{% static 'urunler/favicon.ico' %}">
+    
+    <!-- Standard Favicons -->
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'urunler/favicon-16x16.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'urunler/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="96x96" href="{% static 'urunler/favicon-96x96.png' %}">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" sizes="57x57" href="{% static 'urunler/apple-icon-57x57.png' %}">
+    <link rel="apple-touch-icon" sizes="60x60" href="{% static 'urunler/apple-icon-60x60.png' %}">
+    <link rel="apple-touch-icon" sizes="72x72" href="{% static 'urunler/apple-icon-72x72.png' %}">
+    <link rel="apple-touch-icon" sizes="76x76" href="{% static 'urunler/apple-icon-76x76.png' %}">
+    <link rel="apple-touch-icon" sizes="114x114" href="{% static 'urunler/apple-icon-114x114.png' %}">
+    <link rel="apple-touch-icon" sizes="120x120" href="{% static 'urunler/apple-icon-120x120.png' %}">
+    <link rel="apple-touch-icon" sizes="144x144" href="{% static 'urunler/apple-icon-144x144.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'urunler/apple-icon-180x180.png' %}">
+    
+    <!-- Android Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'urunler/android-icon-192x192.png' %}">
+    
+    <!-- MS Tiles -->
+    <meta name="msapplication-TileColor" content="#f0ec09">
+    <meta name="msapplication-TileImage" content="{% static 'urunler/ms-icon-144x144.png' %}">
+    
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="{% static 'urunler/manifest.json' %}">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#000000">
+    
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #e0e7ff 0%, #f4f4f4 100%); margin: 0; padding: 0; }
         .navbar {
             width: 100%;
-            background: linear-gradient(90deg, #e08206 0%, #60a5fa 100%);
+            background: black ;
             color: #f0ec09;
             padding: 8px 0;
             text-align: center;
@@ -71,22 +104,15 @@
             margin-top: 40px;
         }
         .footer span { color: #bbb; font-size: 0.95em; }
+        .conteiner { background: black; }
+
     </style>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
     <div class="navbar">
             <span>KOLAY BUL EKSPRES</span>
-            <a href="{% url 'aliexpress_redirect' %}" target="_blank">
-                <img src="{% static 'urunler/aliexpress-logo.png' %}" alt="AliExpress" style="height:24px; width:auto; vertical-align:middle; background:#fff;" />
-                AliExpress'te Bul
-            </a> 
-            
 
-                <!-- Tıklamaları kaydeden link -->
-                <a href="{% url 'amazon_redirect' %}" target="_blank" style="display:none;">
-                    Amazon'a Git (Takipli)
-            </a>
     </div>
     {% block content %}{% endblock %}
     <div class="footer">

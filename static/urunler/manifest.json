@@ -1,10 +1,10 @@
 {
-  "name": "KolaybulEkspres",
+  "name": "KOLAY BUL EKSPRES",
   "short_name": "KolaybulExp",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#e08206",
+  "theme_color": "#000000",
   "scope": "/",
   "icons": [
     {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <style>
-    body { width: 400px; padding: 15px; font-family: Arial; margin: 0; }
+    body { width: 900px; padding: 15px; font-family: Arial; margin: 0; }
     
     #searchSection { display: block; }
     #resultsSection { display: none; }
@@ -11,11 +11,34 @@
     button { width: 100%; padding: 10px; cursor: pointer; margin: 5px 0; }
     
     .result-card {
-      background: #f5f5f5;
+      background: white;
       border: 2px solid #ddd;
       padding: 15px;
       border-radius: 5px;
       margin: 10px 0;
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+    }
+    
+    .result-card:hover {
+      border-color: #007bff;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .result-image {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 4px;
+      background: #f0f0f0;
+    }
+    
+    .result-content {
+      display: flex;
+      flex-direction: column;
     }
     
     .result-header {
@@ -62,11 +85,11 @@
       Sayfadaki ürün sayısı: -
     </div>
     <div style="margin-top: 10px; display: flex; gap: 6px;">
-      <input id="rangeStart" type="number" min="1" placeholder="Başlangıç (örn 10)" style="flex:1; padding: 6px;" />
+      <input id="rangeStart" type="number" min="1" placeholder="Başlangıç (örn 1)" style="flex:1; padding: 6px;" />
       <input id="rangeEnd" type="number" min="1" placeholder="Bitiş (örn 20)" style="flex:1; padding: 6px;" />
     </div>
-    <div style="font-size: 11px; color: #666; margin-top: 4px;">
-      Boş bırakırsan ilk 20 ürün kontrol edilir.
+    <div style="font-size: 11px; color: #c92a2a; margin-top: 4px; font-weight: bold;">
+      ⚠️ Aralık zorunlu: Başlangıç ve bitiş değerini giriniz!
     </div>
   </div>
   
@@ -74,14 +97,18 @@
     <button id="backBtn">← Aramaya Dön</button>
     <div id="progressMsg" style="text-align: center; color: #666; padding: 10px; display: none;">İlk 20 ürün kontrol ediliyor...</div>
     <div id="notification" style="text-align: center; background: #d4edda; color: #155724; padding: 8px; border-radius: 4px; margin-bottom: 10px; display: none; font-size: 13px;"></div>
-    <div id="resultsList" style="max-height: 300px; overflow-y: auto;"></div>
+    <div id="resultsList" style="max-height: 600px; overflow-y: auto; background: #fafafa; padding: 10px; border-radius: 5px;"></div>
     <div class="page-info">
       <span id="pageInfo">1 / 20</span>
     </div>
+    <div style="background: #e7f3ff; color: #004085; padding: 8px; border-radius: 4px; margin: 10px 0; font-size: 12px; display: none; font-weight: bold;" id="selectedCount">
+      ✓ <strong id="selectedNum">0</strong> ürün seçildi
+    </div>
+    <button id="expandBtn" style="width: 100%; padding: 10px; margin: 5px 0; background-color: #667eea; color: white; cursor: pointer; border: none; border-radius: 4px; font-weight: 600; font-size: 14px;">📖 Detaylı Görünüm</button>
     <div class="navigation">
       <button id="prevBtn">← Önceki</button>
-      <button id="addBtn">+ Ekle</button>
-      <button id="downloadBtn" style="background-color: #28a745; color: white; display: none;">📥 CSV İndir</button>
+      <button id="addBtn" style="background-color: #007bff; color: white;">+ Ekle</button>
+      <button id="downloadBtn" style="background-color: #28a745; color: white; font-weight: bold; display: none; font-size: 14px;">📥 CSV İndir</button>
       <button id="nextBtn">Sonraki →</button>
     </div>
   </div>

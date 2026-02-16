@@ -180,20 +180,17 @@
             min-height: 18px;
         }
         .product-title {
-            display: -webkit-box;
-            -webkit-line-clamp: 1;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
             font-weight: 600;
-            font-size: 0.6em;
-            line-height: 1.2;
+            font-size: 0.7em;
+            line-height: 1.3;
+            word-break: break-word;
         }
         .product-desc {
             flex: 1;
             display: flex;
             align-items: flex-start;
             overflow: hidden;
-            font-size: 0.5em;
+            font-size: 0.6em;
             line-height: 1.25;
             word-wrap: break-word;
             white-space: normal;
@@ -489,7 +486,7 @@
                     <img src="{{ urun.resim_url }}" alt="{{ urun.isim }}" style="width:100%; height:240px; margin-bottom:14px; display:block; border-radius:8px; box-shadow:0 6px 16px rgba(0,0,0,0.12); object-fit:contain; background:#ffffff;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
                     <div style="width:100%; height:240px; margin-bottom:14px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius:8px; display:none; align-items:center; justify-content:center; color:#fff; font-size:0.9em; font-weight:600; text-align:center; padding:14px; box-shadow:0 6px 16px rgba(0,0,0,0.12);">{{ urun.isim|truncatewords:3 }}</div>
                 </div>
-            {% elif urun.resimler.all|length > 0 %}
+            {% elif urun.resimler.all|length > 0 and urun.resimler.all.0.resim %}
                 <div class="slider product-media" style="position:relative; margin-bottom:14px;">
                     <img src="{{ urun.resimler.all.0.resim.url }}" alt="{{ urun.isim }}" class="slider-img" style="width:100%; max-height:200px; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.07); object-fit:contain; background:#ffffff;" />
                     {% if urun.resimler.all|length > 1 %}
@@ -500,7 +497,7 @@
                         (function() {
                             var slider = document.currentScript.parentElement;
                             var images = [
-                                {% for resim in urun.resimler.all %}'{{ resim.resim.url }}',{% endfor %}
+                                {% for resim in urun.resimler.all %}{% if resim.resim.url %}"{{ resim.resim.url|escapejs }}"{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}
                             ];
                             var img = slider.querySelector('.slider-img');
                             var prev = slider.querySelector('.slider-prev');
@@ -530,12 +527,18 @@
                 <div style="text-align:center; font-size:0.78em; color:#a0aec0; font-weight:500; margin:6px 0 4px 0; letter-spacing:1px;">{{ urun.urun_kodu }}</div>
                 {% endif %}
 
-                {% if urun.aciklama and urun.aciklama != 'CSV ile eklendi' %}
-                <div class="product-title" style="text-align:center; font-weight:600; margin-bottom:6px; color:#1f2937; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%;">{{ urun.isim }}</div>
-                <div class="product-desc" style="text-align:center; font-weight:600; color:#4b5563; margin-bottom:10px;">{{ urun.aciklama }}</div>
+                {% if urun.ana_baslik %}
+                <div class="product-title" style="text-align:center; font-weight:700; margin-bottom:4px; color:#2563eb; font-size:0.9em; word-break:break-word;">{{ urun.ana_baslik }}</div>
                 {% else %}
-                <div class="product-title" style="text-align:center; font-weight:600; margin-bottom:6px; color:#1f2937; word-break:break-word;">{{ urun.isim }}</div>
+                <div class="product-title" style="text-align:center; font-weight:600; margin-bottom:4px; color:#1f2937; word-break:break-word;">{{ urun.isim }}</div>
                 {% endif %}
+                {% if urun.alt_baslik %}
+                <div style="text-align:center; font-size:0.7em; color:#6b7280; font-weight:500; margin-bottom:2px;">{{ urun.alt_baslik }}</div>
+                {% endif %}
+                {% if urun.aciklama and urun.aciklama != 'CSV ile eklendi' %}
+                <div class="product-desc" style="text-align:center; color:#4b5563; margin-bottom:8px;">{{ urun.aciklama }}</div>
+                {% endif %}
+                {# Özellikler ve etiketler ürün kartında gösterilmeyecek #}
             </div>
             </div>
             <div class="stores" style="flex-direction:column; width:100%; padding-top:6px; margin-top:auto;">

@@ -1,0 +1,427 @@
+// Global değişkenler
+let allResults = [];
+let selectedResults = [];
+let currentIndex = 0;
+let editedValues = {}; // Değiştirilen değerleri sakla
+
+// Log mesajlarını göster
+function addLog(message) {
+  console.log(message);
+  const logsDiv = document.getElementById("logs");
+  if (logsDiv) {
+    logsDiv.style.display = "block";
+    logsDiv.innerHTML += message + "<br>";
+    logsDiv.scrollTop = logsDiv.scrollHeight;
+    
+    // 5 saniye sonra gizle
+    setTimeout(() => {
+      logsDiv.style.display = "none";
+      logsDiv.innerHTML = "";
+    }, 5000);
+  }
+}
+
+// Edit modunu başlat
+function startEdit(fieldName) {
+  const viewElement = document.getElementById(fieldName + "Detail");
+  const editRow = document.getElementById(fieldName + "EditRow");
+  const editField = document.getElementById(fieldName + "Edit");
+  
+  if (viewElement && editRow && editField) {
+    viewElement.style.display = "none";
+    editRow.style.display = "block";
+    editField.value = viewElement.textContent;
+    editField.focus();
+    editField.select();
+  }
+}
+
+// Edit kaydet
+function saveEdit(fieldName) {
+  const editRow = document.getElementById(fieldName + "EditRow");
+  const editField = document.getElementById(fieldName + "Edit");
+  const viewElement = document.getElementById(fieldName + "Detail");
+  
+  if (editField && viewElement && editRow) {
+    const newValue = editField.value.trim();
+    viewElement.textContent = newValue;
+    editedValues[fieldName] = newValue; // Değişiklikleri sakla
+    
+    viewElement.style.display = "block";
+    editRow.style.display = "none";
+    
+    addLog(`[EDIT] ${fieldName} güncellendi: ${newValue.substring(0, 50)}`);
+  }
+}
+
+// Edit iptal
+function cancelEdit(fieldName) {
+  const editRow = document.getElementById(fieldName + "EditRow");
+  const viewElement = document.getElementById(fieldName + "Detail");
+  
+  if (viewElement && editRow) {
+    viewElement.style.display = "block";
+    editRow.style.display = "none";
+  }
+}
+
+// localStorage'dan verileri yükle
+function loadData() {
+  try {
+    const resultsJson = localStorage.getItem("aliExtensionResults");
+    const selectedJson = localStorage.getItem("aliExtensionSelected");
+    const indexJson = localStorage.getItem("aliExtensionIndex");
+    
+    if (resultsJson) {
+      allResults = JSON.parse(resultsJson);
+      addLog(`[DATA] ${allResults.length} ürün yüklendi`);
+    }
+    
+    if (selectedJson) {
+      selectedResults = JSON.parse(selectedJson);
+      addLog(`[DATA] ${selectedResults.length} seçili ürün yüklendi`);
+    }
+    
+    if (indexJson) {
+      currentIndex = parseInt(indexJson, 10);
+      addLog(`[DATA] Index: ${currentIndex}`);
+    }
+    
+    if (allResults.length === 0) {
+      document.querySelector(".container").innerHTML = `
+        <div style="grid-column: 1/-1; display: flex; align-items: center; justify-content: center;">
+          <div style="text-align: center; padding: 40px;">
+            <h1>❌ Veri Bulunamadı</h1>
+            <p style="margin-top: 20px; color: #666;">Lütfen popup'tan ürünleri "Bul" düğmesini tıklayıp daha sonra "Genişletilmiş Görünüm"ü açın.</p>
+            <button onclick="window.close();" style="margin-top: 20px; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Kapat</button>
+          </div>
+        </div>
+      `;
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    addLog(`[ERROR] Veri yükleme hatası: ${error.message}`);
+    return false;
+  }
+}
+
+// Ürünü göster
+function displayProduct(index) {
+  if (!allResults || index < 0 || index >= allResults.length) {
+    addLog(`[ERROR] Geçersiz index: ${index}`);
+    return;
+  }
+  
+
+  // Önce eklenmiş/güncellenmiş ürün var mı kontrol et
+  let product = allResults[index];
+  const selectedIndex = selectedResults.findIndex(r => r.index === product.index && r.productLink === product.productLink);
+  if (selectedIndex !== -1) {
+    product = { ...product, ...selectedResults[selectedIndex] };
+  }
+  currentIndex = index;
+  editedValues = {}; // Yeni ürün gösterilince düzenlemeleri sıfırla
+
+  // Görseli ayarla
+  const imgElement = document.getElementById("productImage");
+  const imgUrlElement = document.getElementById("imageUrl");
+  if (product.imageUrl) {
+    imgElement.src = product.imageUrl;
+    imgUrlElement.textContent = product.imageUrl;
+  } else {
+    imgElement.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23ccc' width='200' height='200'/%3E%3Ctext x='50%' y='50%' text-anchor='middle' dy='.3em' fill='%23999' font-size='14'%3EGöbörsel yok%3C/text%3E%3C/svg%3E";
+    imgUrlElement.textContent = "(Görsel Bulunamadı)";
+  }
+
+  // Başlığı ayarla
+  document.getElementById("productIndex").textContent = `ürün #${product.index}`;
+  document.getElementById("productTitle").textContent = product.title || "Başlık Yok";
+
+  // Input field'leri doldur
+  const titleInput = document.getElementById("titleInput");
+  const descriptionInput = document.getElementById("descriptionInput");
+  const shippingInput = document.getElementById("shippingInput");
+  const anaTitleInput = document.getElementById("anaTitleInput");
+  const subTitleInput = document.getElementById("subTitleInput");
+  const tagsInput = document.getElementById("tagsInput");
+  const featuresInput = document.getElementById("featuresInput");
+
+  titleInput.value = product.title || "";
+  anaTitleInput.value = product.anaTitle || "";
+  subTitleInput.value = product.subTitle || "";
+  tagsInput.value = product.tags || "";
+  featuresInput.value = product.features || "";
+
+  // Açıklamayı ayarla
+  const descriptionRow = document.getElementById("descriptionRow");
+  if (product.description) {
+    descriptionRow.style.display = "flex";
+    descriptionInput.style.display = "block";
+    descriptionInput.value = product.description;
+    descriptionInput.placeholder = "Ürün açıklamasını düzenle...";
+  } else {
+    descriptionRow.style.display = "none";
+    descriptionInput.style.display = "none";
+  }
+
+  shippingInput.value = product.shippingFrom || "";
+  shippingInput.placeholder = "Gönderim yerini düzenle (örn: Çin, Fransa)...";
+  
+  // Durum
+  const statusBadge = document.getElementById("statusBadge");
+  const isError = product.status.includes('❌');
+  statusBadge.textContent = product.status;
+  statusBadge.className = isError ? "status-badge error" : "status-badge ok";
+  
+  // Fiyatlar ve gönderim (salt okunur)
+  document.getElementById("priceDetail").textContent = product.price + " TL" || "-";
+  
+  if (product.shippingFee && parseFloat(product.shippingFee) > 0) {
+    document.getElementById("shippingFeeDetail").textContent = product.shippingFee + " TL";
+    document.getElementById("totalPriceDetail").textContent = product.totalPrice + " TL";
+  } else {
+    document.getElementById("shippingFeeDetail").textContent = "Ücretsiz";
+    document.getElementById("totalPriceDetail").textContent = product.price + " TL";
+  }
+  
+  // Link
+  if (product.productLink) {
+    document.getElementById("linkRow").style.display = "flex";
+    document.getElementById("productLink").href = product.productLink;
+  }
+  
+  // Sayfa bilgisi
+  document.getElementById("pageCounter").textContent = `${index + 1} / ${allResults.length}`;
+  
+  // Seçili sayısını güncelle
+  const selectedCountDiv = document.getElementById("selectedCount");
+  const selectedNum = document.getElementById("selectedNum");
+  if (selectedCountDiv && selectedNum) {
+    selectedNum.textContent = selectedResults.length;
+    if (selectedResults.length > 0) {
+      selectedCountDiv.style.display = "block";
+    } else {
+      selectedCountDiv.style.display = "none";
+    }
+  }
+  
+  addLog(`[DISPLAY] Ürün #${product.index} gösterildi`);
+}
+
+// CSV oluştur
+function buildCsv(results) {
+  const lines = [
+    "Index,Başlık,Ana Başlık,Alt Başlık,Etiketler,Özellikler,Açıklama,Fiyat,Gönderim Yeri,Gönderim Ücreti,Toplam Fiyat,Resim URL,Link"
+  ];
+  
+  results.forEach((r) => {
+    const toCsvValue = (v) => {
+      if (v === null || v === undefined) return "";
+      const str = v.toString();
+      if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+        return '"' + str.replace(/"/g, '""') + '"';
+      }
+      return str;
+    };
+    
+    const values = [
+      r.index,
+      r.title,
+      r.anaTitle,
+      r.subTitle,
+      r.tags,
+      r.features,
+      r.description,
+      r.price,
+      r.shippingFrom,
+      r.shippingFee,
+      r.totalPrice,
+      r.imageUrl,
+      r.productLink
+    ].map(toCsvValue);
+    lines.push(values.join(","));
+  });
+  
+  return lines.join("\n");
+}
+
+// CSV İndir
+function downloadCsv(content) {
+  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "aliexpress-secimler.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  
+  addLog(`[CSV] ${selectedResults.length} ürün indirildi`);
+}
+
+// Ürünü ekle
+function addCurrentProduct() {
+  if (currentIndex < 0 || currentIndex >= allResults.length) {
+    addLog("[ERROR] Geçersiz ürün");
+    return;
+  }
+  
+  const product = allResults[currentIndex];
+  
+  // Zaten eklendi mi? (güncelleyeceğiz!)
+  let existingIndex = selectedResults.findIndex((r) => r.index === product.index && r.productLink === product.productLink);
+  
+  // Input field'lerden değerleri oku
+  const titleInput = document.getElementById("titleInput");
+  const descriptionInput = document.getElementById("descriptionInput");
+  const shippingInput = document.getElementById("shippingInput");
+  const anaTitleInput = document.getElementById("anaTitleInput");
+  const subTitleInput = document.getElementById("subTitleInput");
+  const tagsInput = document.getElementById("tagsInput");
+  const featuresInput = document.getElementById("featuresInput");
+  
+  // Düzenlenen değerleri uygula
+  const productToAdd = { ...product };
+  
+  if (titleInput.value !== product.title) {
+    productToAdd.title = titleInput.value;
+    addLog(`[EDIT] Başlık güncellendi: ${titleInput.value.substring(0, 40)}`);
+  }
+
+  if (descriptionInput.value !== product.description) {
+    productToAdd.description = descriptionInput.value;
+    addLog(`[EDIT] Açıklama güncellendi: ${descriptionInput.value.substring(0, 40)}`);
+  }
+
+  if (shippingInput.value !== product.shippingFrom) {
+    productToAdd.shippingFrom = shippingInput.value;
+    addLog(`[EDIT] Gönderim yeri güncellendi: ${shippingInput.value}`);
+  }
+
+  // Ana başlık, alt başlık, etiketler, özellikler inputlarını da ekle
+  productToAdd.anaTitle = anaTitleInput.value;
+  productToAdd.subTitle = subTitleInput.value;
+  productToAdd.tags = tagsInput.value;
+  productToAdd.features = featuresInput.value;
+  
+  if (existingIndex !== -1) {
+    // Zaten var, güncelle
+    selectedResults[existingIndex] = productToAdd;
+    addLog(`[CSV] Ürün güncellendi: ${product.index} (Toplam: ${selectedResults.length})`);
+    alert(`✅ Ürün güncellendi!\n(${selectedResults.length}/${allResults.length})`);
+  } else {
+    // Yeni ürün, ekle
+    selectedResults.push(productToAdd);
+    addLog(`[CSV] Ürün eklendi: ${product.index} (Toplam: ${selectedResults.length})`);
+    alert(`✅ Ürün eklendi!\n(${selectedResults.length}/${allResults.length})`);
+  }
+  
+  // UI güncelle
+  const selectedCountDiv = document.getElementById("selectedCount");
+  const selectedNum = document.getElementById("selectedNum");
+  const downloadBtn = document.getElementById("downloadBtn");
+  
+  if (selectedCountDiv && selectedNum) {
+    selectedNum.textContent = selectedResults.length;
+    selectedCountDiv.style.display = "block";
+  }
+  
+  if (downloadBtn) {
+    downloadBtn.style.display = "block";
+  }
+  
+  // localStorage'a kaydet
+  localStorage.setItem("aliExtensionSelected", JSON.stringify(selectedResults));
+  
+  // Düzenleme verilerini sıfırla
+  editedValues = {};
+}
+
+// Keyboard kısayolları
+window.addEventListener("keydown", function(e) {
+  const active = document.activeElement;
+  // Eğer bir input veya textarea odakta ise yön tuşları ürün değiştirmesin
+  if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) {
+    // Sadece Enter tuşu inputlarda çalışsın, diğerleri engellensin
+    if (e.key.toLowerCase() === 'a' || e.key === 'ArrowLeft' || e.key.toLowerCase() === 'd' || e.key === 'ArrowRight') {
+      return;
+    }
+    // Eğer textarea odakta ve Enter'a basıldıysa ürün eklenmesin, sadece yeni satır eklensin
+    if (active.tagName === "TEXTAREA" && e.key === "Enter") {
+      return; // Sadece textarea'da yeni satır ekle
+    }
+    // Eğer input odakta ve Enter'a basıldıysa ürün ekle
+    if (active.tagName === "INPUT" && e.key === "Enter") {
+      document.getElementById("addBtn").click();
+      return;
+    }
+  }
+  // ...eski yön tuşu kodu...
+  if (e.key.toLowerCase() === 'a' || e.key === 'ArrowLeft') {
+    if (currentIndex > 0) {
+      currentIndex--;
+      displayProduct(currentIndex);
+    }
+  } else if (e.key.toLowerCase() === 'd' || e.key === 'ArrowRight') {
+    if (currentIndex < allResults.length - 1) {
+      currentIndex++;
+      displayProduct(currentIndex);
+    }
+  } else if (e.key === 'Enter') {
+    // Sadece input/textarea odakta değilse ürün ekle
+    if (!active || (active.tagName !== "INPUT" && active.tagName !== "TEXTAREA")) {
+      document.getElementById("addBtn").click();
+    }
+  }
+});
+
+// DOM Yüklendikten sonra
+document.addEventListener("DOMContentLoaded", () => {
+  addLog("[INIT] Sayfa yüklendi");
+  
+  if (!loadData()) {
+    return;
+  }
+  
+  displayProduct(currentIndex);
+  
+  // Butonlar
+  document.getElementById("prevBtn").addEventListener("click", () => {
+    if (currentIndex > 0) {
+      currentIndex--;
+      displayProduct(currentIndex);
+    }
+  });
+  
+  document.getElementById("nextBtn").addEventListener("click", () => {
+    if (currentIndex < allResults.length - 1) {
+      currentIndex++;
+      displayProduct(currentIndex);
+    }
+  });
+  
+  document.getElementById("addBtn").addEventListener("click", () => {
+    addCurrentProduct();
+    // Otomatik sonraki ürüne geçiş kaldırıldı. Kullanıcı isterse manuel geçiş yapacak.
+  });
+  
+  document.getElementById("downloadBtn").addEventListener("click", () => {
+    if (selectedResults.length === 0) {
+      alert("⚠️ Henüz hiçbir ürün eklemedin!");
+      return;
+    }
+    const csv = buildCsv(selectedResults);
+    downloadCsv(csv);
+    alert(`✅ CSV indirildi! (${selectedResults.length} ürün)`);
+    
+    // Reset
+    selectedResults = [];
+    localStorage.setItem("aliExtensionSelected", JSON.stringify(selectedResults));
+    document.getElementById("downloadBtn").style.display = "none";
+    document.getElementById("selectedCount").style.display = "none";
+    displayProduct(currentIndex);
+  });
+});

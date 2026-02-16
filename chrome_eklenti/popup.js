@@ -9,6 +9,21 @@
 let currentProduct = null;
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Inputları localStorage'dan yükle
+    const mainTitleInput = document.getElementById('main-title');
+    const subTitleInput = document.getElementById('sub-title');
+    const tagsInput = document.getElementById('tags');
+    const featuresInput = document.getElementById('features');
+    if (mainTitleInput && localStorage.getItem('mainTitle')) mainTitleInput.value = localStorage.getItem('mainTitle');
+    if (subTitleInput && localStorage.getItem('subTitle')) subTitleInput.value = localStorage.getItem('subTitle');
+    if (tagsInput && localStorage.getItem('tags')) tagsInput.value = localStorage.getItem('tags');
+    if (featuresInput && localStorage.getItem('features')) featuresInput.value = localStorage.getItem('features');
+
+    // Input değişikliklerini localStorage'a kaydet
+    if (mainTitleInput) mainTitleInput.addEventListener('input', e => localStorage.setItem('mainTitle', e.target.value));
+    if (subTitleInput) subTitleInput.addEventListener('input', e => localStorage.setItem('subTitle', e.target.value));
+    if (tagsInput) tagsInput.addEventListener('input', e => localStorage.setItem('tags', e.target.value));
+    if (featuresInput) featuresInput.addEventListener('input', e => localStorage.setItem('features', e.target.value));
     // Ürün bilgilerini çek
     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
         chrome.scripting.executeScript({
@@ -59,17 +74,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Ürünü ekle butonu
     document.getElementById('add-product').onclick = function() {
-        if (!currentProduct) {
-            document.getElementById('ekle-bilgi').innerText = 'Ürün bilgisi alınamadı!';
-            setTimeout(()=>{document.getElementById('ekle-bilgi').innerText = ''}, 1500);
-            return;
+        // currentProduct yoksa bile, inputlardan veri alınarak ürün eklenebilsin
+        let productToSave = {};
+        if (currentProduct) {
+            productToSave = { ...currentProduct };
         }
         // Manuel fiyat kontrolü
         const manualPrice = document.getElementById('manual-price').value;
-        let productToSave = { ...currentProduct };
+        const mainTitle = mainTitleInput ? mainTitleInput.value : '';
+        const subTitle = subTitleInput ? subTitleInput.value : '';
+        const tags = tagsInput ? tagsInput.value : '';
+        const features = featuresInput ? featuresInput.value : '';
         if (manualPrice && !isNaN(manualPrice)) {
             productToSave.price = manualPrice;
         }
+        productToSave.mainTitle = mainTitle;
+        productToSave.subTitle = subTitle;
+        productToSave.tags = tags;
+        productToSave.features = features;
         chrome.storage.local.get({urunler: []}, function(result) {
             const urunler = result.urunler;
             urunler.push(productToSave);
@@ -78,6 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(()=>{document.getElementById('ekle-bilgi').innerText = ''}, 1500);
             });
         });
+        // Hiçbir input veya ekran değişikliği yapılmaz, kullanıcı istediği ürüne kendisi geçer.
     };
 
     // CSV olarak indir butonu
@@ -89,11 +112,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(()=>{document.getElementById('ekle-bilgi').innerText = ''}, 1500);
                 return;
             }
-            let csv = 'Ad,Fiyat,Resim,URL\n';
-            // Sadece ürün adı tırnaklanacak, diğer alanlar sade kalacak
-            let escape = v => `"${String(v).replace(/"/g, '""')}"`;
+            let csv = 'Ad,Ana Başlık,Alt Başlık,Etiketler,Özellikler,Fiyat,Resim,URL\n';
+            let escape = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
             csv += urunler.map(u => [
                 escape(u.name),
+                escape(u.mainTitle),
+                escape(u.subTitle),
+                escape(u.tags),
+                escape(u.features),
                 u.price,
                 u.image,
                 u.url

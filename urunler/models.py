@@ -13,9 +13,13 @@ class Magaza(models.Model):
 class Urun(models.Model):
 	isim = models.CharField(max_length=200)
 	aciklama = models.TextField(blank=True)
+	ana_baslik = models.CharField(max_length=200, blank=True, verbose_name="Ana Başlık")
+	alt_baslik = models.CharField(max_length=200, blank=True, verbose_name="Alt Başlık")
+	etiketler = models.CharField(max_length=500, blank=True, verbose_name="Etiketler")
+	ozellikler = models.TextField(blank=True, verbose_name="Özellikler")
 	resim = models.ImageField(upload_to='urun_resimleri/', blank=True, null=True)  # Dosya yükleme için
 	resim_url = models.URLField(max_length=500, blank=True, null=True, help_text='Resim URL (yer kaplamaz)')  # URL için
-	source_url = models.URLField(max_length=500, blank=True, null=True, unique=True, help_text='Ürünün kaynak URL adresi (tekrarları önler)')
+	source_url = models.URLField(max_length=1000, blank=True, null=True, unique=True, help_text='Ürünün kaynak URL adresi (tekrarları önler)')
 	urun_kodu = models.CharField(max_length=12, unique=True, blank=True, null=True, help_text='Kısa arama kodu (otomatik)')
 
 	def __str__(self):
@@ -43,7 +47,7 @@ class Fiyat(models.Model):
 	magaza = models.ForeignKey(Magaza, on_delete=models.CASCADE)
 	fiyat = models.DecimalField(max_digits=10, decimal_places=2)
 	para_birimi = models.CharField(max_length=3, choices=PARA_BIRIMI_CHOICES, default='TL', help_text='Fiyat hangi para biriminde')
-	affiliate_link = models.URLField()
+	affiliate_link = models.URLField(max_length=1000)
 	
 	# Gönderim bilgileri
 	gonderim_ucreti = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text='Kargo ücreti')

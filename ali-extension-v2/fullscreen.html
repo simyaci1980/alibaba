@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ALİ ÜRÜN ANALİZ - Detaylı Görünüm</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 80vh;
+    }
+    
+    .left-panel {
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #f8f9fa;
+      border-right: 2px solid #e0e0e0;
+    }
+    
+    .product-image {
+      max-width: 400px;
+      max-height: 400px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: white;
+      padding: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    
+    .image-url {
+      font-size: 11px;
+      color: #999;
+      text-align: center;
+      word-break: break-all;
+      max-width: 400px;
+      max-height: 60px;
+      overflow-y: auto;
+    }
+    
+    .right-panel {
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    .product-header {
+      margin-bottom: 30px;
+    }
+    
+    .product-index {
+      font-size: 14px;
+      color: #667eea;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    
+    .product-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1.3;
+      margin-bottom: 20px;
+      word-break: break-word;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    
+    .status-badge.ok {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .status-badge.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    .product-details {
+      margin: 30px 0;
+    }
+    
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 15px 0;
+      border-bottom: 1px solid #e0e0e0;
+      align-items: center;
+    }
+    
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+    
+    .detail-label {
+      font-weight: 600;
+      color: #666;
+      font-size: 15px;
+    }
+    
+    .detail-value {
+      font-size: 18px;
+      color: #1a1a1a;
+      font-weight: 500;
+    }
+    
+    .detail-value.description {
+      display: block;
+      color: #555;
+      font-size: 14px;
+      line-height: 1.5;
+      word-break: break-word;
+      padding: 10px;
+      background: #f9f9f9;
+      border-left: 3px solid #667eea;
+      margin-top: 8px;
+    }
+    
+    .detail-value.highlight {
+      color: #dc3545;
+      font-weight: 700;
+      font-size: 24px;
+    }
+    
+    .editable {
+      position: relative;
+      padding: 8px;
+      border-radius: 4px;
+      background: white;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    
+    .editable:hover {
+      background: #f5f5f5;
+    }
+    
+    .editable.edit-mode {
+      background: #e7f3ff;
+      border: 2px solid #007bff;
+    }
+    
+    textarea.edit-field {
+      width: 100%;
+      border: 2px solid #007bff;
+      border-radius: 4px;
+      padding: 10px;
+      font-family: inherit;
+      font-size: 15px;
+      resize: vertical;
+      min-height: 60px;
+    }
+    
+    .edit-buttons {
+      display: none;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    
+    .edit-buttons.visible {
+      display: flex;
+    }
+    
+    .edit-buttons button {
+      flex: 1;
+      padding: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-save-edit {
+      background: #28a745;
+      color: white;
+    }
+    
+    .btn-save-edit:hover {
+      background: #218838;
+    }
+    
+    .btn-cancel-edit {
+      background: #e0e0e0;
+      color: #333;
+    }
+    
+    .btn-cancel-edit:hover {
+      background: #d0d0d0;
+    }
+    
+    .edit-indicator {
+      display: inline-block;
+      font-size: 12px;
+      color: #007bff;
+      margin-left: 8px;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    
+    .edit-indicator.show {
+      opacity: 1;
+    }
+    
+    .controls {
+      margin-top: 40px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    
+    button {
+      padding: 14px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .btn-add {
+      background: #007bff;
+      color: white;
+      grid-column: 1;
+    }
+    
+    .btn-add:hover {
+      background: #0056b3;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,123,255,0.4);
+    }
+    
+    .btn-download {
+      background: #28a745;
+      color: white;
+      grid-column: 2;
+    }
+    
+    .btn-download:hover {
+      background: #218838;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(40,167,69,0.4);
+    }
+    
+    .navigation {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .btn-nav {
+      flex: 1;
+      background: #e0e0e0;
+      color: #333;
+      padding: 10px;
+      font-size: 14px;
+    }
+    
+    .btn-nav:hover {
+      background: #d0d0d0;
+    }
+    
+    .page-counter {
+      grid-column: 1 / -1;
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      font-weight: 600;
+      padding-top: 10px;
+      border-top: 1px solid #e0e0e0;
+    }
+    
+    .selected-count {
+      background: #e7f3ff;
+      color: #004085;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .selected-count strong {
+      color: #0c5460;
+      font-size: 16px;
+    }
+    
+    @media (max-width: 1200px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+      
+      .left-panel {
+        border-right: none;
+        border-bottom: 2px solid #e0e0e0;
+      }
+      
+      .product-title {
+        font-size: 24px;
+      }
+    }
+    
+    #logs {
+      display: none;
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: #222;
+      color: #0f0;
+      padding: 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 11px;
+      max-width: 300px;
+      max-height: 100px;
+      overflow-y: auto;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- SOL PANEL - ÜRÜN RESMİ -->
+    <div class="left-panel">
+      <img id="productImage" class="product-image" src="" alt="Ürün">
+      <div class="image-url" id="imageUrl"></div>
+    </div>
+    
+    <!-- SAĞ PANEL - ÜRÜN DETAYLARı -->
+    <div class="right-panel">
+      <div>
+        <div class="product-header">
+          <div class="product-index" id="productIndex"></div>
+          <div class="product-title" id="productTitle"></div>
+          <div id="statusBadge" class="status-badge"></div>
+        </div>
+        
+        <div class="selected-count" id="selectedCount" style="display: none;">
+          ✓ <strong id="selectedNum">0</strong> ürün seçildi
+        </div>
+        
+        <div class="product-details">
+          <div class="detail-row">
+            <span class="detail-label">Başlık:</span>
+          </div>
+          <textarea id="titleInput" class="edit-field" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: 4px; font-size: 15px; min-height: 80px; font-weight: 600;"></textarea>
+          <div class="detail-row">
+            <span class="detail-label">Ana Başlık:</span>
+          </div>
+          <input id="anaTitleInput" type="text" class="edit-field" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 2px solid #ddd; border-radius: 4px; font-size: 15px;">
+
+          <div class="detail-row">
+            <span class="detail-label">Alt Başlık:</span>
+          </div>
+          <input id="subTitleInput" type="text" class="edit-field" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 2px solid #ddd; border-radius: 4px; font-size: 15px;">
+
+          <div class="detail-row">
+            <span class="detail-label">Etiketler:</span>
+          </div>
+          <input id="tagsInput" type="text" class="edit-field" placeholder="Virgülle ayır: Spor, Çanta, Unisex" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 2px solid #ddd; border-radius: 4px; font-size: 15px;">
+
+          <div class="detail-row">
+            <span class="detail-label">Özellikler:</span>
+          </div>
+          <input id="featuresInput" type="text" class="edit-field" placeholder="Örn: Renk=Kırmızı, Materyal=Kumaş" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 2px solid #ddd; border-radius: 4px; font-size: 15px;">
+          
+          <div class="detail-row" id="descriptionRow" style="display: none;">
+            <span class="detail-label">Açıklama:</span>
+          </div>
+          <textarea id="descriptionInput" class="edit-field" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: 4px; font-size: 15px; min-height: 100px; display: none;"></textarea>
+          
+          <div class="detail-row">
+            <span class="detail-label">Fiyat:</span>
+            <span class="detail-value" id="priceDetail"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Gönderim Yeri:</span>
+          </div>
+          <input type="text" id="shippingInput" class="edit-field" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: 4px; font-size: 15px;">
+          
+          <div class="detail-row">
+            <span class="detail-label">Gönderim Ücreti:</span>
+            <span class="detail-value" id="shippingFeeDetail"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">TOPLAM FİYAT:</span>
+            <span class="detail-value highlight" id="totalPriceDetail"></span>
+          </div>
+          <div class="detail-row" id="linkRow" style="display: none;">
+            <span class="detail-label">Link:</span>
+            <a class="detail-value" id="productLink" href="" target="_blank" style="color: #007bff; text-decoration: none;">Aç</a>
+          </div>
+        </div>
+      </div>
+      
+      <div>
+        <div class="controls">
+          <button class="btn-add" id="addBtn">+ ÜRÜNÜ EKLE</button>
+          <button class="btn-download" id="downloadBtn" style="display: none;">📥 CSV İNDİR</button>
+        </div>
+        
+        <div class="navigation">
+          <button class="btn-nav" id="prevBtn">← ÖNCEKÜ (A)</button>
+          <button class="btn-nav" id="nextBtn">SONRAKI (D) →</button>
+        </div>
+        
+        <div class="page-counter">
+          <span id="pageCounter">1 / 100</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="logs"></div>
+  
+  <script src="fullscreen.js"></script>
+</body>
+</html>

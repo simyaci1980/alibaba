@@ -47,7 +47,8 @@ class YorumAdmin(admin.ModelAdmin):
 
 @admin.register(Urun)
 class UrunAdmin(admin.ModelAdmin):
-	list_display = ("isim", "resim_goster")
+	list_display = ("isim", "ana_baslik", "alt_baslik", "etiketler", "ozellikler", "resim_goster")
+	fields = ("isim", "ana_baslik", "alt_baslik", "etiketler", "ozellikler", "aciklama", "resim", "resim_url", "source_url", "urun_kodu", "resim_goster")
 	inlines = [FiyatInline, UrunResimInline]
 	readonly_fields = ("resim_goster",)
 

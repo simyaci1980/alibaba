@@ -19,10 +19,17 @@ from django.urls import path, include
 from django.views.generic import RedirectView
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.sitemaps.views import sitemap
+from urunler.sitemaps import StaticViewSitemap
+
+sitemaps = {
+    'static': StaticViewSitemap,
+}
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('urunler.urls')),
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
     path('favicon.ico', RedirectView.as_view(url='/static/urunler/favicon.ico', permanent=True)),
     path('robots.txt', RedirectView.as_view(url='/static/robots.txt', permanent=True)),
 ]
