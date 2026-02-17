@@ -4,6 +4,7 @@
 {% block title %}Ana Sayfa | KOLAY BUL EKSPRES{% endblock %}
 
 {% block content %}
+{% load turkish_currency %}
 <div class="container" style="padding: 0 8px;">
     
     
@@ -156,16 +157,18 @@
             align-items: center;
         }
         .product-media {
-            width: calc(100% + 24px);
-            margin-left: -12px;
-            margin-right: -12px;
-            display: flex;
-            justify-content: center;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            display: block;
             overflow: hidden;
         }
         .product-media img {
-            max-width: 100%;
             width: 100%;
+            height: 260px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
         }
         .product-text {
             width: 100%;
@@ -175,6 +178,7 @@
             justify-content: flex-start;
             min-height: auto;
             max-height: none;
+            padding: 0px 0px 0px 0px;
         }
         .shipping-line {
             min-height: 18px;
@@ -215,25 +219,23 @@
             }
             .product {
                 min-height: 0;
-                padding: 3px 4px 4px 4px !important;
+                padding: 0 !important;
                 font-size: 0.95em;
             }
             .product-media {
-                margin-left: -4px;
-                margin-right: -4px;
-                margin-bottom: 4px !important;
+                margin: 0;
+                padding: 0;
+                margin-bottom: 0 !important;
                 overflow: hidden;
-                width: calc(100% + 8px);
-                height: 100px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+                width: 100%;
+                height: 180px;
+                display: block;
             }
-            .product img {
-                height: auto !important;
-                max-height: 100px !important;
+            .product-media img {
                 width: 100% !important;
-                object-fit: contain !important;
+                height: 180px !important;
+                object-fit: cover !important;
+                display: block;
             }
             .product .slider-img {
                 height: auto !important;
@@ -479,12 +481,12 @@
             <div class="product-row-scrollable">
         {% endif %}
         <a class="product-link" href="{% url 'urun_affiliate_redirect' urun.id %}" target="_blank">
-        <div class="product" style="min-height: 280px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 8px; padding: 8px 12px 12px 12px; transition: box-shadow 0.2s; justify-content: flex-start;">
+        <div class="product" style="min-height: 280px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 8px; padding: 12px 12px 12px 12px; transition: box-shadow 0.2s; justify-content: flex-start;">
             <div class="product-body">
             {% if urun.resim_url %}
                 <div class="product-media">
-                    <img src="{{ urun.resim_url }}" alt="{{ urun.isim }}" style="width:100%; height:240px; margin-bottom:14px; display:block; border-radius:8px; box-shadow:0 6px 16px rgba(0,0,0,0.12); object-fit:contain; background:#ffffff;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-                    <div style="width:100%; height:240px; margin-bottom:14px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius:8px; display:none; align-items:center; justify-content:center; color:#fff; font-size:0.9em; font-weight:600; text-align:center; padding:14px; box-shadow:0 6px 16px rgba(0,0,0,0.12);">{{ urun.isim|truncatewords:3 }}</div>
+                    <img src="{{ urun.resim_url }}" alt="{{ urun.isim }}" style="width:100%; height:240px; display:block; border-radius:8px; box-shadow:0 6px 16px rgba(0,0,0,0.12); object-fit:cover; background:#ffffff;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                <div style="width:100%; height:240px; margin-bottom:14px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius:8px; display:none; align-items:center; justify-content:center; color:#fff; font-size:0.9em; font-weight:600; text-align:center; padding:14px; box-shadow:0 6px 16px rgba(0,0,0,0.12);">{{ urun.isim|truncatewords:3 }}</div>
                 </div>
             {% elif urun.resimler.all|length > 0 and urun.resimler.all.0.resim %}
                 <div class="slider product-media" style="position:relative; margin-bottom:14px;">
@@ -528,15 +530,15 @@
                 {% endif %}
 
                 {% if urun.ana_baslik %}
-                <div class="product-title" style="text-align:center; font-weight:700; margin-bottom:4px; color:#2563eb; font-size:0.9em; word-break:break-word;">{{ urun.ana_baslik }}</div>
+                <div class="product-title" style="text-align:center; font-weight:700; margin-bottom:4px; color:#2563eb; font-size:0.9em; word-break:break-word; padding: 0 8px;">{{ urun.ana_baslik }}</div>
                 {% else %}
-                <div class="product-title" style="text-align:center; font-weight:600; margin-bottom:4px; color:#1f2937; word-break:break-word;">{{ urun.isim }}</div>
+                <div class="product-title" style="text-align:justify; font-weight:600; margin-bottom:4px; color:#1f2937; word-break:break-word; padding: 0 8px;">{{ urun.isim }}</div>
                 {% endif %}
                 {% if urun.alt_baslik %}
-                <div style="text-align:center; font-size:0.7em; color:#6b7280; font-weight:500; margin-bottom:2px;">{{ urun.alt_baslik }}</div>
+                <div style="text-align:justify; font-size:0.7em; color:#f59e0b; font-weight:600; margin-bottom:10px; padding: 0 8px;">{{ urun.alt_baslik }}</div>
                 {% endif %}
                 {% if urun.aciklama and urun.aciklama != 'CSV ile eklendi' %}
-                <div class="product-desc" style="text-align:center; color:#4b5563; margin-bottom:8px;">{{ urun.aciklama }}</div>
+                <div class="product-desc" style="text-align:justify; color:#222; font-weight:600; margin-bottom:8px; padding: 0 8px; font-size: 0.65em;">{{ urun.aciklama }}</div>
                 {% endif %}
                 {# Özellikler ve etiketler ürün kartında gösterilmeyecek #}
             </div>
@@ -563,7 +565,7 @@
                         <div class="shipping-line" style="visibility:hidden; font-size:0.72em; font-weight:500;">-</div>
                         {% endif %}
                         <div class="price-total" style="color:#10b981; font-size:0.8em; font-weight:700; margin-top:2px; padding-top:2px; border-top:1px solid #e5e7eb; white-space:nowrap;">
-                            Toplam: {{ fiyat.toplam_fiyat }} {% if fiyat.para_birimi == 'TL' %}₺{% else %}${% endif %}
+                            <span style="font-size:1.1em;">Toplam: {{ fiyat.toplam_fiyat|turkish_currency }} {% if fiyat.para_birimi == 'TL' %}₺{% else %}${% endif %}</span>
                         </div>
                         
                     </div>

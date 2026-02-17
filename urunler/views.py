@@ -17,6 +17,7 @@ def anasayfa(request):
 		urunler = Urun.objects.prefetch_related('fiyatlar__magaza').filter(
 			Q(isim__icontains=search_query) |
 			Q(aciklama__icontains=search_query) |
+			Q(urun_kodu__iexact=search_query) |
 			Q(urun_kodu__icontains=search_query)
 		).annotate(
 			# Tam eşleşme öncelikli sıralama
