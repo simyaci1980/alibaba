@@ -1,76 +1,177 @@
-    
 {% extends 'urunler/base.html' %}
 
 {% block title %}Ana Sayfa | KOLAY BUL EKSPRES{% endblock %}
 
 {% block content %}
 {% load turkish_currency %}
-<div class="container" style="padding: 0 8px;">
-    
-    
-    <!-- Biz Ne Yapıyoruz Butonu -->
-    <div style="padding: 0 8px; margin-bottom: 20px;">
-        <button id="toggleAboutBtn" style="width: auto; max-width: 400px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; border: none; border-radius: 6px; padding: 6px 10px; font-size: 0.75em; font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2);" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 3px 10px rgba(245, 158, 11, 0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 6px rgba(245, 158, 11, 0.2)'">
-            🎯 Sitemiz Ne İşe Yarıyor Bizim Karımız Nedir?  <span id="toggleIcon" style="float:right; font-size:0.9em; transition: transform 0.3s; margin-left: 4px;">▼</span>
-        </button>
-    </div>
-    
-    <!-- Açıklayıcı Kart ve Hakkımızda (Başlangıçta Gizli) -->
-    <div id="aboutSection" style="display: none; animation: slideDown 0.3s ease-out;">
-        <!-- Açıklayıcı Kart -->
-        <div style="max-width: 700px; margin: 0 auto 20px auto; padding: 16px; background: linear-gradient(135deg, #f0f4ff 0%, #fff5f7 100%); border-radius: 12px; border-left: 4px solid #6366f1; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);">
-            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-                <div style="font-size: 1.5em;">🔍</div>
-                <div>
-                    <h2 style="margin: 0 0 8px 0; color: #1f2937; font-size: 1em; font-weight: 700;">AliExpress Ürünlerini Hızlı Bulun</h2>
-                    <p style="margin: 0 0 8px 0; color: #4b5563; font-size: 0.95em; line-height: 1.5;">Milyonlarca ürün içinden aradığınızı saniyeler içinde keşfedin. Popüler ürünler, en ucuz seçenekler ve en çok satanları görmek kolay.</p>
-                </div>
-            </div>
-            
-            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-                <div style="font-size: 1.5em;">💵</div>
-                <div>
-                    <h2 style="margin: 0 0 8px 0; color: #1f2937; font-size: 1em; font-weight: 700;">Gerçek Fiyatları Görerek Karar Verin</h2>
-                    <p style="margin: 0 0 8px 0; color: #4b5563; font-size: 0.95em; line-height: 1.5;">Her ürün için net fiyatı (ürün fiyatı + kargo ücreti) görün. Hangi deposundan gönderileceğini önceden bilin. Örnek: Avrupa deposundan çok daha hızlı gelir!</p>
-                </div>
-            </div>
-            
-            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-                <div style="font-size: 1.5em;">🚚</div>
-                <div>
-                    <h2 style="margin: 0 0 8px 0; color: #1f2937; font-size: 1em; font-weight: 700;">Kargo Ücretini Önceden Bilin</h2>
-                    <p style="margin: 0 0 8px 0; color: #4b5563; font-size: 0.95em; line-height: 1.5;">Gönderildiği yerden haberdar olursunuz. Avrupa deposundan gelirse 7-15 gün(Türkiye gönderimli ürünlerle aynı süre), Çin'den gelirse 20-40 gün arası beklemeyi öngörün.</p>
-                </div>
-            </div>
-            
-            <div style="display: flex; gap: 12px;">
-                <div style="font-size: 1.5em;">⚡</div>
-                <div>
-                    <h2 style="margin: 0 0 8px 0; color: #1f2937; font-size: 1em; font-weight: 700;">Tek Tıkla Satın Alın</h2>
-                    <p style="margin: 0; color: #4b5563; font-size: 0.95em; line-height: 1.5;">Beğendiğiniz ürüne tıklayın ve doğrudan AliExpress'e yönlenin. Güvenli ödeme ve satıcı garantisi AliExpress tarafından sağlanır.</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Hakkımızda Bölümü -->
-        <div style="max-width: 700px; margin: 0 auto 20px auto; padding: 16px; background: #fff9e6; border-radius: 12px; border-left: 4px solid #f59e0b; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);">
-            <h2 style="text-align: center; color: #d97706; font-size: 1em; font-weight: 700; margin: 0 0 12px 0;">📌 Biz Kimiz?</h2>
-            
-            <p style="margin: 0 0 12px 0; color: #4b5563; font-size: 0.95em; line-height: 1.6;">
-                <strong>Kolay Bul Ekspres</strong>, AliExpress'teki binlerce ürünü kataloglayan ve Türk kullanıcılar için arama sürecini kolaylaştıran bağımsız bir platformdur. Hiçbir resmî bağlantımız yok, sadece kullanıcılarımızın zamanını tasarruf etmek istiyoruz.
-            </p>
-            
-            <p style="margin: 0 0 12px 0; color: #4b5563; font-size: 0.95em; line-height: 1.6;">
-                <strong>💡 Neden Buradan Gitmelisiz?</strong> AliExpress'i ziyaret etmek istediğinizde, ürün bulmak dakikalar alabilir. Biz ürünleri önceden taradık, fiyatları ve kargo bilgilerini güncelledik. Aradığınız şeyi saniyeler içinde bulun.
-            </p>
-            
-            <p style="margin: 0; color: #4b5563; font-size: 0.95em; line-height: 1.6;">
-                <strong>🤝 Bizim Karımız Nedir?</strong> AliExpress'in affiliate programı üzerinden küçük bir komisyon kazanıyoruz. <u>Sizin ödediğiniz fiyat değişmiyor</u> - aynı fiyattan alıyorsunuz. Sadece siz satın aldığınızda, AliExpress bize ufak bir komisyon ödüyor. Bu da paranın ufak bir kısmı da olsa ülkede kalması anlamına geliyor.
-            </p>
-        </div>
-    </div>
+<div class="container" style="padding: 0 8px; background: #111;">
+
+    <style>
+        .about-buttons-row {
+            width: 100vw;
+            margin: 0 0 18px 0;
+            padding: 0 0 0 0;
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+            flex-wrap: nowrap;
+            box-sizing: border-box;
+        }
+        .about-big-btn {
+            flex: 0 0 320px;
+            min-width: 120px;
+            max-width: 420px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.08);
+            padding: 12px 8px;
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+            border: none;
+            font-size: 0.98em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: box-shadow 0.2s, transform 0.2s;
+            outline: none;
+            gap: 12px;
+        }
+        .about-btn-left {
+            justify-content: flex-start;
+            align-self: flex-start;
+        }
+        .about-btn-right {
+            justify-content: flex-end;
+            align-self: flex-end;
+        }
+        .about-big-btn:active, .about-big-btn:focus {
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.18);
+            transform: translateY(-2px) scale(1.01);
+        }
+        .about-btn-blue {
+            background: linear-gradient(135deg, #f0f4ff 0%, #fff5f7 100%);
+            border-left: 4px solid #6366f1;
+            color: #1f2937;
+        }
+        .about-btn-yellow {
+            background: #fff9e6;
+            border-left: 4px solid #f59e0b;
+            color: #1f2937;
+        }
+        .about-btn-icon {
+            font-size: 1.4em;
+            margin-right: 8px;
+        }
+        .about-btn-title {
+            font-size: 1em;
+            font-weight: 700;
+            text-align: left;
+        }
+        @media (max-width: 900px) {
+            .about-buttons-row {
+                width: 100%;
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+            .about-big-btn {
+                min-width: 0;
+                max-width: 100%;
+                justify-content: center !important;
+                font-size: 0.98em;
+            }
+            .about-btn-left, .about-btn-right {
+                align-self: stretch;
+            }
+        }
+        @media (max-width: 500px) {
+            .about-big-btn {
+                padding: 10px 4px;
+                font-size: 0.95em;
+            }
+            .about-buttons-row {
+                margin: 10px 0 12px 0;
+                padding: 0 1px;
+            }
+        }
+    </style>
+
+    <style>
+        .about-cards-row {
+            max-width: 900px;
+            margin: 20px auto 24px auto;
+            display: flex;
+            gap: 24px;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .about-card {
+            flex: 1 1 350px;
+            min-width: 280px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.08);
+            padding: 0;
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+        }
+        .about-card-blue {
+            background: linear-gradient(135deg, #f0f4ff 0%, #fff5f7 100%);
+            border-left: 4px solid #6366f1;
+        }
+        .about-card-yellow {
+            background: #fff9e6;
+            border-left: 4px solid #f59e0b;
+        }
+        .about-card-inner {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            padding: 18px 18px 14px 18px;
+        }
+        .about-card-icon {
+            font-size: 1.5em;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .about-card h2 {
+            margin: 0 0 8px 0;
+            color: #1f2937;
+            font-size: 1em;
+            font-weight: 700;
+        }
+        .about-card p {
+            margin: 0;
+            color: #4b5563;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+        @media (max-width: 800px) {
+            .about-cards-row {
+                flex-direction: column;
+                gap: 16px;
+            }
+            .about-card {
+                min-width: 0;
+            }
+        }
+        @media (max-width: 500px) {
+            .about-card-inner {
+                flex-direction: column;
+                gap: 8px;
+                padding: 14px 8px 10px 8px;
+            }
+            .about-cards-row {
+                margin: 12px 0 16px 0;
+                padding: 0 2px;
+            }
+        }
+    </style>
     
     <style>
+                body {
+                    background: #111 !important;
+                }
         @keyframes slideDown {
             from {
                 opacity: 0;
@@ -114,21 +215,20 @@
 
     <style>
         .product-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            justify-content: center;
-            align-items: stretch;
+            display: block;
         }
         .product-row-scrollable {
             display: flex;
+            align-items: stretch;
             overflow-x: auto;
             gap: 6px;
             scroll-snap-type: x mandatory;
             -webkit-overflow-scrolling: touch;
-            margin-bottom: 12px;
+            margin: 10px 0;
             padding: 0 8px 8px 8px;
             width: 100%;
+            background: #111;
+            /* position: static; */
         }
         .product-row-scrollable::-webkit-scrollbar {
             height: 6px;
@@ -139,65 +239,87 @@
         }
         .product-link {
             display: flex;
-            width: calc(50% - 12px);
-            min-width: 280px;
-            max-width: 420px;
+            flex-direction: column;
+            width: 320px;
+            min-width: 320px;
+            max-width: 320px;
             text-decoration: none;
             color: inherit;
+            box-sizing: border-box;
+            /* position: static; */
         }
         .product {
             width: 100%;
-            height: 100%;
+            height: 480px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            overflow: hidden;
+            /* position: static; */
         }
         .product-body {
             display: flex;
             flex-direction: column;
             width: 100%;
-            height: 100%;
             align-items: center;
+            /* position: static; */
         }
         .product-media {
             width: 100%;
+            height: 280px;
             margin: 0;
-            padding: 0;
-            display: block;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             overflow: hidden;
+            background: #fff;
+            box-sizing: border-box;
         }
         .product-media img {
-            width: 100%;
-            height: 260px;
-            object-fit: cover;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
             border-radius: 8px;
             box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+            background: #f3f4f6;
+            display: block;
+            margin: auto;
+            padding: 0;
         }
-        .product-text {
-            width: 100%;
-            flex: 1;
+        .product-text-scrollable {
+            max-height: 130px;
+            /* 6 satır için yaklaşık yükseklik */
+            overflow-y: auto;
+            padding-right: 4px;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
-            min-height: auto;
-            max-height: none;
-            padding: 0px 0px 0px 0px;
-        }
-        .shipping-line {
-            min-height: 18px;
         }
         .product-title {
             font-weight: 600;
             font-size: 0.7em;
             line-height: 1.3;
             word-break: break-word;
+            flex: none;
+            margin-bottom: 4px;
+        }
+        .product-subtitle {
+            flex: none;
+            display: block;
+            font-size: 0.7em;
+            color: #f59e0b;
+            font-weight: 600;
+            margin-bottom: 10px;
+            padding: 0 8px;
         }
         .product-desc {
-            flex: 1;
-            display: flex;
-            align-items: flex-start;
-            overflow: hidden;
+            flex: none;
+            display: block;
             font-size: 0.6em;
             line-height: 1.25;
             word-wrap: break-word;
             white-space: normal;
+            margin-bottom: 8px;
         }
         @media (max-width: 768px) {
             .product-row {
@@ -213,29 +335,39 @@
             }
             .product-link {
                 flex: 0 0 auto;
-                min-width: 130px;
-                max-width: 165px;
+                min-width: 150px;
+                max-width: 180px;
+                width: 180px;
                 scroll-snap-align: start;
             }
             .product {
-                min-height: 0;
+                height: auto !important;
+                min-height: 0 !important;
                 padding: 0 !important;
                 font-size: 0.95em;
             }
             .product-media {
-                margin: 0;
-                padding: 0;
-                margin-bottom: 0 !important;
-                overflow: hidden;
                 width: 100%;
-                height: 180px;
-                display: block;
+                height: 150px;
+                margin: 0;
+                padding: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+                background: #fff;
+                box-sizing: border-box;
             }
             .product-media img {
-                width: 100% !important;
-                height: 180px !important;
-                object-fit: cover !important;
+                max-width: 100% !important;
+                max-height: 100% !important;
+                object-fit: contain !important;
+                border-radius: 8px !important;
+                box-shadow: 0 6px 16px rgba(0,0,0,0.12) !important;
+                background: #f3f4f6 !important;
                 display: block;
+                margin: auto;
+                padding: 0 !important;
             }
             .product .slider-img {
                 height: auto !important;
@@ -243,23 +375,27 @@
                 width: 100% !important;
                 object-fit: contain !important;
             }
-            .product-text {
-                flex: 1;
-                min-height: auto;
-                max-height: none;
+            .product-text-scrollable {
+                max-height: 90px;
+                /* Mobilde 6 satır için yaklaşık yükseklik */
+                overflow-y: auto;
+                padding-right: 2px;
                 display: flex;
                 flex-direction: column;
-            }
-            .product-desc {
-                flex: 1;
-                font-size: 0.45em;
-                line-height: 1.2;
-                word-wrap: break-word;
-                white-space: normal;
             }
             .product-title {
                 font-size: 0.55em;
                 line-height: 1.15;
+                margin-bottom: 4px;
+            }
+            .product-subtitle {
+                font-size: 0.55em;
+                margin-bottom: 6px;
+            }
+            .product-desc {
+                font-size: 0.45em;
+                line-height: 1.2;
+                margin-bottom: 6px;
             }
             .price-total {
                 font-size: 0.7em !important;
@@ -285,7 +421,7 @@
     </style>
     
     <!-- Sticky Arama Formu -->
-    <div class="sticky-search" style="position:sticky; top:0; z-index:100; background:#f8faff; padding-top:8px; padding-bottom:8px; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+    <div class="sticky-search" style="position:sticky; top:0; z-index:1000; isolation:isolate; background:#111; padding-top:8px; padding-bottom:8px; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
         <form method="get" action="{% url 'anasayfa' %}" style="max-width: 500px; margin: 0 auto 20px auto;">
             <div style="display: flex; gap: 8px; align-items: center;">
                 <input id="searchInput" type="text" name="q" value="{{ search_query }}" placeholder="Ürün ara... (örn: klavye, mouse)" style="flex: 1; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1em; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e5e7eb'" />
@@ -474,7 +610,6 @@
     })();
     </script>
     
-    <div class="product-row">
     {% for urun in urunler %}
         {% if forloop.counter0|divisibleby:15 %}
             {% if not forloop.first %}</div>{% endif %}
@@ -485,12 +620,12 @@
             <div class="product-body">
             {% if urun.resim_url %}
                 <div class="product-media">
-                    <img src="{{ urun.resim_url }}" alt="{{ urun.isim }}" style="width:100%; height:240px; display:block; border-radius:8px; box-shadow:0 6px 16px rgba(0,0,0,0.12); object-fit:cover; background:#ffffff;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-                <div style="width:100%; height:240px; margin-bottom:14px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius:8px; display:none; align-items:center; justify-content:center; color:#fff; font-size:0.9em; font-weight:600; text-align:center; padding:14px; box-shadow:0 6px 16px rgba(0,0,0,0.12);">{{ urun.isim|truncatewords:3 }}</div>
+                    <img src="{{ urun.resim_url }}" alt="{{ urun.isim }}" style="max-width:100%; max-height:100%; object-fit:contain; display:block; margin:auto; border-radius:8px; box-shadow:0 6px 16px rgba(0,0,0,0.12); background:#ffffff; padding:0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                <div style="width:100%; height:100%; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius:8px; display:none; align-items:center; justify-content:center; color:#fff; font-size:0.9em; font-weight:600; text-align:center; padding:14px; box-shadow:0 6px 16px rgba(0,0,0,0.12);">{{ urun.isim|truncatewords:3 }}</div>
                 </div>
             {% elif urun.resimler.all|length > 0 and urun.resimler.all.0.resim %}
-                <div class="slider product-media" style="position:relative; margin-bottom:14px;">
-                    <img src="{{ urun.resimler.all.0.resim.url }}" alt="{{ urun.isim }}" class="slider-img" style="width:100%; max-height:200px; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.07); object-fit:contain; background:#ffffff;" />
+                <div class="slider product-media" style="position:relative;">
+                    <img src="{{ urun.resimler.all.0.resim.url }}" alt="{{ urun.isim }}" class="slider-img" style="max-width:100%; max-height:100%; object-fit:contain; display:block; margin:auto; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.07); background:#ffffff; padding:0;" />
                     {% if urun.resimler.all|length > 1 %}
                         <button class="slider-prev" style="position:absolute; left:0; top:50%; transform:translateY(-50%); background:#6366f1; color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2em; cursor:pointer;">&#8592;</button>
                         <button class="slider-next" style="position:absolute; right:0; top:50%; transform:translateY(-50%); background:#6366f1; color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2em; cursor:pointer;">&#8594;</button>
@@ -519,12 +654,14 @@
                     </script>
                 </div>
             {% elif urun.resim %}
-                <img src="{{ urun.resim.url }}" alt="{{ urun.isim }}" class="product-media" style="max-height:200px; margin-bottom:14px; display:block; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.07); object-fit:contain; background:#ffffff;" />
+                <div class="product-media">
+                    <img src="{{ urun.resim.url }}" alt="{{ urun.isim }}" style="max-width:100%; max-height:100%; object-fit:contain; display:block; margin:auto; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.07); background:#ffffff; padding:0;" />
+                </div>
             {% else %}
                 <div class="product-media" style="height:200px; margin-bottom:14px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.1em; font-weight:600; text-align:center; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.1);">{{ urun.isim|truncatewords:3 }}</div>
             {% endif %}
 
-            <div class="product-text">
+            <div class="product-text-scrollable">
                 {% if search_query and urun.urun_kodu %}
                 <div style="text-align:center; font-size:0.78em; color:#a0aec0; font-weight:500; margin:6px 0 4px 0; letter-spacing:1px;">{{ urun.urun_kodu }}</div>
                 {% endif %}
@@ -534,8 +671,9 @@
                 {% else %}
                 <div class="product-title" style="text-align:justify; font-weight:600; margin-bottom:4px; color:#1f2937; word-break:break-word; padding: 0 8px;">{{ urun.isim }}</div>
                 {% endif %}
+
                 {% if urun.alt_baslik %}
-                <div style="text-align:justify; font-size:0.7em; color:#f59e0b; font-weight:600; margin-bottom:10px; padding: 0 8px;">{{ urun.alt_baslik }}</div>
+                <div class="product-subtitle" style="text-align:justify; font-size:0.7em; color:#f59e0b; font-weight:600; margin-bottom:10px; padding: 0 8px;">{{ urun.alt_baslik }}</div>
                 {% endif %}
                 {% if urun.aciklama and urun.aciklama != 'CSV ile eklendi' %}
                 <div class="product-desc" style="text-align:justify; color:#222; font-weight:600; margin-bottom:8px; padding: 0 8px; font-size: 0.65em;">{{ urun.aciklama }}</div>
@@ -561,8 +699,10 @@
                         <div class="shipping-line" style="color:#f59e0b; font-size:0.68em; font-weight:500;">
                             + Kargo: {{ fiyat.gonderim_ucreti }} {% if fiyat.para_birimi == 'TL' %}₺{% else %}${% endif %}
                         </div>
+                        {% elif fiyat.gonderim_ucreti == 0 %}
+                        <div class="shipping-line" style="color:#10b981; font-size:0.68em; font-weight:500;">Ücretsiz Kargo</div>
                         {% else %}
-                        <div class="shipping-line" style="visibility:hidden; font-size:0.72em; font-weight:500;">-</div>
+                        <div class="shipping-line" style="color:#10b981; font-size:0.68em; font-weight:500;">Ücretsiz Kargo</div>
                         {% endif %}
                         <div class="price-total" style="color:#10b981; font-size:0.8em; font-weight:700; margin-top:2px; padding-top:2px; border-top:1px solid #e5e7eb; white-space:nowrap;">
                             <span style="font-size:1.1em;">Toplam: {{ fiyat.toplam_fiyat|turkish_currency }} {% if fiyat.para_birimi == 'TL' %}₺{% else %}${% endif %}</span>
@@ -575,9 +715,8 @@
             </div>
         </div>
         </a>
-        {% if forloop.last %}</div>{% endif %}
+        {% if forloop.counter0|add:1|divisibleby:15 or forloop.last %}</div>{% endif %}
     {% endfor %}
-    </div>
 </div>
 <div style="max-width: 500px; margin: 40px auto 0 auto; padding: 0 10px;">
     <button id="yorumAcBtn" style="width:100%; background:#6366f1; color:#fff; border:none; border-radius:8px; padding:14px 0; font-size:1.1em; font-weight:700; cursor:pointer; margin-bottom:10px; min-height:48px;">Yorum Bırakmak İster misiniz?</button>

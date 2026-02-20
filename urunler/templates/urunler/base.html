@@ -42,55 +42,123 @@
         body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #e0e7ff 0%, #f4f4f4 100%); margin: 0; padding: 0; }
         .navbar {
             width: 100%;
-            background: black ;
+            background: #111;
             color: #f0ec09;
-            padding: 8px 0;
-            text-align: center;
-            font-size: 1.2em;
-            font-weight: 600;
-            letter-spacing: 1px;
             box-shadow: 0 2px 8px rgba(60,60,120,0.08);
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
+            align-items: stretch;
+            justify-content: flex-start;
+            height: 52px;
+            padding: 0;
+            position: relative;
+            overflow: visible;
+        }
+        .navbar-hamburger {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 2em;
+            color: #f0ec09;
+            cursor: pointer;
+            position: absolute;
+            left: 12px;
+            top: 10px;
+            z-index: 2003;
+        }
+        .navbar-center-text {
+            flex: 1;
+            font-size: 1.18em;
+            font-weight: 700;
+            color: #f0ec09;
+            letter-spacing: 1.2px;
+            white-space: nowrap;
+            text-align: center;
+            display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
         }
-        .navbar span {
-            font-size: 1.5em;
-            font-weight: 800;
-            text-align: center;
-            letter-spacing: 1px;
-        }
-        .navbar a {
-            margin: 0;
-            background: #ff4747;
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: 600;
-            text-decoration: none;
-            font-size: 0.9em;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-            display: inline-flex;
+        .navbar-content {
+            display: flex;
+            flex-direction: row;
             align-items: center;
-            gap: 8px;
-            min-height: 44px;
+            gap: 16px;
+            margin-left: auto;
+            z-index: 9999;
+            background: #111;
+            transition: left 0.3s cubic-bezier(.4,0,.2,1), box-shadow 0.3s;
         }
-        @media (min-width: 768px) {
+        .navbar-btn {
+            padding: 6px 18px;
+            font-size: 1em;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+            min-width: 120px;
+            max-width: 220px;
+            background: rgba(255,255,255,0.9);
+            color: #222;
+        }
+        .navbar-btn-blue {
+            background: #1e90ff;
+            color: #fff;
+        }
+        .navbar-btn-yellow {
+            background: #f0ec09;
+            color: #222;
+        }
+        @media (max-width: 700px) {
+            .navbar-hamburger {
+                display: block;
+            }
+            .navbar-content {
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 18px;
+                position: fixed;
+                top: 0;
+                left: -260px;
+                width: 240px;
+                height: 100vh;
+                background: #111;
+                box-shadow: 2px 0 16px rgba(60,60,120,0.18);
+                padding: 52px 0 12px 0;
+                z-index: 2004;
+                transition: left 0.3s hyperspace(.4,0,.2,1), box-shadow 0.3s;
+                overflow-y: auto;
+                overscroll-behavior: contain;
+            }
+            .navbar-content.active {
+                left: 0;
+                display: flex !important;
+                box-shadow: 2px 0 16px rgba(60,60,120,0.18);
+            }
+            .navbar-btn {
+                width: 100%;
+                margin: 0;
+                font-size: 1.08em;
+            }
             .navbar {
-                flex-direction: row;
-                padding: 0;
-                height: 50%;
+                height: auto;
+                padding: 8px 0;
             }
-            .navbar span {
-                font-size: 3em;
-                flex-basis: 80%;
-                letter-spacing: 2.5px;
+            .navbar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0,0,0,0.35);
+                z-index: 2003;
+                transition: opacity 0.3s;
             }
-            .navbar a {
-                margin-left: 32px;
-                font-size: 0.8em;
+            .navbar-overlay.active {
+                display: block;
+                opacity: 1;
             }
         }
         .footer {
@@ -111,12 +179,88 @@
 </head>
 <body>
     <div class="navbar">
-            <span>KOLAY BUL EKSPRES</span>
+        <button class="navbar-hamburger" id="navbarHamburger" aria-label="Menüyü Aç/Kapat">&#9776;</button>
+        <span class="navbar-center-text">KOLAY BUL EKSPRES</span>
+        <div class="navbar-content" id="navbarMenu">
+            <button class="navbar-btn navbar-btn-blue" id="btnAvrupaDeposu">🚚 Avrupa Deposundan gelen Aliexpress ürünleri</button>
+            <div id="avrupaDeposuInfo" style="display:none; color:#fff; background:#1e90ff; border-radius:6px; margin:8px 0 0 0; padding:10px 14px; font-size:0.98em; text-align:justify;">
+                Avrupa deposundan (özellikle Fransa) gelen ürünleri özenle seçip listeliyoruz.<br>
+                Böylece Çin’den gelecek uzun kargo sürelerini beklemeden, <b>HIZLI TESLİMAT</b> avantajı ile alışveriş yapabilirsiniz.<br>
+                Ayrıca, aradığınız ürünü en doğru şekilde bulmanızı sağlıyoruz; (örneğin sandalye arayanların yanlışlıkla kılıf almamasını sağlamaya çalışıyoruz ).<br>
+                Amacımız, Türk kullanıcıların doğru ürüne hızlı ve güvenli şekilde ulaşmasını sağlamaktır.
+                <style>
+                #avrupaDeposuInfo, #komisyonInfo {
+                    max-height: 180px;
+                    overflow-y: auto;
+                }
+                </style>
+            </div>
+            <button class="navbar-btn navbar-btn-yellow" id="btnKomisyon">🤝 Bizim Karımız Nedir?</button>
+            <div id="komisyonInfo" style="display:none; color:#222; background:#f0ec09; border-radius:6px; margin:8px 0 0 0; padding:10px 14px; font-size:0.98em; text-align:justify;">
+                Aliexpress ile affiliate ortaklığı sayesinde ufak bir komisyon kazanmaktayız.<br>
+                Bu komisyon, bizim ayakta durmamızı sağlarken  siz  kullanıcılar ise ürünleri <b>aynı fiyata</b> alıyorsunuz  fazladan ücret ödemiyorsunuz. Hatta mobil cihazlarda sitemizdeki ürün linkinden(her ürünün kendi linki var)   Aliexpress’in kendi uygulamasına giderseniz <b>bazen</b>    bizim gösterdiğimiz fiyatlardan daha ucuza bile gelebiliyor ürünler.<br>
+            </div>
+        </div>
+        <div class="navbar-overlay" id="navbarOverlay"></div>
+    </div>
 
-    </div>
     {% block content %}{% endblock %}
-    <div class="footer">
-        <span>© 2025 KOLAY BUL EKSPRES - Tüm hakları saklıdır.</span>
-    </div>
-</body>
-</html>
+    <script>
+        window.addEventListener('DOMContentLoaded', function() {
+            const hamburger = document.getElementById('navbarHamburger');
+            const menu = document.getElementById('navbarMenu');
+            const overlay = document.getElementById('navbarOverlay');
+            const btnAvrupaDeposu = document.getElementById('btnAvrupaDeposu');
+            const avrupaDeposuInfo = document.getElementById('avrupaDeposuInfo');
+            const btnKomisyon = document.getElementById('btnKomisyon');
+            const komisyonInfo = document.getElementById('komisyonInfo');
+            function updateMenuDisplay() {
+                if (window.innerWidth > 700) {
+                    menu.classList.add('active');
+                    overlay.classList.remove('active');
+                } else {
+                    menu.classList.remove('active');
+                    overlay.classList.remove('active');
+                }
+            }
+            hamburger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isActive = menu.classList.toggle('active');
+                if (isActive) {
+                    overlay.classList.add('active');
+                } else {
+                    overlay.classList.remove('active');
+                }
+            });
+            overlay.addEventListener('click', function() {
+                menu.classList.remove('active');
+                overlay.classList.remove('active');
+            });
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth <= 700 && menu.classList.contains('active')) {
+                    if (!menu.contains(e.target) && e.target !== hamburger) {
+                        menu.classList.remove('active');
+                        overlay.classList.remove('active');
+                    }
+                }
+            });
+            btnAvrupaDeposu.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (avrupaDeposuInfo.style.display === 'none') {
+                    avrupaDeposuInfo.style.display = 'block';
+                } else {
+                    avrupaDeposuInfo.style.display = 'none';
+                }
+            });
+            btnKomisyon.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (komisyonInfo.style.display === 'none') {
+                    komisyonInfo.style.display = 'block';
+                } else {
+                    komisyonInfo.style.display = 'none';
+                }
+            });
+            window.addEventListener('resize', updateMenuDisplay);
+            updateMenuDisplay();
+        });
+    </script>
