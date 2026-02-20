@@ -39,6 +39,32 @@
     <meta name="theme-color" content="#000000">
     
     <style>
+                /* Bilgi kutuları için masaüstü ve mobil stiller */
+                #avrupaDeposuInfo, #komisyonInfo {
+                    max-height: 180px;
+                    overflow-y: auto;
+                }
+                @media (min-width: 701px) {
+                    .info-popup {
+                        position: fixed !important;
+                        top: 70px;
+                        right: 32px;
+                        width: 340px;
+                        min-width: 220px;
+                        max-width: 95vw;
+                        box-shadow: 0 4px 24px rgba(60,60,120,0.18);
+                        z-index: 3000;
+                        margin: 0 !important;
+                        max-height: 300px;
+                        overflow-y: auto;
+                        animation: popupfadein 0.2s;
+                        padding: 18px 22px !important;
+                    }
+                    @keyframes popupfadein {
+                        from { opacity: 0; transform: translateY(-20px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #e0e7ff 0%, #f4f4f4 100%); margin: 0; padding: 0; }
         .navbar {
             width: 100%;
@@ -47,9 +73,9 @@
             box-shadow: 0 2px 8px rgba(60,60,120,0.08);
             display: flex;
             flex-direction: row;
-            align-items: stretch;
+            align-items: center; /* Dikey ortalama */
             justify-content: flex-start;
-            height: 52px;
+            height: 64px;
             padding: 0;
             position: relative;
             overflow: visible;
@@ -62,7 +88,7 @@
             color: #f0ec09;
             cursor: pointer;
             position: absolute;
-            left: 12px;
+            right: 12px;
             top: 10px;
             z-index: 2003;
         }
@@ -77,6 +103,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            height: 100%;
         }
         .navbar-content {
             display: flex;
@@ -87,27 +114,40 @@
             z-index: 9999;
             background: #111;
             transition: left 0.3s cubic-bezier(.4,0,.2,1), box-shadow 0.3s;
+            height: 100%;
         }
         .navbar-btn {
-            padding: 6px 18px;
+            padding: 8px 14px;
             font-size: 1em;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-weight: 600;
             transition: background 0.2s;
-            min-width: 120px;
+            width: 220px;
+            min-width: 220px;
             max-width: 220px;
+            min-height: 56px;
+            margin-top: 8px;
+            font-size: 0.97em;
             background: rgba(255,255,255,0.9);
             color: #222;
+            margin: 0 0 8px 0;
+            box-sizing: border-box;
+            text-align: center;
+            white-space: normal;
         }
         .navbar-btn-blue {
             background: #1e90ff;
             color: #fff;
+            font-size: 0.81em;
+            padding-top: 2px;
+            padding-bottom: 2px;
         }
         .navbar-btn-yellow {
             background: #f0ec09;
             color: #222;
+            font-size: 0.97em;
         }
         @media (max-width: 700px) {
             .navbar-hamburger {
@@ -120,26 +160,29 @@
                 gap: 18px;
                 position: fixed;
                 top: 0;
-                left: -260px;
+                right: -260px;
                 width: 240px;
                 height: 100vh;
                 background: #111;
-                box-shadow: 2px 0 16px rgba(60,60,120,0.18);
+                box-shadow: -2px 0 16px rgba(60,60,120,0.18);
                 padding: 52px 0 12px 0;
                 z-index: 2004;
-                transition: left 0.3s hyperspace(.4,0,.2,1), box-shadow 0.3s;
+                transition: right 0.3s cubic-bezier(.4,0,.2,1), box-shadow 0.3s;
                 overflow-y: auto;
                 overscroll-behavior: contain;
             }
             .navbar-content.active {
-                left: 0;
+                right: 0;
                 display: flex !important;
-                box-shadow: 2px 0 16px rgba(60,60,120,0.18);
+                box-shadow: -2px 0 16px rgba(60,60,120,0.18);
             }
             .navbar-btn {
                 width: 100%;
-                margin: 0;
+                margin: 0 0 8px 0;
                 font-size: 1.08em;
+                min-width: unset;
+                max-width: unset;
+                box-sizing: border-box;
             }
             .navbar {
                 height: auto;
@@ -179,24 +222,18 @@
 </head>
 <body>
     <div class="navbar">
+       <br> <span class="navbar-center-text">KOLAY BUL EKSPRES</span>
         <button class="navbar-hamburger" id="navbarHamburger" aria-label="Menüyü Aç/Kapat">&#9776;</button>
-        <span class="navbar-center-text">KOLAY BUL EKSPRES</span>
         <div class="navbar-content" id="navbarMenu">
             <button class="navbar-btn navbar-btn-blue" id="btnAvrupaDeposu">🚚 Avrupa Deposundan gelen Aliexpress ürünleri</button>
-            <div id="avrupaDeposuInfo" style="display:none; color:#fff; background:#1e90ff; border-radius:6px; margin:8px 0 0 0; padding:10px 14px; font-size:0.98em; text-align:justify;">
+            <div id="avrupaDeposuInfo" class="info-popup" style="display:none; color:#fff; background:#1e90ff; border-radius:6px; margin:8px 0 0 0; padding:18px 22px; font-size:0.98em; text-align:justify;">
                 Avrupa deposundan (özellikle Fransa) gelen ürünleri özenle seçip listeliyoruz.<br>
                 Böylece Çin’den gelecek uzun kargo sürelerini beklemeden, <b>HIZLI TESLİMAT</b> avantajı ile alışveriş yapabilirsiniz.<br>
                 Ayrıca, aradığınız ürünü en doğru şekilde bulmanızı sağlıyoruz; (örneğin sandalye arayanların yanlışlıkla kılıf almamasını sağlamaya çalışıyoruz ).<br>
                 Amacımız, Türk kullanıcıların doğru ürüne hızlı ve güvenli şekilde ulaşmasını sağlamaktır.
-                <style>
-                #avrupaDeposuInfo, #komisyonInfo {
-                    max-height: 180px;
-                    overflow-y: auto;
-                }
-                </style>
             </div>
             <button class="navbar-btn navbar-btn-yellow" id="btnKomisyon">🤝 Bizim Karımız Nedir?</button>
-            <div id="komisyonInfo" style="display:none; color:#222; background:#f0ec09; border-radius:6px; margin:8px 0 0 0; padding:10px 14px; font-size:0.98em; text-align:justify;">
+            <div id="komisyonInfo" class="info-popup" style="display:none; color:#222; background:#f0ec09; border-radius:6px; margin:8px 0 0 0; padding:18px 22px; font-size:0.98em; text-align:justify;">
                 Aliexpress ile affiliate ortaklığı sayesinde ufak bir komisyon kazanmaktayız.<br>
                 Bu komisyon, bizim ayakta durmamızı sağlarken  siz  kullanıcılar ise ürünleri <b>aynı fiyata</b> alıyorsunuz  fazladan ücret ödemiyorsunuz. Hatta mobil cihazlarda sitemizdeki ürün linkinden(her ürünün kendi linki var)   Aliexpress’in kendi uygulamasına giderseniz <b>bazen</b>    bizim gösterdiğimiz fiyatlardan daha ucuza bile gelebiliyor ürünler.<br>
             </div>

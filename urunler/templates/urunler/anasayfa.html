@@ -4,12 +4,12 @@
 
 {% block content %}
 {% load turkish_currency %}
-<div class="container" style="padding: 0 8px; background: #111;">
+<div class="container" style="padding: 0; background: #111; margin-bottom: 0;">
 
     <style>
         .about-buttons-row {
             width: 100vw;
-            margin: 0 0 18px 0;
+            margin: 0 0 0 0;
             padding: 0 0 0 0;
             display: flex;
             gap: 12px;
@@ -98,7 +98,7 @@
     <style>
         .about-cards-row {
             max-width: 900px;
-            margin: 20px auto 24px auto;
+            margin: 0px auto 0 auto;
             display: flex;
             gap: 24px;
             justify-content: space-between;
@@ -419,10 +419,10 @@
             }
         }
     </style>
-    
+    <br>
     <!-- Sticky Arama Formu -->
-    <div class="sticky-search" style="position:sticky; top:0; z-index:1000; isolation:isolate; background:#111; padding-top:8px; padding-bottom:8px; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
-        <form method="get" action="{% url 'anasayfa' %}" style="max-width: 500px; margin: 0 auto 20px auto;">
+    <div class="sticky-search" style="position:sticky; top:0; z-index:1000; isolation:isolate; background:#111; padding:0; margin:0; box-shadow:0 2px 8px rgba(0,0,0,0.03); width:100vw; left:0;">
+        <form method="get" action="{% url 'anasayfa' %}" style="max-width: 500px; margin: 0 auto 10px auto;"> 
             <div style="display: flex; gap: 8px; align-items: center;">
                 <input id="searchInput" type="text" name="q" value="{{ search_query }}" placeholder="Ürün ara... (örn: klavye, mouse)" style="flex: 1; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1em; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e5e7eb'" />
                 <button type="submit" style="background: #6366f1; color: #fff; border: none; border-radius: 8px; padding: 12px 24px; font-size: 1em; font-weight: 600; cursor: pointer; transition: background 0.2s; white-space: nowrap;" onmouseover="this.style.background='#4f46e5'" onmouseout="this.style.background='#6366f1'">Ara</button>
@@ -610,9 +610,11 @@
     })();
     </script>
     
+    <!-- Ürünler yatay scrollable satırlarla başlasın -->
+    <div class="product-row-scrollable">
     {% for urun in urunler %}
-        {% if forloop.counter0|divisibleby:15 %}
-            {% if not forloop.first %}</div>{% endif %}
+        {% if forloop.counter0 != 0 and forloop.counter0|divisibleby:15 %}
+            </div>
             <div class="product-row-scrollable">
         {% endif %}
         <a class="product-link" href="{% url 'urun_affiliate_redirect' urun.id %}" target="_blank">
