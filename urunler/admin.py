@@ -11,6 +11,7 @@ def temiz_alisveris_linki(url):
 	# Sadece scheme, netloc, path
 	return urllib.parse.urlunparse((parsed.scheme, parsed.netloc, parsed.path, '', new_query, ''))
 from django.contrib import admin
+from django.utils.safestring import mark_safe
 from django.urls import path
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -47,8 +48,19 @@ class YorumAdmin(admin.ModelAdmin):
 
 @admin.register(Urun)
 class UrunAdmin(admin.ModelAdmin):
-	list_display = ("isim", "ana_baslik", "alt_baslik", "etiketler", "ozellikler", "resim_goster")
-	fields = ("isim", "ana_baslik", "alt_baslik", "etiketler", "ozellikler", "aciklama", "resim", "resim_url", "source_url", "urun_kodu", "resim_goster")
+	from django.utils.safestring import mark_safe
+	def admin_thumbnail(self, obj):
+		if obj.resim:
+			return mark_safe(f'<img src="{obj.resim.url}" style="height:40px; width:auto; border-radius:4px; box-shadow:0 1px 4px rgba(0,0,0,0.07);" />')
+		elif obj.resim_url:
+			return mark_safe(f'<img src="{obj.resim_url}" style="height:40px; width:auto; border-radius:4px; box-shadow:0 1px 4px rgba(0,0,0,0.07);" />')
+		else:
+			return "-"
+	admin_thumbnail.short_description = "Resim"
+
+	list_display = ("isim", "ana_baslik", "alt_baslik", "etiketler", "ozellikler", "sira", "admin_thumbnail")
+	list_editable = ("sira",)
+	fields = ("isim", "ana_baslik", "alt_baslik", "etiketler", "ozellikler", "aciklama", "resim", "resim_url", "source_url", "urun_kodu", "sira", "resim_goster")
 	inlines = [FiyatInline, UrunResimInline]
 	readonly_fields = ("resim_goster",)
 

@@ -32,7 +32,32 @@ def anasayfa(request):
 		).order_by('relevance', 'isim')
 	else:
 		# Arama yoksa tüm ürünleri göster
-		urunler = Urun.objects.prefetch_related('fiyatlar__magaza').all()
+		gonderim_yeri = request.GET.get('gonderim_yeri', '').strip()
+		urunler = list(Urun.objects.prefetch_related('fiyatlar__magaza').all())
+		if gonderim_yeri:
+			gonderim_yeri_lower = gonderim_yeri.strip().lower()
+			urunler = [
+				u for u in urunler
+				if any(
+					f.gonderim_yerinden and f.gonderim_yerinden.strip().lower() == gonderim_yeri_lower
+					for f in u.fiyatlar.all()
+				)
+			]
+		numarali = {u.sira: u for u in urunler if u.sira and u.sira > 0}
+		sifirli = [u for u in urunler if not u.sira or u.sira == 0]
+		sifirli_sorted = sorted(sifirli, key=lambda u: -u.id)
+		max_sira = max(list(numarali.keys()) + [0])
+		urunler_sirali = []
+		sifirli_idx = 0
+		for i in range(1, max_sira+1):
+			if i in numarali:
+				urunler_sirali.append(numarali[i])
+			else:
+				if sifirli_idx < len(sifirli_sorted):
+					urunler_sirali.append(sifirli_sorted[sifirli_idx])
+					sifirli_idx += 1
+		urunler_sirali += sifirli_sorted[sifirli_idx:]
+		urunler = urunler_sirali
 	
 	yorumlar = Yorum.objects.filter(onayli=True).order_by('-eklenme_tarihi')[:10]
 	form = YorumForm(request.POST or None)
@@ -49,7 +74,22 @@ def anasayfa(request):
 
 def urun_listesi(request):
 	"""Ürün listesi sayfası"""
-	urunler = Urun.objects.prefetch_related('fiyatlar__magaza').all()
+	urunler = list(Urun.objects.prefetch_related('fiyatlar__magaza').all())
+	numarali = {u.sira: u for u in urunler if u.sira and u.sira > 0}
+	sifirli = [u for u in urunler if not u.sira or u.sira == 0]
+	sifirli_sorted = sorted(sifirli, key=lambda u: -u.id)
+	max_sira = max(list(numarali.keys()) + [0])
+	urunler_sirali = []
+	sifirli_idx = 0
+	for i in range(1, max_sira+1):
+		if i in numarali:
+			urunler_sirali.append(numarali[i])
+		else:
+			if sifirli_idx < len(sifirli_sorted):
+				urunler_sirali.append(sifirli_sorted[sifirli_idx])
+				sifirli_idx += 1
+	urunler_sirali += sifirli_sorted[sifirli_idx:]
+	urunler = urunler_sirali
 	return render(request, 'urunler/urun_listesi.html', {'urunler': urunler})
 
 

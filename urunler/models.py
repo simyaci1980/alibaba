@@ -21,6 +21,7 @@ class Urun(models.Model):
 	resim_url = models.URLField(max_length=500, blank=True, null=True, help_text='Resim URL (yer kaplamaz)')  # URL için
 	source_url = models.URLField(max_length=1000, blank=True, null=True, unique=True, help_text='Ürünün kaynak URL adresi (tekrarları önler)')
 	urun_kodu = models.CharField(max_length=12, unique=True, blank=True, null=True, help_text='Kısa arama kodu (otomatik)')
+	sira = models.PositiveIntegerField(default=0, blank=True, null=True, help_text="Ürün sırası (küçükten büyüğe önde)")
 
 	def __str__(self):
 		return f"{self.isim} ({self.urun_kodu})" if self.urun_kodu else self.isim
