@@ -3,35 +3,101 @@
 {% block title %}Ana Sayfa | KOLAY BUL EKSPRES{% endblock %}
 
 {% block content %}
-<!-- Sticky Arama ve Filtreleme Formları (ayrı) -->
-<div class="sticky-search" style="position:sticky; top:0; z-index:1000; isolation:isolate; background:#111; padding:0; margin:0; box-shadow:0 2px 8px rgba(0,0,0,0.03); width:100vw; left:0; margin-top:24px;">
-    <div style="max-width: 600px; margin: 24px auto 10px auto; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-        <!-- Arama Formu -->
-        <form method="get" action="{% url 'anasayfa' %}" style="flex: 1; display: flex; gap: 8px; align-items: center;">
-            <input id="searchInput" type="text" name="q" value="{{ search_query }}" placeholder="Ürün ara... (örn: klavye, mouse)" style="flex: none; width: 180px; height: 40px; padding: 6px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em; outline: none; transition: border-color 0.2s; box-sizing: border-box; line-height: 40px;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#ddd'" />
-            <button type="submit" style="padding: 6px 18px; border-radius: 6px; background: #6366f1; color: #fff; border: none; font-weight: 600;">Ara</button>
-        </form>
-        <!-- Filtreleme Formu -->
-        <form method="get" action="{% url 'anasayfa' %}" style="display: flex; gap: 8px; align-items: center;">
-            <select name="gonderim_yeri" style="width: 180px; height: 40px; padding: 6px 12px; border-radius: 6px; border: 1px solid #ddd; font-size: 1em; box-sizing: border-box; line-height: 40px;">
-                <option value="">Gönderim Yeri Seçiniz</option>
-                <option value="İngiltere">İngiltere</option>
-                <option value="İspanya">İspanya</option>
-                <option value="Fransa">Fransa</option>
-                <option value="Çek Cumhuriyeti">Çek Cumhuriyeti</option>
-                <option value="İtalya">İtalya</option>
-                <option value="Polanya">Polanya</option>
-                <option value="Almanya">Almanya</option>
-            </select>
-            <button type="submit" style="padding: 6px 18px; border-radius: 6px; background: #6366f1; color: #fff; border: none; font-weight: 600;">Filtrele</button>
-            {% if request.GET.gonderim_yeri %}
-                <a href="{% url 'anasayfa' %}" style="padding: 6px 18px; border-radius: 6px; background: #f59e0b; color: #fff; border: none; font-weight: 600; text-decoration: none;">Filtreyi Temizle</a>
-            {% endif %}
-        </form>
+<!-- Ürün Resim Carousel (En Üste) -->
+<div class="carousel-wrapper" style="overflow: hidden; margin: 24px 0 0 0; background: linear-gradient(90deg, #111 0%, #ff9800 100%); padding: 0 0 16px 0; border-radius: 12px; margin-bottom: 8px;">
+    <div class="carousel-container" id="productCarousel" style="display: flex; will-change: transform;">
+        {% for urun in urunler %}
+        <a href="{% url 'urun_affiliate_redirect' urun.id %}" target="_blank" class="carousel-item" style="flex: 0 0 auto; margin: 0 8px; text-decoration: none; cursor: pointer;" data-urun-id="{{ urun.id }}">
+            <div class="carousel-circle" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background: #fff; transition: transform 0.2s, box-shadow 0.2s;">
+                {% if urun.resim_url %}
+                <img src="{{ urun.resim_url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% elif urun.resimler.all|length > 0 %}
+                <img src="{{ urun.resimler.all.0.resim.url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% elif urun.resim %}
+                <img src="{{ urun.resim.url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; font-size: 0.7em; text-align: center; padding: 4px;">{{ urun.isim|truncatewords:2 }}</div>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+<!-- Sticky Arama ve Filtreleme Formları (aşağıya taşındı) -->
+<div class="sticky-search" style="position:sticky; top:0; z-index:1000; isolation:isolate; background:#111; padding:0; margin:0 0 0 0; box-shadow:0 2px 8px rgba(0,0,0,0.03); width:100vw; left:0; margin-top:8px; margin-bottom:0 !important;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 0; box-sizing: border-box;">
+        <div class="search-filter-row" style="margin:0; padding:0; box-sizing:border-box; display:flex; gap:10px; align-items:center; width:100%; flex-wrap:wrap; margin-bottom:0 !important; padding-bottom:0 !important;">
+            <!-- Arama ve Filtreleme Formları YAN YANA -->
+            <form method="get" action="{% url 'anasayfa' %}" class="search-form" style="display:flex; align-items:center; gap:6px; margin:0; padding:0; box-sizing:border-box;">
+                <input id="searchInput" type="text" name="q" value="{{ search_query }}" placeholder="Ürün ara... (örn: klavye, mouse)" style="width:120px; height:30px; padding:0 6px; border:1px solid #ddd; border-radius:5px; font-size:0.92068em; outline:none; transition:border-color 0.2s; box-sizing:border-box; line-height:20px;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#ddd'" />
+                <button type="submit" style="padding:0 10px; height:30px; border-radius:5px; background:linear-gradient(90deg,#ff9800 0%,#111 100%); color:#fff; border:none; font-weight:600; font-size:0.92em;"> Ara</button>
+                {% if search_query %}
+                    <a href="{% url 'anasayfa' %}" style="padding:0 8px; height:30px; border-radius:5px; background:#ef4444; color:#fff; border:none; font-weight:400; text-decoration:none; display:flex; align-items:center; font-size:0.92em;">Temizle</a>
+                {% endif %}
+            </form>
+            <form method="get" action="{% url 'anasayfa' %}" class="filter-form" style="display:flex; align-items:center; gap:4px; margin:0; padding:0; box-sizing:border-box;">
+                <select name="gonderim_yeri" style="width:120px; height:30px; padding:0 6px; border-radius:5px; border:1px solid #ddd; font-size:0.92em; box-sizing:border-box; line-height:30px;">
+                    <option valu2070e="">Gönderim Yeri Seçiniz</option>
+                    <option value="İngiltere">İngiltere</option>
+                    <option value="İspanya">İspanya</option>
+                    <option value="Fransa">Fransa</option>
+                    <option value="Çek Cumhuriyeti">Çek Cumhuriyeti</option>
+                    <option value="İtalya">İtalya</option>
+                    <option value="Polanya">Polanya</option>
+                    <option value="Almanya">Almanya</option>
+                </select>
+                <button type="submit" style="padding:0 10px; height:30px; border-radius:5px; background:linear-gradient(90deg,#ff9800 0%,#111 100%); color:#fff; border:none; font-weight:600; font-size:0.92em; letter-spacing:0.5px; display:flex; align-items:center;"> Filtre</button>
+                {% if request.GET.gonderim_yeri %}
+                    <a href="{% url 'anasayfa' %}" style="padding:0 8px; height:30px; border-radius:5px; background:#f59e0b; color:#fff; border:none; font-weight:400; text-decoration:none; display:flex; align-items:center; font-size:0.92em;">Temizle</a>
+                {% endif %}
+            </form>
+        </div>
+        <style>
+        @media (max-width: 700px) {
+            #yorumAcBtn {
+                padding: 7px 10px !important;
+                font-size: 0.97em !important;
+                min-width: 120px !important;
+                min-height: 28px !important;
+            }
+            #yorumFormKapsayici {
+                padding: 10px !important;
+            }
+            #yorumFormKapsayici h2 {
+                font-size: 0.97em !important;
+                padding: 5px 0 !important;
+                margin-bottom: 6px !important;
+            }
+            #yorumFormKapsayici form {
+                padding: 8px !important;
+                gap: 5px !important;
+            }
+            .son-yorumlar-baslik {
+                font-size: 0.95em !important;
+                margin-bottom: 5px !important;
+            }
+            .son-yorumlar-kart {
+                padding: 7px 10px !important;
+                margin-bottom: 7px !important;
+            }
+            .henuz-yorum-yok {
+                font-size: 0.93em !important;
+                margin-bottom: 4px !important;
+            }
+        }
+        /* Mobilde de kesinlikle yan yana kalsın */
+        .search-filter-row { display: inline-flex !important; flex-direction: row !important; gap: 6px !important; align-items: center !important; flex-wrap: nowrap !important; width: 100%; }
+        .search-form, .filter-form { width: auto !important; min-width: 0 !important; }
+        @media (max-width: 700px) {
+            .search-filter-row { gap: 2px !important; }
+            .search-form input, .filter-form select { min-width: 90px !important; font-size: 0.95em !important; }
+            .search-form button, .filter-form button, .search-form a, .filter-form a { font-size: 0.95em !important; padding-left: 6px !important; padding-right: 6px !important; }
+        }
+        </style>
     </div>
 </div>
 {% load turkish_currency %}
-<div class="container" style="padding: 0; background: #111; margin-bottom: 0;">
+<div class="container" style="padding: 0; background: linear-gradient(135deg, #111 0%, #ff9800 100%); margin-bottom: 0; margin-top: 0 !important; padding-top: 0 !important;">
 
     <style>
         .about-buttons-row {
@@ -243,6 +309,8 @@
     <style>
         .product-row {
             display: block;
+            margin-top: 0 !important;
+            background: linear-gradient(90deg, #111 0%, #ff9800 100%);
         }
         .product-row-scrollable {
             display: flex;
@@ -251,10 +319,11 @@
             gap: 6px;
             scroll-snap-type: x mandatory;
             -webkit-overflow-scrolling: touch;
-            margin: 10px 0;
+            margin-top: 0 !important;
+            margin-bottom: 0;
             padding: 0 8px 8px 8px;
             width: 100%;
-            background: #111;
+            background: linear-gradient(90deg, #111 0%, #ff9800 100%);
             /* position: static; */
         }
         .product-row-scrollable::-webkit-scrollbar {
@@ -323,14 +392,17 @@
             flex-direction: column;
         }
         .product-title {
-              font-weight: 600;
-              max-height: 2.2em;
-              overflow: auto;
-            font-size: 0.7em;
-            line-height: 1.3;
-            word-break: break-word;
-            flex: none;
-            margin-bottom: 4px;
+                            font-weight: 600;
+                            min-height: 2.6em;
+                            font-size: 0.7em;
+                            line-height: 1.3;
+                            word-break: break-word;
+                            flex: none;
+                            margin-bottom: 4px;
+                              display: flex;
+                              align-items: center;
+                              justify-content: center;
+                              text-align: center;
         }
         .product-subtitle {
             flex: none;
@@ -452,35 +524,11 @@
     </style>
     <br>
     <!-- ...existing code... -->
-    {% if search_query %}
-    <div style="display: flex; justify-content: center; margin-bottom: 12px;">
-        <a href="{% url 'anasayfa' %}" style="background: #ef4444; color: #fff; border-radius: 8px; padding: 10px 32px; font-size: 1.2em; font-weight: 700; text-decoration: none; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.08); letter-spacing: 1px;">✕ Temizle</a>
-    </div>
-    {% endif %}
+    
     {% if search_query %}
     <div style="text-align: center; margin-bottom: 16px; color: #6366f1; font-weight: 600;">"{{ search_query }}" için {{ urunler|length }} sonuç bulundu</div>
     {% endif %}
     
-    <!-- Ürün Resim Carousel -->
-    <div class="carousel-wrapper" style="overflow: hidden; margin: 0 0 20px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 16px 0; border-radius: 12px;">
-        <div class="carousel-container" id="productCarousel" style="display: flex; will-change: transform;">
-            {% for urun in urunler %}
-            <a href="{% url 'urun_affiliate_redirect' urun.id %}" target="_blank" class="carousel-item" style="flex: 0 0 auto; margin: 0 8px; text-decoration: none; cursor: pointer;" data-urun-id="{{ urun.id }}">
-                <div class="carousel-circle" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background: #fff; transition: transform 0.2s, box-shadow 0.2s;">
-                    {% if urun.resim_url %}
-                    <img src="{{ urun.resim_url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;">
-                    {% elif urun.resimler.all|length > 0 %}
-                    <img src="{{ urun.resimler.all.0.resim.url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;">
-                    {% elif urun.resim %}
-                    <img src="{{ urun.resim.url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;">
-                    {% else %}
-                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; font-size: 0.7em; text-align: center; padding: 4px;">{{ urun.isim|truncatewords:2 }}</div>
-                    {% endif %}
-                </div>
-            </a>
-            {% endfor %}
-        </div>
-    </div>
     <style>
         .carousel-item:hover .carousel-circle {
             transform: scale(1.1);
@@ -640,7 +688,7 @@
             </div>
             <div class="product-row-scrollable">
         {% endif %}
-        <a class="product-link" href="{% url 'urun_affiliate_redirect' urun.id %}" target="_blank">
+        <a class="product-link product-item" data-index="{{ forloop.counter0 }}" href="{% url 'urun_affiliate_redirect' urun.id %}" target="_blank">
         <div class="product" style="min-height: 280px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 8px; padding: 12px 12px 12px 12px; transition: box-shadow 0.2s; justify-content: flex-start;">
             <div class="product-body">
             {% if urun.resim_url %}
@@ -691,18 +739,47 @@
                 <div style="text-align:center; font-size:0.78em; color:#a0aec0; font-weight:500; margin:6px 0 4px 0; letter-spacing:1px;">{{ urun.urun_kodu }}</div>
                 {% endif %}
 
+                {# Ana başlık her zaman üstte ve sabit #}
                 {% if urun.ana_baslik %}
                 <div class="product-title" style="text-align:center; font-weight:700; margin-bottom:4px; color:#2563eb; font-size:0.9em; word-break:break-word; padding: 0 8px;">{{ urun.ana_baslik }}</div>
                 {% else %}
                 <div class="product-title" style="text-align:justify; font-weight:600; margin-bottom:4px; color:#1f2937; word-break:break-word; padding: 0 8px;">{{ urun.isim }}</div>
                 {% endif %}
 
-                {% if urun.alt_baslik %}
-                <div class="product-subtitle" style="text-align:justify; font-size:0.7em; color:#f59e0b; font-weight:600; margin-bottom:10px; padding: 0 8px;">{{ urun.alt_baslik }}</div>
-                {% endif %}
-                {% if urun.aciklama and urun.aciklama != 'CSV ile eklendi' %}
-                <div class="product-desc" style="text-align:justify; color:#222; font-weight:600; margin-bottom:8px; padding: 0 8px; font-size: 0.65em;">{{ urun.aciklama }}</div>
-                {% endif %}
+                <div style="max-height: 80px; overflow-y: auto; display: flex; flex-direction: column;">
+                    <div class="auto-scroll-desc" style="max-height: 80px; overflow-y: auto; display: flex; flex-direction: column;">
+                        {% if urun.alt_baslik %}
+                        <div class="product-subtitle" style="text-align:justify; font-size:0.7em; color:#f59e0b; font-weight:600; margin-bottom:10px; padding: 0 8px;">{{ urun.alt_baslik }}</div>
+                        {% endif %}
+                        {% if urun.aciklama and urun.aciklama != 'CSV ile eklendi' %}
+                        <div class="product-desc" style="text-align:justify; color:#222; font-weight:600; margin-bottom:8px; padding: 0 8px; font-size: 0.65em;">{{ urun.aciklama }}</div>
+                        {% endif %}
+                        {# SEO için etiketler, kullanıcıya görünmez #}
+                        {% if urun.etiketler %}
+                        <div style="display:none;">
+                            <span>{{ urun.etiketler }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                <style>
+                .shipping-line.free-animated {
+                    animation: freeKargoAnim 1.2s infinite alternate;
+                }
+                @keyframes freeKargoAnim {
+                    0% { background: #10b981; color: #fff; }
+                    100% { background: #fff; color: #10b981; }
+                }
+                </style>
+                <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    document.querySelectorAll('.shipping-line').forEach(function(el) {
+                        if (el.textContent.includes('Ücretsiz Kargo')) {
+                            el.classList.add('free-animated');
+                        }
+                    });
+                });
+                </script>
+                </div>
                 {# Özellikler ve etiketler ürün kartında gösterilmeyecek #}
             </div>
             </div>
@@ -711,8 +788,8 @@
                 <div class="store" style="margin-bottom:6px; background:#f6f8ff; border-radius:4px; padding:6px 4px 4px 4px; box-shadow:0 1px 4px rgba(60,100,200,0.04); text-align:center;">
                     
                     <!-- Gönderim Bilgisi (Üstte) -->
-                    <div style="font-size:0.72em; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #e5e7eb;">
-                        <span style="color:#6b7280;">📍 {{ fiyat.gonderim_yerinden }}'den gönderiliyor</span>
+                    <div style="font-size:0.72em; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #e5e7eb; height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        <span style="color:#6b7280; display:inline-block; max-width: 100%; vertical-align:middle; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">📍 {{ fiyat.gonderim_yerinden }}'den gönderiliyor</span>
                     </div>
                     
                     <!-- Fiyat Bilgileri -->
@@ -743,14 +820,24 @@
         {% if forloop.counter0|add:1|divisibleby:15 or forloop.last %}</div>{% endif %}
     {% endfor %}
 </div>
+<div style="text-align:center; margin:32px 0 40px 0;">
+    <button id="dahaFazlaBtn" style="display:none; background:#f59e0b; color:#fff; border:none; border-radius:8px; padding:14px 38px; font-size:1.1em; font-weight:600; box-shadow:0 2px 8px rgba(0,0,0,0.10); cursor:pointer;">Daha Fazla Ürün</button>
+</div>
 <div style="max-width: 500px; margin: 40px auto 0 auto; padding: 0 10px;">
-    <button id="yorumAcBtn" style="width:100%; background:#6366f1; color:#fff; border:none; border-radius:8px; padding:14px 0; font-size:1.1em; font-weight:700; cursor:pointer; margin-bottom:10px; min-height:48px;">Yorum Bırakmak İster misiniz?</button>
+    <div style="display:flex; justify-content:center; margin-bottom:4px;">
+        <button id="yorumAcBtn" style="background:#fff; color:#222; border:none; border-radius:8px; padding:10px 20px; font-size:1em; font-weight:700; cursor:pointer; min-width:180px; min-height:36px; box-shadow:0 2px 8px rgba(0,0,0,0.10);">Yorum Bırakmak İster misiniz?</button>
+    </div>
     <div id="yorumFormKapsayici" style="display:none; padding: 24px; background: #f9fafb; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
-        <h2 style="text-align:center; color:#6366f1; font-size:1.3em; margin-bottom:18px;">Yorum Bırakın</h2>
-        <form method="post" style="display:flex; flex-direction:column; gap:12px;">
+        <h2 style="text-align:center; color:#fff; font-size:1.1em; margin-bottom:10px; background:#222; padding:8px 0; border-radius:8px;">Yorum Bırakın</h2>
+        <form method="post" style="display:flex; flex-direction:column; gap:14px; background:#222; border-radius:10px; padding:18px; box-shadow:0 2px 8px rgba(0,0,0,0.12);">
             {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" style="background:#6366f1; color:#fff; border:none; border-radius:5px; padding:10px 0; font-size:1.1em; font-weight:600; cursor:pointer;">Gönder</button>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+                <label for="id_isim" style="color:#222; font-weight:600;">Adınız</label>
+                {{ form.isim }}
+                <label for="id_yorum" style="color:#222; font-weight:600;">Yorumunuz</label>
+                {{ form.yorum }}
+            </div>
+            <button type="submit" style="background:#f59e0b; color:#fff; border:none; border-radius:5px; padding:8px 0; font-size:1em; font-weight:700; cursor:pointer; margin-top:4px;">Gönder</button>
         </form>
     </div>
 </div>
@@ -768,21 +855,42 @@
 </script>
 
 <div style="max-width: 600px; margin: 32px auto 0 auto; padding: 0 10px;">
-    <h2 style="text-align:center; color:#e08206; font-size:1.15em; margin-bottom:12px;">Son Yorumlar</h2>
+    <h2 class="son-yorumlar-baslik" style="text-align:center; color:#e08206; font-size:1em; margin-bottom:8px;">Son Yorumlar</h2>
     {% for yorum in yorumlar %}
         <div style="background:#fff; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.06); padding:14px 18px; margin-bottom:14px;">
-            <div style="font-weight:600; color:#374151;">{{ yorum.isim }}</div>
-            <div style="color:#444; margin:6px 0 2px 0;">{{ yorum.yorum }}</div>
-            <div style="font-size:0.92em; color:#888; text-align:right;">{{ yorum.eklenme_tarihi|date:"d.m.Y H:i" }}</div>
+            <div class="son-yorumlar-kart" style="background:#fff; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.06); padding:14px 18px; margin-bottom:14px;">
+                <div style="font-weight:600; color:#374151;">{{ yorum.isim }}</div>
+                <div style="color:#444; margin:4px 0 2px 0;">{{ yorum.yorum }}</div>
+                <div style="font-size:0.9em; color:#888; text-align:right;">{{ yorum.eklenme_tarihi|date:"d.m.Y H:i" }}</div>
+            </div>
         </div>
     {% empty %}
-        <div style="text-align:center; color:#888;">Henüz yorum yok.</div>
+        <div class="henuz-yorum-yok" style="text-align:center; color:#888; font-size:0.97em; margin-bottom:8px;">Henüz yorum yok.</div>
     {% endfor %}
 </div>
 <!-- Yukarı Çık Butonu ve scripti block content'in sonunda -->
 <button id="scrollTopBtn" title="Yukarı Çık" style="display:none; position:fixed; bottom:32px; right:24px; z-index:9999; background:#6366f1; color:#fff; border:none; border-radius:50%; width:48px; height:48px; font-size:2em; box-shadow:0 2px 8px rgba(0,0,0,0.12); cursor:pointer; transition:background 0.2s;">
     ↑
 </button>
+<div style="text-align:center; margin:32px 0 40px 0;">
+    <!-- Daha Fazla Ürün butonu yukarıya taşındı -->
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var items = document.querySelectorAll('.product-item');
+    var btn = document.getElementById('dahaFazlaBtn');
+    if(items.length > 90) btn.style.display = 'inline-block';
+    var shown = 90;
+    btn && btn.addEventListener('click', function() {
+        var next = shown + 90;
+        for(var i=shown; i<next && i<items.length; i++) {
+            items[i].style.display = '';
+        }
+        shown = next;
+        if(shown >= items.length) btn.style.display = 'none';
+    });
+});
+</script>
 <script>
 // Yukarı Çık butonunu göster/gizle
 window.addEventListener('scroll', function() {

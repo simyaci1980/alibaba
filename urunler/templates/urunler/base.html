@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}KOLAY BUL EKSPRES{% endblock %}</title>
+    <meta name="description" content="Kolay Bul Ekspres ile güvenli, hızlı ve güvenli alışveriş! Kişisel bilgi istemeden, seçilmiş Aliexpress ürünlerini Avrupa deposundan hızlı teslimat avantajıyla sunuyoruz.">
     
     <!-- Favicon - Tüm Cihazlar İçin -->
     <link rel="icon" type="image/x-icon" href="{% static 'urunler/favicon.ico' %}">
@@ -87,15 +88,23 @@
             font-size: 2em;
             color: #f0ec09;
             cursor: pointer;
-            position: absolute;
-            right: 12px;
-            top: 10px;
+            margin-left: 16px;
+            height: 48px;
+            width: 48px;
+            align-items: center;
+            justify-content: center;
+            position: static;
             z-index: 2003;
+        }
+        @media (max-width: 700px) {
+            .navbar-hamburger {
+                display: flex;
+            }
         }
         .navbar-center-text {
             flex: 1;
-            font-size: 1.18em;
-            font-weight: 700;
+            font-size: 1.180em;
+            font-weight: 900;
             color: #f0ec09;
             letter-spacing: 1.2px;
             white-space: nowrap;
@@ -104,6 +113,12 @@
             align-items: center;
             justify-content: center;
             height: 100%;
+        }
+        @media (min-width: 701px) {
+            .navbar-center-text {
+                font-size: 2.2em;
+                font-weight: 900;
+            }
         }
         .navbar-content {
             display: flex;
@@ -138,14 +153,14 @@
             white-space: normal;
         }
         .navbar-btn-blue {
-            background: #1e90ff;
-            color: #fff;
+            background: #f3f3f3;
+            color: #222;
             font-size: 0.81em;
             padding-top: 2px;
             padding-bottom: 2px;
         }
         .navbar-btn-yellow {
-            background: #f0ec09;
+            background: #f3f3f3;
             color: #222;
             font-size: 0.97em;
         }
@@ -221,21 +236,31 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <div class="navbar">
-       <br> <span class="navbar-center-text">KOLAY BUL EKSPRES</span>
+    <div class="navbar" style="display: flex; align-items: center;">
+        <span class="navbar-center-text" style="flex: 1;">KOLAY BUL EKSPRES</span>
         <button class="navbar-hamburger" id="navbarHamburger" aria-label="Menüyü Aç/Kapat">&#9776;</button>
         <div class="navbar-content" id="navbarMenu">
-            <button class="navbar-btn navbar-btn-blue" id="btnAvrupaDeposu">🚚 Avrupa Deposundan gelen Aliexpress ürünleri</button>
+            <button class="navbar-btn navbar-btn-blue" id="btnAvrupaDeposu">🚚 Aliexpress'in Avrupa deposu olduğunu biliyor muydunuz?</button>
             <div id="avrupaDeposuInfo" class="info-popup" style="display:none; color:#fff; background:#1e90ff; border-radius:6px; margin:8px 0 0 0; padding:18px 22px; font-size:0.98em; text-align:justify;">
-                Avrupa deposundan (özellikle Fransa) gelen ürünleri özenle seçip listeliyoruz.<br>
-                Böylece Çin’den gelecek uzun kargo sürelerini beklemeden, <b>HIZLI TESLİMAT</b> avantajı ile alışveriş yapabilirsiniz.<br>
-                Ayrıca, aradığınız ürünü en doğru şekilde bulmanızı sağlıyoruz; (örneğin sandalye arayanların yanlışlıkla kılıf almamasını sağlamaya çalışıyoruz ).<br>
-                Amacımız, Türk kullanıcıların doğru ürüne hızlı ve güvenli şekilde ulaşmasını sağlamaktır.
+                Aliexpress'te bazı ürünler Avrupa'daki depolardan gönderilmektedir. Bu sayede ürünler çok daha hızlı ve gümrük sorunu olmadan elinize ulaşır.<br><br>
+                <b>Biz tam burada devreye giriyoruz:</b> Avrupa deposundan gelen ürünleri sizin için listeliyoruz. Böylece hızlı ve güvenli alışveriş yapabilirsiniz!
             </div>
-            <button class="navbar-btn navbar-btn-yellow" id="btnKomisyon">🤝 Bizim Karımız Nedir?</button>
+            <button class="navbar-btn navbar-btn-yellow" id="btnKomisyon">🤝 Affiliate ortaklık nedir?</button>
             <div id="komisyonInfo" class="info-popup" style="display:none; color:#222; background:#f0ec09; border-radius:6px; margin:8px 0 0 0; padding:18px 22px; font-size:0.98em; text-align:justify;">
-                Aliexpress ile affiliate ortaklığı sayesinde ufak bir komisyon kazanmaktayız.<br>
-                Bu komisyon, bizim ayakta durmamızı sağlarken  siz  kullanıcılar ise ürünleri <b>aynı fiyata</b> alıyorsunuz  fazladan ücret ödemiyorsunuz. Hatta mobil cihazlarda sitemizdeki ürün linkinden(her ürünün kendi linki var)   Aliexpress’in kendi uygulamasına giderseniz <b>bazen</b>    bizim gösterdiğimiz fiyatlardan daha ucuza bile gelebiliyor ürünler.<br>
+                Affiliate (ortaklık) sistemi, bir web sitesinin yönlendirdiği satışlardan komisyon alması esasına dayanır.<br><br>
+                Siz sitemizden bir ürüne tıkladığınızda, sizi Aliexpress'e yönlendiriyoruz. Eğer alışveriş yaparsanız, Aliexpress bize küçük bir komisyon ödüyor.<br><br>
+                <b>Sizin ödediğiniz fiyat değişmez</b>, ekstra ücret ödemezsiniz. Hatta bazen mobil uygulamada daha uygun fiyatlar görebilirsiniz.<br><br>
+                Bu sistem sayesinde hem siz güvenli alışveriş yaparsınız hem de biz sitemizi sürdürebiliriz.
+            </div>
+            <button class="navbar-btn" id="btnGuvenlik">🔒 Güvenlik & Gizlilik</button>
+            <div id="guvenlikInfo" class="info-popup" style="display:none; color:#fff; background:#16a34a; border-radius:6px; margin:8px 0 0 0; padding:18px 22px; font-size:0.98em; text-align:justify; max-height:180px; overflow-y:auto;">
+                <b>Gizliliğiniz ve güvenliğiniz bizim için çok önemli!</b><br><br>
+                Sitemizde <b>hiçbir şekilde üyelik, telefon, ad, soyad, e-posta veya kişisel bilgi</b> talep edilmez.<br>
+                Alışverişinizi doğrudan <b>dünyaca ünlü Aliexpress mağazası</b> üzerinden yaparsınız.<br><br>
+                Bizim yaptığımız sadece, seçtiğiniz ürünü <b>affiliate (ortaklık) linki</b> ile sizi Aliexpress’e yönlendirmektir.<br>
+                Tüm ödeme, teslimat ve müşteri hizmetleri işlemleri Aliexpress’in kendi güvenli altyapısı üzerinden gerçekleşir.<br><br>
+                <b>Kısacası:</b> Sitemiz üzerinden hiçbir kişisel veri paylaşmaz, doğrudan Aliexpress’in güvenli ortamında alışverişinizi tamamlarsınız.<br>
+                <span style="color:#d1fae5; font-size:0.98em;">Gönül rahatlığıyla alışveriş yapabilirsiniz!</span>
             </div>
         </div>
         <div class="navbar-overlay" id="navbarOverlay"></div>
@@ -251,6 +276,15 @@
             const avrupaDeposuInfo = document.getElementById('avrupaDeposuInfo');
             const btnKomisyon = document.getElementById('btnKomisyon');
             const komisyonInfo = document.getElementById('komisyonInfo');
+            const btnGuvenlik = document.getElementById('btnGuvenlik');
+            const guvenlikInfo = document.getElementById('guvenlikInfo');
+
+            function closeAllPopups() {
+                avrupaDeposuInfo.style.display = 'none';
+                komisyonInfo.style.display = 'none';
+                guvenlikInfo.style.display = 'none';
+            }
+
             function updateMenuDisplay() {
                 if (window.innerWidth > 700) {
                     menu.classList.add('active');
@@ -284,6 +318,7 @@
             btnAvrupaDeposu.addEventListener('click', function(e) {
                 e.stopPropagation();
                 if (avrupaDeposuInfo.style.display === 'none') {
+                    closeAllPopups();
                     avrupaDeposuInfo.style.display = 'block';
                 } else {
                     avrupaDeposuInfo.style.display = 'none';
@@ -292,12 +327,42 @@
             btnKomisyon.addEventListener('click', function(e) {
                 e.stopPropagation();
                 if (komisyonInfo.style.display === 'none') {
+                    closeAllPopups();
                     komisyonInfo.style.display = 'block';
                 } else {
                     komisyonInfo.style.display = 'none';
                 }
             });
+            btnGuvenlik.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (guvenlikInfo.style.display === 'none') {
+                    closeAllPopups();
+                    guvenlikInfo.style.display = 'block';
+                } else {
+                    guvenlikInfo.style.display = 'none';
+                }
+            });
             window.addEventListener('resize', updateMenuDisplay);
             updateMenuDisplay();
         });
+
+    </script>
+
+    <footer style="background:#111; color:#fff; text-align:center; padding: 24px 8px 16px 8px; font-size: 1rem; margin-top:40px; border-top:1px solid #222;">
+        <div style="max-width:900px; margin:0 auto;">
+            <strong>KOLAY BUL EKSPRES</strong> &copy; 2026
+            <br>
+            <span style="font-size:0.95em; color:#bbb;">Avrupa deposundan seçilmiş Aliexpress ürünleri, hızlı teslimat ve güvenli alışveriş.</span>
+        </div>
+    </footer>
+
+    <script>
+    // Footer'daki Gizlilik Politikası butonuna basınca navbar'daki gizlilik popup'ı açılır
+    document.addEventListener('DOMContentLoaded', function() {
+        var footerBtn = document.getElementById('footerGizlilikBtn');
+        var guvenlikBtn = document.getElementById('btnGuvenlik');
+        var menu = document.getElementById('navbarMenu');
+        var overlay = document.getElementById('navbarOverlay');
+
+    });
     </script>
