@@ -14,6 +14,20 @@ from urllib3.util.retry import Retry
 logger = logging.getLogger(__name__)
 
 
+COUNTRY_CODE_TO_TR = {
+    "US": "ABD",
+    "CN": "Çin",
+    "TR": "Türkiye",
+    "DE": "Almanya",
+    "FR": "Fransa",
+    "ES": "İspanya",
+    "IT": "İtalya",
+    "GB": "İngiltere",
+    "PL": "Polonya",
+    "CZ": "Çek Cumhuriyeti",
+}
+
+
 class EbayAPIConnector:
     """eBay Browse API Connector"""
     
@@ -222,6 +236,10 @@ class EbayAPIConnector:
             return items
         
         for item in response.get("itemSummaries", []):
+            item_location = item.get("itemLocation") or {}
+            country_code = item_location.get("country")
+            shipping_origin = COUNTRY_CODE_TO_TR.get(country_code, country_code or "Belirtilmedi")
+
             parsed_item = {
                 "item_id": item.get("itemId"),
                 "title": item.get("title"),
@@ -234,8 +252,8 @@ class EbayAPIConnector:
                 "category": item.get("categories")[0].get("categoryName") if item.get("categories") else None,
                 "seller_feedback_score": item.get("seller", {}).get("feedbackScore", 0),
                 "shipping_cost": 0,
-                "shipping_origin": "USA",
-                "shipping_available": True,
+                "shipping_origin": shipping_origin,
+                "shipping_available": False,
             }
             
             # Parse shipping info
@@ -244,8 +262,11 @@ class EbayAPIConnector:
                 parsed_item["shipping_cost"] = float(
                     shipping.get("shippingCost", {}).get("value", 0)
                 ) if shipping.get("shippingCost") else 0
-                if shipping.get("shippingCostType") == "FIXED":
+                shipping_cost_type = shipping.get("shippingCostType")
+                if shipping_cost_type in {"FIXED", "CALCULATED", "FREE"}:
                     parsed_item["shipping_available"] = True
+                if shipping_cost_type == "FREE":
+                    parsed_item["shipping_cost"] = 0
             
             # Parse category
             if item.get("categories"):

@@ -115,7 +115,10 @@ class Command(BaseCommand):
                     source_url=source_url,
                     defaults={
                         'isim': item['title'],
-                        'aciklama': f"Category: {item['category']}",
+                        'aciklama': f"Kategori: {item['category'] or 'Belirtilmedi'}",
+                        'ana_baslik': item['title'][:200],
+                        'alt_baslik': f"Durum: {item['condition']}",
+                        'etiketler': item['category'] or '',
                         'resim_url': item['image_url'],
                     }
                 )
@@ -124,6 +127,14 @@ class Command(BaseCommand):
                     self.stdout.write(f'✓ Created product: {item["title"][:50]}...')
                 else:
                     self.stdout.write(f'~ Found existing: {item["title"][:50]}...')
+                    # Keep text fields fresh for existing products too
+                    product.aciklama = f"Kategori: {item['category'] or 'Belirtilmedi'}"
+                    product.ana_baslik = item['title'][:200]
+                    product.alt_baslik = f"Durum: {item['condition']}"
+                    product.etiketler = item['category'] or ''
+                    if item['image_url']:
+                        product.resim_url = item['image_url']
+                    product.save()
 
                 # Add/update price entry
                 affiliate_url = item['affiliate_url'] or item['item_web_url']
@@ -153,6 +164,8 @@ class Command(BaseCommand):
                     price.fiyat = Decimal(str(item['price']))
                     price.affiliate_link = affiliate_url
                     price.gonderim_ucreti = Decimal(str(item['shipping_cost']))
+                    price.gonderim_yerinden = item['shipping_origin']
+                    price.gonderim_durumu = item['shipping_available']
                     price.save()
 
                 # Add product image if URL available
