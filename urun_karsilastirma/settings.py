@@ -158,3 +158,22 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #SECURE_SSL_REDIRECT = True  # Tüm HTTP isteklerini otomatik olarak HTTPS'ye yönlendirir
 #SESSION_COOKIE_SECURE = True
 #CSRF_COOKIE_SECURE = True
+# ===== eBay API CREDENTIALS =====
+# Sandbox Keys
+EBAY_SANDBOX_CLIENT_ID = config('EBAY_SANDBOX_CLIENT_ID', default='')
+EBAY_SANDBOX_CLIENT_SECRET = config('EBAY_SANDBOX_CLIENT_SECRET', default='')
+
+# Production Keys  
+EBAY_PRODUCTION_CLIENT_ID = config('EBAY_PRODUCTION_CLIENT_ID', default='')
+EBAY_PRODUCTION_CLIENT_SECRET = config('EBAY_PRODUCTION_CLIENT_SECRET', default='')
+
+# eBay Partner Network Campaign ID
+EBAY_CAMPAIGN_ID = config('EBAY_CAMPAIGN_ID', default='')
+
+# Caching for tokens (in-memory cache)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-location',
+    }
+}

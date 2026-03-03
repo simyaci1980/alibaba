@@ -412,6 +412,7 @@
             font-weight: 600;
             margin-bottom: 10px;
             padding: 0 8px;
+            min-height: 2.2em;
         }
         .product-desc {
             flex: none;
@@ -421,6 +422,7 @@
             word-wrap: break-word;
             white-space: normal;
             margin-bottom: 8px;
+            min-height: 3.2em;
         }
         @media (max-width: 768px) {
             .product-row {
@@ -785,7 +787,13 @@
             </div>
             <div class="stores" style="flex-direction:column; width:100%; padding-top:6px; margin-top:auto;">
                 {% for fiyat in urun.fiyatlar.all %}
-                <div class="store" style="margin-bottom:6px; background:#f6f8ff; border-radius:4px; padding:6px 4px 4px 4px; box-shadow:0 1px 4px rgba(60,100,200,0.04); text-align:center;">
+                <div class="store" style="margin-bottom:6px; background:{% if fiyat.magaza.isim == 'eBay' %}#fef08a{% else %}#f6f8ff{% endif %}; border-radius:4px; padding:6px 4px 4px 4px; box-shadow:0 1px 4px rgba(60,100,200,0.04); text-align:center; border-left:3px solid {% if fiyat.magaza.isim == 'eBay' %}#e7900a{% else %}#6366f1{% endif %};">
+                    <div style="font-size:0.75em; color:#222; margin-bottom:2px; font-weight:{% if fiyat.magaza.isim == 'eBay' %}700{% else %}500{% endif %};">
+                        Mağaza: {{ fiyat.magaza.isim }}
+                        {% if fiyat.magaza.isim == 'eBay' %}
+                        <span style="display:inline-block; background:#e7900a; color:#fff; font-size:0.8em; padding:1px 5px; border-radius:3px; margin-left:3px;">🏆 Orijinal</span>
+                        {% endif %}
+                    </div>
                     
                     <!-- Gönderim Bilgisi (Üstte) -->
                     <div style="font-size:0.72em; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #e5e7eb; height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
