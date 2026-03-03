@@ -18,10 +18,10 @@ class EbayAPIConnector:
     """eBay Browse API Connector"""
     
     # Endpoints (corrected OAuth token paths)
-    SANDBOX_AUTH_URL = "https://api.sandbox.ebay.com/oauth2/token"
+    SANDBOX_AUTH_URL = "https://api.sandbox.ebay.com/identity/v1/oauth2/token"
     SANDBOX_API_URL = "https://api.sandbox.ebay.com/buy/browse/v1"
     
-    PRODUCTION_AUTH_URL = "https://api.ebay.com/oauth2/token"
+    PRODUCTION_AUTH_URL = "https://api.ebay.com/identity/v1/oauth2/token"
     PRODUCTION_API_URL = "https://api.ebay.com/buy/browse/v1"
     
     def __init__(self, client_id: str, client_secret: str, sandbox: bool = True):
