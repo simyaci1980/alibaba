@@ -11,8 +11,30 @@ from decimal import Decimal
 import logging
 import re
 import importlib
+from urllib.parse import urlencode
 
 logger = logging.getLogger(__name__)
+
+
+def build_epn_rover_url(item_url: str, campaign_id: str, custom_id: int | None = None) -> str:
+    if not item_url:
+        return ''
+
+    if 'rover.ebay.com' in item_url:
+        return item_url
+
+    if not campaign_id:
+        return item_url
+
+    params = {
+        'campid': str(campaign_id),
+        'toolid': '10001',
+        'mpre': item_url,
+    }
+    if custom_id is not None:
+        params['customid'] = str(custom_id)
+
+    return f"https://rover.ebay.com/rover/1/711-53200-19255-0/1?{urlencode(params)}"
 
 
 class Command(BaseCommand):
@@ -230,14 +252,8 @@ class Command(BaseCommand):
                     product.save()
 
                 # Add/update price entry
-                affiliate_url = item['affiliate_url'] or item['item_web_url']
-                
-                # Add affiliate tracking if available
-                if affiliate_url and campaign_id:
-                    # Check if URL already has campaign ID
-                    if 'campid=' not in affiliate_url:
-                        separator = '&' if '?' in affiliate_url else '?'
-                        affiliate_url += f"{separator}campid={campaign_id}&customid={product.id}"
+                base_item_url = item['item_web_url'] or item['affiliate_url']
+                affiliate_url = build_epn_rover_url(base_item_url, campaign_id, product.id)
 
                 price, price_created = Fiyat.objects.get_or_create(
                     urun=product,
