@@ -11,7 +11,7 @@ from decimal import Decimal
 import logging
 import re
 import importlib
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse, parse_qsl, urlunparse
 
 logger = logging.getLogger(__name__)
 
@@ -26,20 +26,34 @@ def build_epn_rover_url(item_url: str, campaign_id: str, custom_id: int | None =
     if not campaign_id:
         return item_url
 
-    # Remove query parameters from item URL (e.g., ?_skw=drone&hash=...)
-    # Keep only the base eBay item URL (e.g., https://www.ebay.com/itm/ITEM_ID)
-    if '?' in item_url:
-        item_url = item_url.split('?')[0]
+    parsed = urlparse(item_url)
 
-    params = {
+    clean_path = parsed.path
+    if '/itm/' in clean_path:
+        item_id = clean_path.split('/itm/', 1)[1].split('/', 1)[0]
+        clean_path = f"/itm/{item_id}"
+
+    existing_params = dict(parse_qsl(parsed.query, keep_blank_values=True))
+    tracking_params = {
+        'mkcid': '1',
+        'mkrid': '711-53200-19255-0',
+        'siteid': '0',
         'campid': str(campaign_id),
         'toolid': '10001',
-        'mpre': item_url,
+        'mkevt': '1',
     }
+    existing_params.update(tracking_params)
     if custom_id is not None:
-        params['customid'] = str(custom_id)
+        existing_params['customid'] = str(custom_id)
 
-    return f"https://rover.ebay.com/rover/1/711-53200-19255-0/1?{urlencode(params)}"
+    return urlunparse((
+        parsed.scheme or 'https',
+        parsed.netloc or 'www.ebay.com',
+        clean_path,
+        '',
+        urlencode(existing_params),
+        ''
+    ))
 
 
 class Command(BaseCommand):
