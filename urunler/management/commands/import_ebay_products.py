@@ -26,6 +26,11 @@ def build_epn_rover_url(item_url: str, campaign_id: str, custom_id: int | None =
     if not campaign_id:
         return item_url
 
+    # Remove query parameters from item URL (e.g., ?_skw=drone&hash=...)
+    # Keep only the base eBay item URL (e.g., https://www.ebay.com/itm/ITEM_ID)
+    if '?' in item_url:
+        item_url = item_url.split('?')[0]
+
     params = {
         'campid': str(campaign_id),
         'toolid': '10001',
