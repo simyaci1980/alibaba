@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.db.models import Q, Case, When, IntegerField
+from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 from .models import Urun, ClickLog, Yorum
 from .forms import YorumForm
 
@@ -123,9 +124,29 @@ def urun_affiliate_redirect(request, urun_id):
 	if not fiyat:
 		return redirect('/')  # Fiyat yoksa ana sayfaya yönlendir
 	
-	ClickLog.objects.create(
+	click = ClickLog.objects.create(
 		user=request.user if request.user.is_authenticated else None,
 		link_type='urun_affiliate',
-		urun=urun
+		urun=urun,
+		subid=f"u{urun.id}_c"
 	)
-	return redirect(fiyat.affiliate_link)
+
+	target_link = fiyat.affiliate_link
+	if target_link and 'ebay.com' in target_link and 'campid=' in target_link:
+		parsed = urlparse(target_link)
+		params = dict(parse_qsl(parsed.query, keep_blank_values=True))
+		params['customid'] = f"u{urun.id}_c{click.id}"
+		target_link = urlunparse((
+			parsed.scheme,
+			parsed.netloc,
+			parsed.path,
+			parsed.params,
+			urlencode(params),
+			parsed.fragment,
+		))
+
+	if click.subid != f"u{urun.id}_c{click.id}":
+		click.subid = f"u{urun.id}_c{click.id}"
+		click.save(update_fields=['subid'])
+
+	return redirect(target_link)
