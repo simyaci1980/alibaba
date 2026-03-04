@@ -11,6 +11,8 @@ from decimal import Decimal
 import logging
 import re
 import importlib
+import random
+import string
 from urllib.parse import urlencode, urlparse, parse_qsl, urlunparse
 
 logger = logging.getLogger(__name__)
@@ -123,6 +125,13 @@ class Command(BaseCommand):
                 return translated
             except Exception:
                 return text
+
+        def generate_unique_code(length=5):
+            """Generate unique 5-digit product code (same as AliExpress imports)"""
+            while True:
+                code = ''.join(random.choices(string.digits, k=length))
+                if not Urun.objects.filter(urun_kodu=code).exists():
+                    return code
 
         def clean_html(raw_text: str) -> str:
             if not raw_text:
@@ -252,6 +261,7 @@ class Command(BaseCommand):
                         'etiketler': etiketler,
                         'ozellikler': '\n'.join(ozellikler_lines)[:5000],
                         'resim_url': item['image_url'],
+                        'urun_kodu': generate_unique_code(),
                     }
                 )
 
@@ -272,7 +282,7 @@ class Command(BaseCommand):
 
                 # Add/update price entry
                 base_item_url = item['item_web_url'] or item['affiliate_url']
-                affiliate_url = build_epn_rover_url(base_item_url, campaign_id, product.id)
+                affiliate_url = build_epn_rover_url(base_item_url, campaign_id, product.urun_kodu)
 
                 price, price_created = Fiyat.objects.get_or_create(
                     urun=product,

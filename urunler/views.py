@@ -135,7 +135,7 @@ def urun_affiliate_redirect(request, urun_id):
 	if target_link and 'ebay.com' in target_link and 'campid=' in target_link:
 		parsed = urlparse(target_link)
 		params = dict(parse_qsl(parsed.query, keep_blank_values=True))
-		params['customid'] = f"u{urun.id}_c{click.id}"
+		params['customid'] = urun.urun_kodu or str(urun.id)
 		target_link = urlunparse((
 			parsed.scheme,
 			parsed.netloc,
@@ -145,8 +145,8 @@ def urun_affiliate_redirect(request, urun_id):
 			parsed.fragment,
 		))
 
-	if click.subid != f"u{urun.id}_c{click.id}":
-		click.subid = f"u{urun.id}_c{click.id}"
+	if click.subid != (urun.urun_kodu or str(urun.id)):
+		click.subid = urun.urun_kodu or str(urun.id)
 		click.save(update_fields=['subid'])
 
 	return redirect(target_link)
