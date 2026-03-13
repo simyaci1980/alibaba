@@ -1,3 +1,85 @@
+</div>
+<script>
+function slideImage(urunId, direction, event) {
+    if(event) {
+        event.stopPropagation();
+        if(event.preventDefault) event.preventDefault();
+    }
+    if(!window.productImages || !window.productImages[urunId]) return;
+    var imgs = window.productImages[urunId];
+    if(imgs.length === 0) return;
+    window.productSliderIndex[urunId] = (window.productSliderIndex[urunId] + direction + imgs.length) % imgs.length;
+    var idx = window.productSliderIndex[urunId];
+    var imgTag = document.getElementById('slider-img-' + urunId);
+    imgTag.src = imgs[idx];
+}
+
+function setupSliderDrag(urunId) {
+    var img = document.getElementById('slider-img-' + urunId);
+    if (!img) return;
+    var startX = 0;
+    var isDragging = false;
+    var threshold = 30; // minimum px to trigger slide
+
+    img.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        isDragging = true;
+        startX = e.clientX;
+    });
+    img.addEventListener('mousemove', function(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        e.stopPropagation();
+    });
+    img.addEventListener('mouseup', function(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var diff = e.clientX - startX;
+        if (Math.abs(diff) > threshold) {
+            slideImage(urunId, diff < 0 ? 1 : -1);
+        }
+        isDragging = false;
+    });
+    img.addEventListener('mouseleave', function(e) {
+        if (!isDragging) return;
+        isDragging = false;
+    });
+    // Touch events
+    img.addEventListener('touchstart', function(e) {
+        if (e.touches.length !== 1) return;
+        e.preventDefault();
+        e.stopPropagation();
+        isDragging = true;
+        startX = e.touches[0].clientX;
+    });
+    img.addEventListener('touchmove', function(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        e.stopPropagation();
+    });
+    img.addEventListener('touchend', function(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var endX = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : startX;
+        var diff = endX - startX;
+        if (Math.abs(diff) > threshold) {
+            slideImage(urunId, diff < 0 ? 1 : -1);
+        }
+        isDragging = false;
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.productImages) {
+        Object.keys(window.productImages).forEach(function(urunId) {
+            setupSliderDrag(urunId);
+        });
+    }
+});
+</script>
 {% extends 'urunler/base.html' %}
 
 {% block title %}Ana Sayfa | KOLAY BUL EKSPRES{% endblock %}
@@ -8,15 +90,21 @@
     <div class="carousel-container" id="productCarousel" style="display: flex; will-change: transform;">
         {% for urun in urunler %}
         <a href="{% url 'urun_affiliate_redirect' urun.id %}" target="_blank" class="carousel-item" style="flex: 0 0 auto; margin: 0 8px; text-decoration: none; cursor: pointer;" data-urun-id="{{ urun.id }}">
-            <div class="carousel-circle" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background: #fff; transition: transform 0.2s, box-shadow 0.2s;">
+            <div class="carousel-circle" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background: #fff; transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; justify-content: center;">
                 {% if urun.resim_url %}
-                <img src="{{ urun.resim_url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;">
-                {% elif urun.resimler.all|length > 0 %}
-                <img src="{{ urun.resimler.all.0.resim.url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <img src="{{ urun.resim_url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;">
                 {% elif urun.resim %}
-                <img src="{{ urun.resim.url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <img src="{{ urun.resim.url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% elif urun.resimler.all|length > 0 %}
+                    {% with ilk_resim=urun.resimler.all.0 %}
+                        {% if ilk_resim.resim_url %}
+                            <img src="{{ ilk_resim.resim_url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% elif ilk_resim.resim %}
+                            <img src="{{ ilk_resim.resim.url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% endif %}
+                    {% endwith %}
                 {% else %}
-                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; font-size: 0.7em; text-align: center; padding: 4px;">{{ urun.isim|truncatewords:2 }}</div>
+                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; font-size: 0.7em; text-align: center; padding: 4px;">{{ urun.isim|truncatewords:2 }}</div>
                 {% endif %}
             </div>
         </a>
@@ -305,6 +393,56 @@
             }
         });
     </script>
+<script>
+// Akıllı drag-to-scroll: Ürün kartı üzerinde de kaydırma çalışır, sürükleme olursa tıklama engellenir
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.product-row-scrollable').forEach(function(row) {
+        let isDown = false;
+        let startX = 0;
+        let scrollLeft = 0;
+        let dragMoved = false;
+
+        row.addEventListener('mousedown', function(e) {
+            if (e.button !== 0) return;
+            isDown = true;
+            dragMoved = false;
+            row.classList.add('dragging');
+            startX = e.pageX - row.offsetLeft;
+            scrollLeft = row.scrollLeft;
+        });
+        // a etiketinde dragstart'ı engelle
+        row.querySelectorAll('a').forEach(function(link) {
+            link.addEventListener('dragstart', function(e) { e.preventDefault(); });
+        });
+
+        function onMouseMove(e) {
+            var leftButton = (e.buttons !== undefined ? e.buttons === 1 : e.which === 1);
+            if (!isDown || !leftButton) return;
+            const x = e.pageX - row.offsetLeft;
+            const walk = (x - startX) * 1.5;
+            if (Math.abs(x - startX) > 5) dragMoved = true; // 5px üstü hareket drag sayılır
+            row.scrollLeft = scrollLeft - walk;
+        }
+        function onMouseUp(e) {
+            if (isDown) {
+                setTimeout(() => { dragMoved = false; }, 0); // kısa gecikme ile resetle
+                isDown = false;
+                row.classList.remove('dragging');
+            }
+        }
+        // Tıklama engelleme
+        row.querySelectorAll('a').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                if (dragMoved) e.preventDefault();
+            });
+        });
+
+        row.addEventListener('mouseleave', onMouseUp);
+        window.addEventListener('mousemove', onMouseMove, { passive: false });
+        window.addEventListener('mouseup', onMouseUp);
+    });
+});
+</script>
 
     <style>
         .product-row {
@@ -324,6 +462,7 @@
             padding: 0 8px 8px 8px;
             width: 100%;
             background: linear-gradient(90deg, #111 0%, #ff9800 100%);
+            min-height: 700px;
             /* position: static; */
         }
         .product-row-scrollable::-webkit-scrollbar {
@@ -336,17 +475,41 @@
         .product-link {
             display: flex;
             flex-direction: column;
-            width: 320px;
-            min-width: 320px;
-            max-width: 320px;
+            width: 360px;
+            min-width: 360px;
+            max-width: 360px;
             text-decoration: none;
             color: inherit;
             box-sizing: border-box;
+            height: 800px;
+            overflow: hidden;
             /* position: static; */
+        }
+        @media (max-width: 700px) {
+            .product-link {
+                width: 75vw !important;
+                min-width: 75vw !important;
+                max-width: 75vw !important;
+            }
+            .product-row-scrollable {
+                padding-left: 4vw !important;
+            }
+        }
+        @media (max-width: 500px) {
+            .product-link {
+                width: 75vw !important;
+                min-width: 75vw !important;
+                max-width: 75vw !important;
+            }
+            .product-row-scrollable {
+                padding-left: 2vw !important;
+            }
+        }
         }
         .product {
             width: 100%;
-            height: 520px;
+            height: auto;
+            min-height: 520px;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -358,39 +521,42 @@
             flex-direction: column;
             width: 100%;
             align-items: center;
-            /* position: static; */
+            flex: 1 1 auto;
+                    height: 80px;
         }
         .product-media {
             width: 100%;
-            height: 280px;
+                height: 140px;
+            min-height: 200px;
             margin: 0;
-            padding: 16px;
+            padding: 0;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            align-items: stretch !important;
+            justify-content: stretch !important;
             overflow: hidden;
             background: #fff;
             box-sizing: border-box;
         }
         .product-media img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            border-radius: 8px;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.14);
             background: #f3f4f6;
             display: block;
-            margin: auto;
+            margin: 0;
             padding: 0;
         }
-        .product-text-scrollable {
-            max-height: 130px;
-            /* 6 satır için yaklaşık yükseklik */
-            overflow-y: auto;
-            padding-right: 4px;
-            display: flex;
-            flex-direction: column;
-        }
+            .product-text-scrollable {
+                max-height: 130px;
+                /* Masaüstüyle aynı yükseklik ve kaydırma */
+                overflow-y: auto;
+                padding-right: 4px;
+                display: flex;
+                flex-direction: column;
+            }
         .product-title {
                             font-weight: 600;
                             min-height: 2.6em;
@@ -422,7 +588,7 @@
             word-wrap: break-word;
             white-space: normal;
             margin-bottom: 8px;
-            min-height: 3.2em;
+            /* max-height ve overflow kaldırıldı, açıklama tamamen görünür */
         }
         @media (max-width: 768px) {
             .product-row {
@@ -440,20 +606,22 @@
                 flex: 0 0 auto;
                 min-width: 150px;
                 max-width: 180px;
-                width: 180px;
-                scroll-snap-align: start;
-            }
-            .product {
-                height: auto !important;
-                min-height: 0 !important;
-                padding: 0 !important;
-                font-size: 0.95em;
-            }
-            .product-media {
+                width: 50%;
+                height: 50%;
+                max-width: 40px;
+                max-height: 40px;
+                object-fit: contain;
+                object-position: center center;
+                border-radius: 12px;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+                background: #f3f4f6;
+                display: block;
+                margin: 0 auto;
+                padding: 0;
                 width: 100%;
-                height: 150px;
+                height: 140px;
                 margin: 0;
-                padding: 8px;
+                padding: 0;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -462,27 +630,27 @@
                 box-sizing: border-box;
             }
             .product-media img {
-                max-width: 100% !important;
-                max-height: 100% !important;
-                object-fit: contain !important;
-                border-radius: 8px !important;
-                box-shadow: 0 6px 16px rgba(0,0,0,0.12) !important;
+                width: 100% !important;
+                height: 140px !important;
+                object-fit: cover !important;
+                border-radius: 10px !important;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.14) !important;
                 background: #f3f4f6 !important;
                 display: block;
-                margin: auto;
+                margin: 0;
                 padding: 0 !important;
             }
             .product .slider-img {
                 height: auto !important;
-                max-height: 100px !important;
+                max-height: 120px !important;
                 width: 100% !important;
                 object-fit: contain !important;
             }
             .product-text-scrollable {
-                max-height: 90px;
-                /* Mobilde 6 satır için yaklaşık yükseklik */
+                max-height: 130px;
+                /* Mobilde de masaüstüyle aynı yükseklik ve kaydırma */
                 overflow-y: auto;
-                padding-right: 2px;
+                padding-right: 4px;
                 display: flex;
                 flex-direction: column;
             }
@@ -504,6 +672,7 @@
             }
             .price-total {
                 font-size: 0.7em !important;
+                margin-top: auto !important;
             }
             .shipping-line {
                 min-height: 14px;
@@ -690,71 +859,117 @@
             </div>
             <div class="product-row-scrollable">
         {% endif %}
-        <a class="product-link product-item" data-index="{{ forloop.counter0 }}" href="{% url 'urun_affiliate_redirect' urun.id %}" target="_blank">
-        <div class="product" style="min-height: 280px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 8px; padding: 12px 12px 12px 12px; transition: box-shadow 0.2s; justify-content: flex-start;">
+        <div class="product-link product-item" data-index="{{ forloop.counter0 }}" style="box-sizing: border-box; display: flex; flex-direction: column; align-items: center; background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 8px; padding: 4px 4px 8px 4px; transition: box-shadow 0.2s; justify-content: flex-start;">
             <div class="product-body">
-            {% if urun.resim_url %}
-                <div class="product-media">
-                    <img src="{{ urun.resim_url }}" alt="{{ urun.isim }}" style="max-width:100%; max-height:100%; object-fit:contain; display:block; margin:auto; border-radius:8px; box-shadow:0 6px 16px rgba(0,0,0,0.12); background:#ffffff; padding:0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-                <div style="width:100%; height:100%; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius:8px; display:none; align-items:center; justify-content:center; color:#fff; font-size:0.9em; font-weight:600; text-align:center; padding:14px; box-shadow:0 6px 16px rgba(0,0,0,0.12);">{{ urun.isim|truncatewords:3 }}</div>
-                </div>
-            {% elif urun.resimler.all|length > 0 and urun.resimler.all.0.resim %}
-                <div class="slider product-media" style="position:relative;">
-                    <img src="{{ urun.resimler.all.0.resim.url }}" alt="{{ urun.isim }}" class="slider-img" style="max-width:100%; max-height:100%; object-fit:contain; display:block; margin:auto; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.07); background:#ffffff; padding:0;" />
-                    {% if urun.resimler.all|length > 1 %}
-                        <button class="slider-prev" style="position:absolute; left:0; top:50%; transform:translateY(-50%); background:#6366f1; color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2em; cursor:pointer;">&#8592;</button>
-                        <button class="slider-next" style="position:absolute; right:0; top:50%; transform:translateY(-50%); background:#6366f1; color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2em; cursor:pointer;">&#8594;</button>
-                    {% endif %}
-                    <script>
-                        (function() {
-                            var slider = document.currentScript.parentElement;
-                            var images = [
-                                {% for resim in urun.resimler.all %}{% if resim.resim.url %}"{{ resim.resim.url|escapejs }}"{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}
-                            ];
-                            var img = slider.querySelector('.slider-img');
-                            var prev = slider.querySelector('.slider-prev');
-                            var next = slider.querySelector('.slider-next');
-                            var idx = 0;
-                            if (prev && next) {
-                                prev.onclick = function() {
-                                    idx = (idx - 1 + images.length) % images.length;
-                                    img.src = images[idx];
-                                };
-                                next.onclick = function() {
-                                    idx = (idx + 1) % images.length;
-                                    img.src = images[idx];
-                                };
+            <div class="product-media product-image-slider" style="position:relative; width:100%; height:100%; min-height:180px; display:flex; align-items:stretch; justify-content:stretch;">
+                <img id="slider-img-{{ urun.id }}" src="" alt="{{ urun.isim }}" style="width:100%; height:100%; object-fit:cover; object-position:center; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.14); background:#fff; touch-action: pan-y; cursor: grab; display:block; margin:0; padding:0;" />
+                <div id="slider-dots-{{ urun.id }}" class="slider-dots" style="position:absolute; left:0; right:0; bottom:6px; display:flex; justify-content:center; gap:6px; z-index:2;"></div>
+                <script>
+                window.productImages = window.productImages || {};
+                window.productSliderIndex = window.productSliderIndex || {};
+                window.productImages['{{ urun.id }}'] = [
+                    {% if urun.resim_url %}'{{ urun.resim_url }}',{% endif %}
+                    {% if urun.resim %}'{{ urun.resim.url }}',{% endif %}
+                    {% for resim in urun.resimler.all|dictsort:'sira' %}
+                        {% if resim.resim_url %}'{{ resim.resim_url }}',{% elif resim.resim %}'{{ resim.resim.url }}',{% endif %}
+                    {% endfor %}
+                ];
+                window.productSliderIndex['{{ urun.id }}'] = 0;
+                (function() {
+                    var imgs = window.productImages['{{ urun.id }}'];
+                    var idx = window.productSliderIndex['{{ urun.id }}'];
+                    var imgTag = document.getElementById('slider-img-{{ urun.id }}');
+                    var dotsDiv = document.getElementById('slider-dots-{{ urun.id }}');
+                    if(imgs.length > 0) {
+                        imgTag.src = imgs[idx];
+                        // Dots oluştur
+                        if (dotsDiv) {
+                            dotsDiv.innerHTML = '';
+                            for (let i = 0; i < imgs.length; i++) {
+                                var dot = document.createElement('span');
+                                dot.className = 'slider-dot' + (i === idx ? ' active' : '');
+                                dot.style.cssText = 'width:9px;height:9px;border-radius:50%;background:' + (i===idx?'#6366f1':'#e5e7eb') + ';display:inline-block;transition:background 0.2s;';
+                                dot.dataset.idx = i;
+                                dot.addEventListener('click', function(e) {
+                                    window.productSliderIndex['{{ urun.id }}'] = i;
+                                    imgTag.src = imgs[i];
+                                    updateDots();
+                                });
+                                dotsDiv.appendChild(dot);
                             }
-                        })();
-                    </script>
-                </div>
-            {% elif urun.resim %}
-                <div class="product-media">
-                    <img src="{{ urun.resim.url }}" alt="{{ urun.isim }}" style="max-width:100%; max-height:100%; object-fit:contain; display:block; margin:auto; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.07); background:#ffffff; padding:0;" />
-                </div>
-            {% else %}
-                <div class="product-media" style="height:200px; margin-bottom:14px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.1em; font-weight:600; text-align:center; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.1);">{{ urun.isim|truncatewords:3 }}</div>
-            {% endif %}
+                        }
+                    } else {
+                        imgTag.style.display = 'none';
+                    }
+                    function updateDots() {
+                        if (!dotsDiv) return;
+                        var dots = dotsDiv.querySelectorAll('span');
+                        var activeIdx = window.productSliderIndex['{{ urun.id }}'];
+                        for (let i = 0; i < dots.length; i++) {
+                            dots[i].style.background = (i === activeIdx) ? '#6366f1' : '#e5e7eb';
+                        }
+                    }
+                    // Drag/swipe ile resim değiştir
+                    let startX = 0;
+                    let dragging = false;
+                    imgTag.addEventListener('mousedown', function(e) {
+                        dragging = true;
+                        startX = e.clientX;
+                        imgTag.style.cursor = 'grabbing';
+                    });
+                    imgTag.addEventListener('touchstart', function(e) {
+                        dragging = true;
+                        startX = e.touches[0].clientX;
+                    });
+                    imgTag.addEventListener('mouseup', function(e) {
+                        if (!dragging) return;
+                        let delta = e.clientX - startX;
+                        if (Math.abs(delta) > 30) {
+                            slideImage('{{ urun.id }}', delta < 0 ? 1 : -1);
+                            updateDots();
+                        }
+                        dragging = false;
+                        imgTag.style.cursor = 'grab';
+                    });
+                    imgTag.addEventListener('mouseleave', function(e) {
+                        dragging = false;
+                        imgTag.style.cursor = 'grab';
+                    });
+                    imgTag.addEventListener('touchend', function(e) {
+                        if (!dragging) return;
+                        let delta = e.changedTouches[0].clientX - startX;
+                        if (Math.abs(delta) > 30) {
+                            slideImage('{{ urun.id }}', delta < 0 ? 1 : -1);
+                            updateDots();
+                        }
+                        dragging = false;
+                    });
+                })();
+                </script>
+            </div>
+
 
             <div class="product-text-scrollable">
-                {% if search_query and urun.urun_kodu %}
-                <div style="text-align:center; font-size:0.78em; color:#a0aec0; font-weight:500; margin:6px 0 4px 0; letter-spacing:1px;">{{ urun.urun_kodu }}</div>
-                {% endif %}
-
-                {# Ana başlık her zaman üstte ve sabit #}
-                {% if urun.ana_baslik %}
-                <div class="product-title" style="text-align:center; font-weight:700; margin-bottom:4px; color:#2563eb; font-size:0.9em; word-break:break-word; padding: 0 8px;">{{ urun.ana_baslik }}</div>
-                {% else %}
-                <div class="product-title" style="text-align:justify; font-weight:600; margin-bottom:4px; color:#1f2937; word-break:break-word; padding: 0 8px;">{{ urun.isim }}</div>
-                {% endif %}
-
-                <div style="max-height: 80px; overflow-y: auto; display: flex; flex-direction: column;">
-                    <div class="auto-scroll-desc" style="max-height: 80px; overflow-y: auto; display: flex; flex-direction: column;">
+                <div style="max-height: 120px; overflow-y: auto; display: flex; flex-direction: column;">
+                    <div class="auto-scroll-desc" style="display: flex; flex-direction: column;">
+                        {% if urun.ana_baslik %}
+                        <a href="{% url 'urun_affiliate_redirect' urun.id %}" target="_blank" class="product-title" style="text-align:center; font-weight:700; margin-bottom:4px; color:#2563eb; font-size:0.9em; word-break:break-word; padding: 0 8px; text-decoration:underline;">{{ urun.ana_baslik|truncatechars:45 }}</a>
+                        {% else %}
+                        <a href="{% url 'urun_affiliate_redirect' urun.id %}" target="_blank" class="product-title" style="text-align:justify; font-weight:600; margin-bottom:4px; color:#1f2937; word-break:break-word; padding: 0 8px; text-decoration:underline;">{{ urun.isim|truncatechars:45 }}</a>
+                        {% endif %}
+                        {% if urun.durum %}
+                        <div style="color: #e11d48; font-weight: bold; font-size: 0.8em; margin-bottom: 2px; padding: 0 8px;">Durum: {{ urun.durum }}</div>
+                        {% endif %}
                         {% if urun.alt_baslik %}
                         <div class="product-subtitle" style="text-align:justify; font-size:0.7em; color:#f59e0b; font-weight:600; margin-bottom:10px; padding: 0 8px;">{{ urun.alt_baslik }}</div>
                         {% endif %}
                         {% if urun.aciklama and urun.aciklama != 'CSV ile eklendi' %}
-                        <div class="product-desc" style="text-align:justify; color:#222; font-weight:600; margin-bottom:8px; padding: 0 8px; font-size: 0.65em;">{{ urun.aciklama }}</div>
+                        <div class="product-desc" style="text-align:justify; color:#222; font-weight:600; margin-bottom:8px; padding: 0 8px; font-size: 0.65em; overflow:unset; max-height:unset;">
+                            {{ urun.aciklama }}
+                            {% if urun.ozellikler %}
+                                <br><span style="color:#666; font-size:0.95em; font-weight:400;">{{ urun.ozellikler|linebreaksbr }}</span>
+                            {% endif %}
+                        </div>
                         {% endif %}
                         {# SEO için etiketler, kullanıcıya görünmez #}
                         {% if urun.etiketler %}
@@ -791,7 +1006,7 @@
                     <div style="font-size:0.75em; color:#222; margin-bottom:2px; font-weight:{% if fiyat.magaza.isim == 'eBay' %}700{% else %}500{% endif %};">
                         Mağaza: {{ fiyat.magaza.isim }}
                         {% if fiyat.magaza.isim == 'eBay' %}
-                        <span style="display:inline-block; background:#e7900a; color:#fff; font-size:0.8em; padding:1px 5px; border-radius:3px; margin-left:3px;">🏆 Orijinal</span>
+                        <span style="display:inline-block; background:#e11d48; color:#fff; font-size:0.8em; padding:1px 5px; border-radius:3px; margin-left:3px;">{{ urun.durum }}</span>
                         {% endif %}
                     </div>
                     
@@ -814,7 +1029,7 @@
                         {% else %}
                         <div class="shipping-line" style="color:#10b981; font-size:0.68em; font-weight:500;">Ücretsiz Kargo</div>
                         {% endif %}
-                        <div class="price-total" style="color:#10b981; font-size:0.8em; font-weight:700; margin-top:2px; padding-top:2px; border-top:1px solid #e5e7eb; white-space:nowrap;">
+                        <div class="price-total" style="color:#10b981; font-size:0.8em; font-weight:700; margin-top:auto; padding-top:2px; border-top:1px solid #e5e7eb; white-space:nowrap;">
                             <span style="font-size:1.1em; margin-top:auto; display:block;">Toplam: {{ fiyat.toplam_fiyat|turkish_currency }} {% if fiyat.para_birimi == 'TL' %}₺{% else %}${% endif %}</span>
                         </div>
                         
