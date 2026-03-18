@@ -1,21 +1,21 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
-from django.db.models import Q, Case, When, IntegerField
+from django.db.models import Q, Case, When, IntegerField, Prefetch
+from django.core.paginator import Paginator
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
-from .models import Urun, ClickLog, Yorum
+from .models import Urun, UrunResim, Fiyat, ClickLog, Yorum
 from .forms import YorumForm
-
-
-
-
+from django.http import HttpResponse
 
 def anasayfa(request):
 	"""Ana sayfa - ürün listesi ve yorumlar"""
 	search_query = request.GET.get('q', '').strip()
+	resim_prefetch = Prefetch('resimler', queryset=UrunResim.objects.order_by('sira', 'id'), to_attr='sirali_resimler')
+	base_queryset = Urun.objects.prefetch_related('fiyatlar__magaza', resim_prefetch)
 	
 	if search_query:
 		# Arama yapılıyorsa - ürün ismine veya urun_kodu'na göre filtrele
-		urunler = Urun.objects.prefetch_related('fiyatlar__magaza').filter(
+		urunler = base_queryset.filter(
 			Q(isim__icontains=search_query) |
 			Q(aciklama__icontains=search_query) |
 			Q(urun_kodu__iexact=search_query) |
@@ -34,7 +34,7 @@ def anasayfa(request):
 	else:
 		# Arama yoksa tüm ürünleri göster
 		gonderim_yeri = request.GET.get('gonderim_yeri', '').strip()
-		urunler = list(Urun.objects.prefetch_related('fiyatlar__magaza').all())
+		urunler = list(base_queryset.all())
 		if gonderim_yeri:
 			gonderim_yeri_lower = gonderim_yeri.strip().lower()
 			urunler = [
@@ -65,8 +65,21 @@ def anasayfa(request):
 	if request.method == 'POST' and form.is_valid():
 		form.save()
 		form = YorumForm()
+
+	# İlk açılışta 60 ürün göster, devamı sayfalansın.
+	paginator = Paginator(urunler, 60)
+	page_number = request.GET.get('page')
+	page_obj = paginator.get_page(page_number)
+	urunler = page_obj.object_list
+
+	query_params = request.GET.copy()
+	query_params.pop('page', None)
+	query_string = query_params.urlencode()
+
 	return render(request, 'urunler/anasayfa.html', {
 		'urunler': urunler,
+		'page_obj': page_obj,
+		'query_string': query_string,
 		'yorumlar': yorumlar,
 		'form': form,
 		'search_query': search_query,
@@ -75,7 +88,8 @@ def anasayfa(request):
 
 def urun_listesi(request):
 	"""Ürün listesi sayfası"""
-	urunler = list(Urun.objects.prefetch_related('fiyatlar__magaza').all())
+	resim_prefetch = Prefetch('resimler', queryset=UrunResim.objects.order_by('sira', 'id'), to_attr='sirali_resimler')
+	urunler = list(Urun.objects.prefetch_related('fiyatlar__magaza', resim_prefetch).all())
 	numarali = {u.sira: u for u in urunler if u.sira and u.sira > 0}
 	sifirli = [u for u in urunler if not u.sira or u.sira == 0]
 	sifirli_sorted = sorted(sifirli, key=lambda u: -u.id)
@@ -150,3 +164,41 @@ def urun_affiliate_redirect(request, urun_id):
 		click.save(update_fields=['subid'])
 
 	return redirect(target_link)
+
+
+def fiyat_affiliate_redirect(request, fiyat_id):
+	"""Fiyat (mağaza teklifi) bazlı affiliate redirect - her buton kendi linkine gider"""
+	fiyat = get_object_or_404(Fiyat.objects.select_related('urun', 'magaza'), id=fiyat_id)
+	urun = fiyat.urun
+
+	click = ClickLog.objects.create(
+		user=request.user if request.user.is_authenticated else None,
+		link_type='urun_affiliate',
+		urun=urun,
+		subid=f"u{urun.id}_f{fiyat.id}"
+	)
+
+	target_link = fiyat.affiliate_link
+	if target_link and 'ebay.com' in target_link and 'campid=' in target_link:
+		parsed = urlparse(target_link)
+		params = dict(parse_qsl(parsed.query, keep_blank_values=True))
+		params['customid'] = urun.urun_kodu or str(urun.id)
+		target_link = urlunparse((
+			parsed.scheme,
+			parsed.netloc,
+			parsed.path,
+			parsed.params,
+			urlencode(params),
+			parsed.fragment,
+		))
+
+	if click.subid != (urun.urun_kodu or str(urun.id)):
+		click.subid = urun.urun_kodu or str(urun.id)
+		click.save(update_fields=['subid'])
+
+	return redirect(target_link)
+
+def aliexpress_callback_view(request):
+    code = request.GET.get('code')
+    state = request.GET.get('state')
+    return HttpResponse(f"AliExpress callback! Code: {code}, State: {state}")

@@ -1,85 +1,3 @@
-</div>
-<script>
-function slideImage(urunId, direction, event) {
-    if(event) {
-        event.stopPropagation();
-        if(event.preventDefault) event.preventDefault();
-    }
-    if(!window.productImages || !window.productImages[urunId]) return;
-    var imgs = window.productImages[urunId];
-    if(imgs.length === 0) return;
-    window.productSliderIndex[urunId] = (window.productSliderIndex[urunId] + direction + imgs.length) % imgs.length;
-    var idx = window.productSliderIndex[urunId];
-    var imgTag = document.getElementById('slider-img-' + urunId);
-    imgTag.src = imgs[idx];
-}
-
-function setupSliderDrag(urunId) {
-    var img = document.getElementById('slider-img-' + urunId);
-    if (!img) return;
-    var startX = 0;
-    var isDragging = false;
-    var threshold = 30; // minimum px to trigger slide
-
-    img.addEventListener('mousedown', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        isDragging = true;
-        startX = e.clientX;
-    });
-    img.addEventListener('mousemove', function(e) {
-        if (!isDragging) return;
-        e.preventDefault();
-        e.stopPropagation();
-    });
-    img.addEventListener('mouseup', function(e) {
-        if (!isDragging) return;
-        e.preventDefault();
-        e.stopPropagation();
-        var diff = e.clientX - startX;
-        if (Math.abs(diff) > threshold) {
-            slideImage(urunId, diff < 0 ? 1 : -1);
-        }
-        isDragging = false;
-    });
-    img.addEventListener('mouseleave', function(e) {
-        if (!isDragging) return;
-        isDragging = false;
-    });
-    // Touch events
-    img.addEventListener('touchstart', function(e) {
-        if (e.touches.length !== 1) return;
-        e.preventDefault();
-        e.stopPropagation();
-        isDragging = true;
-        startX = e.touches[0].clientX;
-    });
-    img.addEventListener('touchmove', function(e) {
-        if (!isDragging) return;
-        e.preventDefault();
-        e.stopPropagation();
-    });
-    img.addEventListener('touchend', function(e) {
-        if (!isDragging) return;
-        e.preventDefault();
-        e.stopPropagation();
-        var endX = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : startX;
-        var diff = endX - startX;
-        if (Math.abs(diff) > threshold) {
-            slideImage(urunId, diff < 0 ? 1 : -1);
-        }
-        isDragging = false;
-    });
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    if (window.productImages) {
-        Object.keys(window.productImages).forEach(function(urunId) {
-            setupSliderDrag(urunId);
-        });
-    }
-});
-</script>
 {% extends 'urunler/base.html' %}
 
 {% block title %}Ana Sayfa | KOLAY BUL EKSPRES{% endblock %}
@@ -88,707 +6,320 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Ürün Resim Carousel (En Üste) -->
 <div class="carousel-wrapper" style="overflow: hidden; margin: 24px 0 0 0; background: linear-gradient(90deg, #111 0%, #ff9800 100%); padding: 0 0 16px 0; border-radius: 12px; margin-bottom: 8px;">
     <div class="carousel-container" id="productCarousel" style="display: flex; will-change: transform;">
-        {% for urun in urunler %}
+        {% for urun in urunler|slice:":20" %}
         <a href="{% url 'urun_affiliate_redirect' urun.id %}" target="_blank" class="carousel-item" style="flex: 0 0 auto; margin: 0 8px; text-decoration: none; cursor: pointer;" data-urun-id="{{ urun.id }}">
-            <div class="carousel-circle" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background: #fff; transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; justify-content: center;">
+            <div class="carousel-circle" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background: #fff; transition: transform 0.2s, box-shadow 0.2s;">
                 {% if urun.resim_url %}
-                    <img src="{{ urun.resim_url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;">
-                {% elif urun.resim %}
-                    <img src="{{ urun.resim.url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <img src="{{ urun.resim_url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.parentElement.innerHTML='{{ urun.isim|truncatechars:10 }}';">
+                {% elif urun.resim and urun.resim.name %}
+                    <img src="{{ urun.resim.url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.parentElement.innerHTML='{{ urun.isim|truncatechars:10 }}';">
                 {% elif urun.resimler.all|length > 0 %}
-                    {% with ilk_resim=urun.resimler.all.0 %}
-                        {% if ilk_resim.resim_url %}
-                            <img src="{{ ilk_resim.resim_url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;">
-                        {% elif ilk_resim.resim %}
-                            <img src="{{ ilk_resim.resim.url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% with first_image=urun.resimler.all.0 %}
+                        {% if first_image.resim and first_image.resim.name %}
+                            <img src="{{ first_image.resim.url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.parentElement.innerHTML='{{ urun.isim|truncatechars:10 }}';">
+                        {% else %}
+                            <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; font-size:0.7em; text-align:center;">{{ urun.isim|truncatechars:10 }}</div>
                         {% endif %}
                     {% endwith %}
                 {% else %}
-                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; font-size: 0.7em; text-align: center; padding: 4px;">{{ urun.isim|truncatewords:2 }}</div>
+                    <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; font-size:0.7em; text-align:center;">{{ urun.isim|truncatechars:10 }}</div>
                 {% endif %}
             </div>
         </a>
         {% endfor %}
     </div>
 </div>
-<!-- Sticky Arama ve Filtreleme Formları (aşağıya taşındı) -->
-<div class="sticky-search" style="position:sticky; top:0; z-index:1000; isolation:isolate; background:#111; padding:0; margin:0 0 0 0; box-shadow:0 2px 8px rgba(0,0,0,0.03); width:100vw; left:0; margin-top:8px; margin-bottom:0 !important;">
-    <div style="max-width: 600px; margin: 0 auto; padding: 0; box-sizing: border-box;">
-        <div class="search-filter-row" style="margin:0; padding:0; box-sizing:border-box; display:flex; gap:10px; align-items:center; width:100%; flex-wrap:wrap; margin-bottom:0 !important; padding-bottom:0 !important;">
-            <!-- Arama ve Filtreleme Formları YAN YANA -->
-            <form method="get" action="{% url 'anasayfa' %}" class="search-form" style="display:flex; align-items:center; gap:6px; margin:0; padding:0; box-sizing:border-box;">
-                <input id="searchInput" type="text" name="q" value="{{ search_query }}" placeholder="Ürün ara... (örn: klavye, mouse)" style="width:120px; height:30px; padding:0 6px; border:1px solid #ddd; border-radius:5px; font-size:0.92068em; outline:none; transition:border-color 0.2s; box-sizing:border-box; line-height:20px;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#ddd'" />
-                <button type="submit" style="padding:0 10px; height:30px; border-radius:5px; background:linear-gradient(90deg,#ff9800 0%,#111 100%); color:#fff; border:none; font-weight:600; font-size:0.92em;"> Ara</button>
-                {% if search_query %}
-                    <a href="{% url 'anasayfa' %}" style="padding:0 8px; height:30px; border-radius:5px; background:#ef4444; color:#fff; border:none; font-weight:400; text-decoration:none; display:flex; align-items:center; font-size:0.92em;">Temizle</a>
+
+<!-- Sticky Arama ve Filtreleme -->
+<div class="sticky-search" style="position:sticky; top:0; z-index:1000; isolation:isolate; background:#111; padding:8px 0; margin:0; box-shadow:0 2px 8px rgba(0,0,0,0.03); width:100%; left:0;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 0 10px; box-sizing: border-box;">
+        <div class="search-filter-row" style="display:flex; gap:10px; align-items:center; flex-wrap:nowrap; justify-content:flex-start; overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; scrollbar-width:thin; padding-bottom:2px;">
+            <!-- Arama Formu -->
+            <form method="get" action="{% url 'anasayfa' %}" class="search-form" style="display:flex; align-items:center; gap:6px; margin:0; flex:0 0 auto;">
+                {% if request.GET.gonderim_yeri %}
+                    <input type="hidden" name="gonderim_yeri" value="{{ request.GET.gonderim_yeri }}">
+                {% endif %}
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Ürün ara..." style="width:140px; height:36px; padding:0 10px; border:1px solid #ddd; border-radius:5px; font-size:0.95em;">
+                <button type="submit" style="padding:0 15px; height:36px; border-radius:5px; background:linear-gradient(90deg,#ff9800 0%,#111 100%); color:#fff; border:none; font-weight:600;">Ara</button>
+                {% if search_query and not request.GET.gonderim_yeri %}
+                    <a href="{% url 'anasayfa' %}" style="padding:0 10px; height:36px; border-radius:5px; background:#ef4444; color:#fff; text-decoration:none; display:flex; align-items:center;">Temizle</a>
+                {% elif search_query and request.GET.gonderim_yeri %}
+                    <a href="?gonderim_yeri={{ request.GET.gonderim_yeri }}" style="padding:0 10px; height:36px; border-radius:5px; background:#ef4444; color:#fff; text-decoration:none; display:flex; align-items:center;">Temizle</a>
                 {% endif %}
             </form>
-            <form method="get" action="{% url 'anasayfa' %}" class="filter-form" style="display:flex; align-items:center; gap:4px; margin:0; padding:0; box-sizing:border-box;">
-                <select name="gonderim_yeri" style="width:120px; height:30px; padding:0 6px; border-radius:5px; border:1px solid #ddd; font-size:0.92em; box-sizing:border-box; line-height:30px;">
-                    <option valu2070e="">Gönderim Yeri Seçiniz</option>
-                    <option value="İngiltere">İngiltere</option>
-                    <option value="İspanya">İspanya</option>
-                    <option value="Fransa">Fransa</option>
-                    <option value="Çek Cumhuriyeti">Çek Cumhuriyeti</option>
-                    <option value="İtalya">İtalya</option>
-                    <option value="Polanya">Polanya</option>
-                    <option value="Almanya">Almanya</option>
+            
+            <!-- Filtre Formu -->
+            <form method="get" action="{% url 'anasayfa' %}" class="filter-form" style="display:flex; align-items:center; gap:4px; margin:0; flex:0 0 auto;">
+                {% if search_query %}
+                    <input type="hidden" name="q" value="{{ search_query }}">
+                {% endif %}
+                <select name="gonderim_yeri" style="width:140px; height:36px; padding:0 8px; border-radius:5px; border:1px solid #ddd;">
+                    <option value="">Gönderim Yeri</option>
+                    <option value="İngiltere" {% if request.GET.gonderim_yeri == 'İngiltere' %}selected{% endif %}>İngiltere</option>
+                    <option value="İspanya" {% if request.GET.gonderim_yeri == 'İspanya' %}selected{% endif %}>İspanya</option>
+                    <option value="Fransa" {% if request.GET.gonderim_yeri == 'Fransa' %}selected{% endif %}>Fransa</option>
+                    <option value="Çek Cumhuriyeti" {% if request.GET.gonderim_yeri == 'Çek Cumhuriyeti' %}selected{% endif %}>Çek Cumhuriyeti</option>
+                    <option value="İtalya" {% if request.GET.gonderim_yeri == 'İtalya' %}selected{% endif %}>İtalya</option>
+                    <option value="Polanya" {% if request.GET.gonderim_yeri == 'Polanya' %}selected{% endif %}>Polanya</option>
+                    <option value="Almanya" {% if request.GET.gonderim_yeri == 'Almanya' %}selected{% endif %}>Almanya</option>
                 </select>
-                <button type="submit" style="padding:0 10px; height:30px; border-radius:5px; background:linear-gradient(90deg,#ff9800 0%,#111 100%); color:#fff; border:none; font-weight:600; font-size:0.92em; letter-spacing:0.5px; display:flex; align-items:center;"> Filtre</button>
-                {% if request.GET.gonderim_yeri %}
-                    <a href="{% url 'anasayfa' %}" style="padding:0 8px; height:30px; border-radius:5px; background:#f59e0b; color:#fff; border:none; font-weight:400; text-decoration:none; display:flex; align-items:center; font-size:0.92em;">Temizle</a>
+                <button type="submit" style="padding:0 15px; height:36px; border-radius:5px; background:linear-gradient(90deg,#ff9800 0%,#111 100%); color:#fff; border:none; font-weight:600;">Filtrele</button>
+                {% if request.GET.gonderim_yeri and not search_query %}
+                    <a href="{% url 'anasayfa' %}" style="padding:0 10px; height:36px; border-radius:5px; background:#f59e0b; color:#fff; text-decoration:none; display:flex; align-items:center;">Temizle</a>
+                {% elif request.GET.gonderim_yeri and search_query %}
+                    <a href="?q={{ search_query|urlencode }}" style="padding:0 10px; height:36px; border-radius:5px; background:#f59e0b; color:#fff; text-decoration:none; display:flex; align-items:center;">Temizle</a>
                 {% endif %}
             </form>
         </div>
-        <style>
-        @media (max-width: 700px) {
-            #yorumAcBtn {
-                padding: 7px 10px !important;
-                font-size: 0.97em !important;
-                min-width: 120px !important;
-                min-height: 28px !important;
-            }
-            #yorumFormKapsayici {
-                padding: 10px !important;
-            }
-            #yorumFormKapsayici h2 {
-                font-size: 0.97em !important;
-                padding: 5px 0 !important;
-                margin-bottom: 6px !important;
-            }
-            #yorumFormKapsayici form {
-                padding: 8px !important;
-                gap: 5px !important;
-            }
-            .son-yorumlar-baslik {
-                font-size: 0.95em !important;
-                margin-bottom: 5px !important;
-            }
-            .son-yorumlar-kart {
-                padding: 7px 10px !important;
-                margin-bottom: 7px !important;
-            }
-            .henuz-yorum-yok {
-                font-size: 0.93em !important;
-                margin-bottom: 4px !important;
-            }
-        }
-        /* Mobilde de kesinlikle yan yana kalsın */
-        .search-filter-row { display: inline-flex !important; flex-direction: row !important; gap: 6px !important; align-items: center !important; flex-wrap: nowrap !important; width: 100%; }
-        .search-form, .filter-form { width: auto !important; min-width: 0 !important; }
-        @media (max-width: 700px) {
-            .search-filter-row { gap: 2px !important; }
-            .search-form input, .filter-form select { min-width: 90px !important; font-size: 0.95em !important; }
-            .search-form button, .filter-form button, .search-form a, .filter-form a { font-size: 0.95em !important; padding-left: 6px !important; padding-right: 6px !important; }
-        }
-        </style>
     </div>
 </div>
+
 {% load turkish_currency %}
-<div class="container" style="padding: 0; background: linear-gradient(135deg, #111 0%, #ff9800 100%); margin-bottom: 0; margin-top: 0 !important; padding-top: 0 !important;">
 
-    <style>
-        .about-buttons-row {
-            width: 100vw;
-            margin: 0 0 0 0;
-            padding: 0 0 0 0;
-            display: flex;
-            gap: 12px;
-            justify-content: space-between;
-            flex-wrap: nowrap;
-            box-sizing: border-box;
-        }
-        .about-big-btn {
-            flex: 0 0 320px;
-            min-width: 120px;
-            max-width: 420px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.08);
-            padding: 12px 8px;
-            margin-bottom: 0;
-            display: flex;
-            align-items: center;
-            border: none;
-            font-size: 0.98em;
-            font-weight: 700;
-            cursor: pointer;
-            transition: box-shadow 0.2s, transform 0.2s;
-            outline: none;
-            gap: 12px;
-        }
-        .about-btn-left {
-            justify-content: flex-start;
-            align-self: flex-start;
-        }
-        .about-btn-right {
-            justify-content: flex-end;
-            align-self: flex-end;
-        }
-        .about-big-btn:active, .about-big-btn:focus {
-            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.18);
-            transform: translateY(-2px) scale(1.01);
-        }
-        .about-btn-blue {
-            background: linear-gradient(135deg, #f0f4ff 0%, #fff5f7 100%);
-            border-left: 4px solid #6366f1;
-            color: #1f2937;
-        }
-        .about-btn-yellow {
-            background: #fff9e6;
-            border-left: 4px solid #f59e0b;
-            color: #1f2937;
-        }
-        .about-btn-icon {
-            font-size: 1.4em;
-            margin-right: 8px;
-        }
-        .about-btn-title {
-            font-size: 1em;
-            font-weight: 700;
-            text-align: left;
-        }
-        @media (max-width: 900px) {
-            .about-buttons-row {
-                width: 100%;
-                flex-direction: column;
-                gap: 10px;
-                align-items: stretch;
-            }
-            .about-big-btn {
-                min-width: 0;
-                max-width: 100%;
-                justify-content: center !important;
-                font-size: 0.98em;
-            }
-            .about-btn-left, .about-btn-right {
-                align-self: stretch;
-            }
-        }
-        @media (max-width: 500px) {
-            .about-big-btn {
-                padding: 10px 4px;
-                font-size: 0.95em;
-            }
-            .about-buttons-row {
-                margin: 10px 0 12px 0;
-                padding: 0 1px;
-            }
-        }
-    </style>
+<div class="container" style="padding: 0; background: linear-gradient(135deg, #111 0%, #ff9800 100%); margin-top: 0;">
 
-    <style>
-        .about-cards-row {
-            max-width: 900px;
-            margin: 0px auto 0 auto;
-            display: flex;
-            gap: 24px;
-            justify-content: space-between;
-            flex-wrap: wrap;
-        }
-        .about-card {
-            flex: 1 1 350px;
-            min-width: 280px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.08);
-            padding: 0;
-            margin-bottom: 0;
-            display: flex;
-            flex-direction: column;
-            background: #fff;
-        }
-        .about-card-blue {
-            background: linear-gradient(135deg, #f0f4ff 0%, #fff5f7 100%);
-            border-left: 4px solid #6366f1;
-        }
-        .about-card-yellow {
-            background: #fff9e6;
-            border-left: 4px solid #f59e0b;
-        }
-        .about-card-inner {
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-            padding: 18px 18px 14px 18px;
-        }
-        .about-card-icon {
-            font-size: 1.5em;
-            flex-shrink: 0;
-            margin-top: 2px;
-        }
-        .about-card h2 {
-            margin: 0 0 8px 0;
-            color: #1f2937;
-            font-size: 1em;
-            font-weight: 700;
-        }
-        .about-card p {
-            margin: 0;
-            color: #4b5563;
-            font-size: 0.95em;
-            line-height: 1.5;
-        }
-        @media (max-width: 800px) {
-            .about-cards-row {
-                flex-direction: column;
-                gap: 16px;
-            }
-            .about-card {
-                min-width: 0;
-            }
-        }
-        @media (max-width: 500px) {
-            .about-card-inner {
-                flex-direction: column;
-                gap: 8px;
-                padding: 14px 8px 10px 8px;
-            }
-            .about-cards-row {
-                margin: 12px 0 16px 0;
-                padding: 0 2px;
-            }
-        }
-    </style>
-    
-    <style>
-                body {
-                    background: #111 !important;
-                }
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        @keyframes slideUp {
-            from {
-                opacity: 1;
-                transform: translateY(0);
-            }
-            to {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-        }
-    </style>
-    
-    <script>
-        document.getElementById('toggleAboutBtn').addEventListener('click', function() {
-            const section = document.getElementById('aboutSection');
-            const icon = document.getElementById('toggleIcon');
+{% if search_query %}
+<div style="text-align: center; padding: 15px 0; color: #fff; font-weight: 600;">"{{ search_query }}" için {{ urunler|length }} sonuç bulundu</div>
+{% endif %}
+
+<!-- Ürünler Grid -->
+<div class="products-rows-container">
+    {% for urun in urunler %}
+    {% if forloop.counter0|divisibleby:20 %}<div class="products-row">{% endif %}
+    <!-- Ürün Kartı -->
+    <div class="product-card" style="background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column;">
+        
+        <!-- Resim Galerisi Container -->
+        <div class="product-gallery" style="position: relative; overflow: hidden;">
+            <div class="gallery-stage">
+                <div class="gallery-track">
+                    {% if urun.resim_url %}
+                    <div class="gallery-slide">
+                        <img src="{{ urun.resim_url }}" alt="{{ urun.isim }}" class="gallery-image" onerror="this.parentElement.innerHTML='<div class=\'gallery-empty\'>{{ urun.isim|truncatechars:50 }}</div>'">
+                    </div>
+                    {% elif urun.resim and urun.resim.name %}
+                    <div class="gallery-slide">
+                        <img src="{{ urun.resim.url }}" alt="{{ urun.isim }}" class="gallery-image" onerror="this.parentElement.innerHTML='<div class=\'gallery-empty\'>{{ urun.isim|truncatechars:50 }}</div>'">
+                    </div>
+                    {% endif %}
+
+                    {% for resim in urun.sirali_resimler %}
+                        {% if resim.resim_url %}
+                        <div class="gallery-slide">
+                            <img src="{{ resim.resim_url }}" alt="{{ urun.isim }}" class="gallery-image" onerror="this.parentElement.style.display='none';">
+                        </div>
+                        {% elif resim.resim and resim.resim.name %}
+                        <div class="gallery-slide">
+                            <img src="{{ resim.resim.url }}" alt="{{ urun.isim }}" class="gallery-image" onerror="this.parentElement.style.display='none';">
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if not urun.resim_url and not urun.resim and not urun.sirali_resimler %}
+                    <div class="gallery-slide">
+                        <div class="gallery-empty">{{ urun.isim|truncatechars:50 }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <button class="gallery-nav prev" type="button" aria-label="Önceki resim">←</button>
+                <button class="gallery-nav next" type="button" aria-label="Sonraki resim">→</button>
+                <div class="gallery-counter"></div>
+            </div>
+
+            <div class="gallery-thumbnails">
+                {% if urun.resim_url %}
+                <button class="gallery-thumb" type="button" data-index="0" aria-label="1. resmi göster">
+                    <img src="{{ urun.resim_url }}" alt="{{ urun.isim }} küçük görsel">
+                </button>
+                {% elif urun.resim and urun.resim.name %}
+                <button class="gallery-thumb" type="button" data-index="0" aria-label="1. resmi göster">
+                    <img src="{{ urun.resim.url }}" alt="{{ urun.isim }} küçük görsel">
+                </button>
+                {% endif %}
+
+                {% if urun.resim_url or urun.resim %}
+                    {% for resim in urun.sirali_resimler %}
+                        {% if resim.resim_url %}
+                        <button class="gallery-thumb" type="button" data-index="{{ forloop.counter }}" aria-label="{{ forloop.counter|add:1 }}. resmi göster">
+                            <img src="{{ resim.resim_url }}" alt="{{ urun.isim }} küçük görsel {{ forloop.counter|add:1 }}">
+                        </button>
+                        {% elif resim.resim and resim.resim.name %}
+                        <button class="gallery-thumb" type="button" data-index="{{ forloop.counter }}" aria-label="{{ forloop.counter|add:1 }}. resmi göster">
+                            <img src="{{ resim.resim.url }}" alt="{{ urun.isim }} küçük görsel {{ forloop.counter|add:1 }}">
+                        </button>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    {% for resim in urun.sirali_resimler %}
+                        {% if resim.resim_url %}
+                        <button class="gallery-thumb" type="button" data-index="{{ forloop.counter0 }}" aria-label="{{ forloop.counter }}. resmi göster">
+                            <img src="{{ resim.resim_url }}" alt="{{ urun.isim }} küçük görsel {{ forloop.counter }}">
+                        </button>
+                        {% elif resim.resim and resim.resim.name %}
+                        <button class="gallery-thumb" type="button" data-index="{{ forloop.counter0 }}" aria-label="{{ forloop.counter }}. resmi göster">
+                            <img src="{{ resim.resim.url }}" alt="{{ urun.isim }} küçük görsel {{ forloop.counter }}">
+                        </button>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Ürün Detayları -->
+        <div class="product-details" style="padding: 12px; display: flex; flex-direction: column; flex: 1;">
+            <h3 style="margin: 0 0 8px 0; font-size: 1.1em; color: #333;">{{ urun.isim|truncatechars:50 }}</h3>
+
+            {% if urun.ana_baslik or urun.alt_baslik or urun.ozellikler or urun.aciklama and urun.aciklama != 'CSV ile eklendi' %}
+            <div class="detail-scroll detail-content-scroll">
+                <div class="detail-main-title">{% if urun.ana_baslik %}{{ urun.ana_baslik }}{% else %}&nbsp;{% endif %}</div>
+
+                <div class="detail-sub-title">{% if urun.alt_baslik %}{{ urun.alt_baslik }}{% else %}&nbsp;{% endif %}</div>
+
+                <div class="detail-description">
+                    {% if urun.ozellikler %}
+                    {{ urun.ozellikler|linebreaksbr }}
+                    {% elif urun.aciklama and urun.aciklama != 'CSV ile eklendi' %}
+                    {{ urun.aciklama|linebreaksbr }}
+                    {% else %}
+                    &nbsp;
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
             
-            if (section.style.display === 'none') {
-                section.style.display = 'block';
-                section.style.animation = 'slideDown 0.3s ease-out';
-                icon.style.transform = 'rotate(180deg)';
-            } else {
-                section.style.animation = 'slideUp 0.3s ease-out';
-                setTimeout(function() {
-                    section.style.display = 'none';
-                }, 300);
-                icon.style.transform = 'rotate(0deg)';
-            }
-        });
-    </script>
-<script>
-// Akıllı drag-to-scroll: Ürün kartı üzerinde de kaydırma çalışır, sürükleme olursa tıklama engellenir
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.product-row-scrollable').forEach(function(row) {
-        let isDown = false;
-        let startX = 0;
-        let scrollLeft = 0;
-        let dragMoved = false;
+            <!-- Fiyatlar -->
+            <div class="prices" style="margin-top: auto; padding-top: 8px;">
+                {% for fiyat in urun.fiyatlar.all|slice:":3" %}
+                <div class="price-item" style="background: {% if fiyat.magaza.isim == 'eBay' %}#fef08a{% else %}#f0f4ff{% endif %}; padding: 6px; border-radius: 6px; margin-bottom: 4px; border-left: 3px solid {% if fiyat.magaza.isim == 'eBay' %}#e7900a{% else %}#6366f1{% endif %};">
+                    <div style="font-weight: 600; font-size: 0.9em; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <span>{{ fiyat.magaza.isim }}</span>
+                        {% if fiyat.magaza.isim == 'eBay' and urun.durum %}
+                        <span style="font-size: 0.78em; font-weight: 700; background: #fff7d6; color: #7a4d00; border: 1px solid #e8b24a; border-radius: 999px; padding: 1px 7px;">{{ urun.durum }}</span>
+                        {% endif %}
+                    </div>
+                    <div style="font-size: 0.85em;">Ürün: {{ fiyat.fiyat }} {{ fiyat.para_birimi }}</div>
+                    <div style="font-size: 0.8em; color: {% if fiyat.gonderim_ucreti == 0 %}#10b981{% else %}#f59e0b{% endif %};">
+                        {% if fiyat.gonderim_ucreti == 0 %}
+                            Ücretsiz Kargo
+                        {% else %}
+                            Kargo: {{ fiyat.gonderim_ucreti }} {{ fiyat.para_birimi }}
+                        {% endif %}
+                    </div>
+                    <div style="font-weight: 700; color: #10b981; margin-top: 4px; border-top: 1px solid #ddd; padding-top: 4px;">
+                        Toplam: {{ fiyat.toplam_fiyat|turkish_currency }} {{ fiyat.para_birimi }}
+                    </div>
+                    {% if fiyat.affiliate_link %}
+                    <a href="{% url 'fiyat_affiliate_redirect' fiyat.id %}" target="_blank" rel="noopener sponsored nofollow" style="display: inline-block; margin-top: 4px; background: #111827; color: #fff; text-decoration: none; font-weight: 700; font-size: 0.8em; padding: 5px 9px; border-radius: 8px;">
+                        Magazada Incele
+                    </a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% if forloop.counter|divisibleby:20 or forloop.last %}</div>{% endif %}
+    {% endfor %}
+</div>
 
-        row.addEventListener('mousedown', function(e) {
-            if (e.button !== 0) return;
-            isDown = true;
-            dragMoved = false;
-            row.classList.add('dragging');
-            startX = e.pageX - row.offsetLeft;
-            scrollLeft = row.scrollLeft;
-        });
-        // a etiketinde dragstart'ı engelle
-        row.querySelectorAll('a').forEach(function(link) {
-            link.addEventListener('dragstart', function(e) { e.preventDefault(); });
-        });
-
-        function onMouseMove(e) {
-            var leftButton = (e.buttons !== undefined ? e.buttons === 1 : e.which === 1);
-            if (!isDown || !leftButton) return;
-            const x = e.pageX - row.offsetLeft;
-            const walk = (x - startX) * 1.5;
-            if (Math.abs(x - startX) > 5) dragMoved = true; // 5px üstü hareket drag sayılır
-            row.scrollLeft = scrollLeft - walk;
-        }
-        function onMouseUp(e) {
-            if (isDown) {
-                setTimeout(() => { dragMoved = false; }, 0); // kısa gecikme ile resetle
-                isDown = false;
-                row.classList.remove('dragging');
-            }
-        }
-        // Tıklama engelleme
-        row.querySelectorAll('a').forEach(function(link) {
-            link.addEventListener('click', function(e) {
-                if (dragMoved) e.preventDefault();
-            });
-        });
-
-        row.addEventListener('mouseleave', onMouseUp);
-        window.addEventListener('mousemove', onMouseMove, { passive: false });
-        window.addEventListener('mouseup', onMouseUp);
-    });
-});
-</script>
-
-    <style>
-        .product-row {
-            display: block;
-            margin-top: 0 !important;
-            background: linear-gradient(90deg, #111 0%, #ff9800 100%);
-        }
-        .product-row-scrollable {
-            display: flex;
-            align-items: stretch;
-            overflow-x: auto;
-            gap: 6px;
-            scroll-snap-type: x mandatory;
-            -webkit-overflow-scrolling: touch;
-            margin-top: 0 !important;
-            margin-bottom: 0;
-            padding: 0 8px 8px 8px;
-            width: 100%;
-            background: linear-gradient(90deg, #111 0%, #ff9800 100%);
-            min-height: 700px;
-            /* position: static; */
-        }
-        .product-row-scrollable::-webkit-scrollbar {
-            height: 6px;
-        }
-        .product-row-scrollable::-webkit-scrollbar-thumb {
-            background: #6366f1;
-            border-radius: 3px;
-        }
-        .product-link {
-            display: flex;
-            flex-direction: column;
-            width: 360px;
-            min-width: 360px;
-            max-width: 360px;
-            text-decoration: none;
-            color: inherit;
-            box-sizing: border-box;
-            height: 800px;
-            overflow: hidden;
-            /* position: static; */
-        }
-        @media (max-width: 700px) {
-            .product-link {
-                width: 75vw !important;
-                min-width: 75vw !important;
-                max-width: 75vw !important;
-            }
-            .product-row-scrollable {
-                padding-left: 4vw !important;
-            }
-        }
-        @media (max-width: 500px) {
-            .product-link {
-                width: 75vw !important;
-                min-width: 75vw !important;
-                max-width: 75vw !important;
-            }
-            .product-row-scrollable {
-                padding-left: 2vw !important;
-            }
-        }
-        }
-        .product {
-            width: 100%;
-            height: auto;
-            min-height: 520px;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            overflow: visible;
-            /* position: static; */
-        }
-        .product-body {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            align-items: center;
-            flex: 1 1 auto;
-                    height: 80px;
-        }
-        .product-media {
-            width: 100%;
-                height: 140px;
-            min-height: 200px;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            align-items: stretch !important;
-            justify-content: stretch !important;
-            overflow: hidden;
-            background: #fff;
-            box-sizing: border-box;
-        }
-        .product-media img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.14);
-            background: #f3f4f6;
-            display: block;
-            margin: 0;
-            padding: 0;
-        }
-            .product-text-scrollable {
-                max-height: 130px;
-                /* Masaüstüyle aynı yükseklik ve kaydırma */
-                overflow-y: auto;
-                padding-right: 4px;
-                display: flex;
-                flex-direction: column;
-            }
-        .product-title {
-                            font-weight: 600;
-                            min-height: 2.6em;
-                            font-size: 0.7em;
-                            line-height: 1.3;
-                            word-break: break-word;
-                            flex: none;
-                            margin-bottom: 4px;
-                              display: flex;
-                              align-items: center;
-                              justify-content: center;
-                              text-align: center;
-        }
-        .product-subtitle {
-            flex: none;
-            display: block;
-            font-size: 0.7em;
-            color: #f59e0b;
-            font-weight: 600;
-            margin-bottom: 10px;
-            padding: 0 8px;
-            min-height: 2.2em;
-        }
-        .product-desc {
-            flex: none;
-            display: block;
-            font-size: 0.6em;
-            line-height: 1.25;
-            word-wrap: break-word;
-            white-space: normal;
-            margin-bottom: 8px;
-            /* max-height ve overflow kaldırıldı, açıklama tamamen görünür */
-        }
-        @media (max-width: 768px) {
-            .product-row {
-                display: block;
-            }
-            .product-row-scrollable {
-                display: flex;
-                overflow-x: auto;
-                scroll-snap-type: x mandatory;
-                gap: 6px;
-                padding-bottom: 8px;
-                margin-bottom: 12px;
-            }
-            .product-link {
-                flex: 0 0 auto;
-                min-width: 150px;
-                max-width: 180px;
-                width: 50%;
-                height: 50%;
-                max-width: 40px;
-                max-height: 40px;
-                object-fit: contain;
-                object-position: center center;
-                border-radius: 12px;
-                box-shadow: 0 8px 24px rgba(0,0,0,0.14);
-                background: #f3f4f6;
-                display: block;
-                margin: 0 auto;
-                padding: 0;
-                width: 100%;
-                height: 140px;
-                margin: 0;
-                padding: 0;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                overflow: hidden;
-                background: #fff;
-                box-sizing: border-box;
-            }
-            .product-media img {
-                width: 100% !important;
-                height: 140px !important;
-                object-fit: cover !important;
-                border-radius: 10px !important;
-                box-shadow: 0 8px 24px rgba(0,0,0,0.14) !important;
-                background: #f3f4f6 !important;
-                display: block;
-                margin: 0;
-                padding: 0 !important;
-            }
-            .product .slider-img {
-                height: auto !important;
-                max-height: 120px !important;
-                width: 100% !important;
-                object-fit: contain !important;
-            }
-            .product-text-scrollable {
-                max-height: 130px;
-                /* Mobilde de masaüstüyle aynı yükseklik ve kaydırma */
-                overflow-y: auto;
-                padding-right: 4px;
-                display: flex;
-                flex-direction: column;
-            }
-            .product-title {
-                font-size: 0.55em;
-                line-height: 1.15;
-                margin-bottom: 4px;
-            }
-            .product-subtitle {
-                font-size: 0.55em;
-                margin-bottom: 6px;
-            }
-            .product-desc {
-                  font-size: 0.6em;
-                  max-height: 3.2em;
-                  overflow: auto;
-                line-height: 1.2;
-                margin-bottom: 6px;
-            }
-            .price-total {
-                font-size: 0.7em !important;
-                margin-top: auto !important;
-            }
-            .shipping-line {
-                min-height: 14px;
-            }
-            .stores {
-                padding-top: 4px !important;
-            }
-            .store {
-                padding: 4px 4px 4px 4px !important;
-                margin-bottom: 4px !important;
-            }
-            .store a {
-                min-height: 28px !important;
-                font-size: 0.7em !important;
-            }
-            .store div {
-                line-height: 1.2;
-            }
-        }
-    </style>
-    <br>
-    <!-- ...existing code... -->
-    
-    {% if search_query %}
-    <div style="text-align: center; margin-bottom: 16px; color: #6366f1; font-weight: 600;">"{{ search_query }}" için {{ urunler|length }} sonuç bulundu</div>
+{% if page_obj and page_obj.paginator.num_pages > 1 %}
+<div style="max-width: 1400px; margin: 0 auto 24px auto; padding: 0 20px; display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
+    {% if page_obj.has_previous %}
+    <a href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.previous_page_number }}" style="background:#111827; color:#fff; text-decoration:none; border-radius:8px; padding:8px 12px; font-weight:700; font-size:0.9em;">Onceki</a>
     {% endif %}
+
+    <span style="background:#fff; color:#111827; border-radius:8px; padding:8px 12px; font-weight:700; font-size:0.9em;">
+        Sayfa {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+    <a href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.next_page_number }}" style="background:#f59e0b; color:#fff; text-decoration:none; border-radius:8px; padding:8px 12px; font-weight:700; font-size:0.9em;">Daha Fazla Urun</a>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Yorum Bölümü -->
+<div style="max-width: 600px; margin: 40px auto 0 auto; padding: 0 20px;">
+    <button id="yorumAcBtn" style="background:#fff; color:#222; border:none; border-radius:8px; padding:12px 24px; font-size:1em; font-weight:700; cursor:pointer; width:100%; max-width:300px; display:block; margin:0 auto; box-shadow:0 2px 8px rgba(0,0,0,0.1);">Yorum Bırakmak İster misiniz?</button>
     
-    <style>
-        .carousel-item:hover .carousel-circle {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-        }
-        .carousel-container:hover {
-            animation-play-state: paused !important;
-        }
-        @media (max-width: 768px) {
-            .carousel-item {
-                margin: 0 4px !important;
-            }
-            .carousel-circle {
-                width: 60px !important;
-                height: 60px !important;
-                border: 2px solid #fff !important;
-            }
-            .carousel-wrapper {
-                padding: 12px 0 !important;
-            }
-        }
-    </style>
-    <script>
-    (function() {
-        const carousel = document.getElementById('productCarousel');
-        const wrapper = carousel.parentElement;
-        const items = Array.from(carousel.children);
-        
-        // Orijinal içeriği sakla ve karıştır
-        const originalItems = Array.from(carousel.children);
-        
-        // Fisher-Yates shuffle algoritması
-        function shuffleArray(array) {
-            const shuffled = [...array];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            return shuffled;
-        }
-        
+    <div id="yorumFormKapsayici" style="display:none; margin-top:20px; padding: 24px; background: #f9fafb; border-radius: 10px;">
+        <h3 style="text-align:center; margin-bottom:20px;">Yorum Bırakın</h3>
+        <form method="post" style="display:flex; flex-direction:column; gap:15px;">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" style="background:#f59e0b; color:#fff; border:none; border-radius:5px; padding:10px; font-size:1em; font-weight:700; cursor:pointer;">Gönder</button>
+        </form>
+    </div>
+</div>
+
+<!-- Son Yorumlar -->
+<div style="max-width: 600px; margin: 40px auto; padding: 0 20px;">
+    <h3 style="text-align:center; color:#fff; margin-bottom:20px;">Son Yorumlar</h3>
+    {% for yorum in yorumlar|slice:":5" %}
+    <div style="background:#fff; border-radius:8px; padding:15px; margin-bottom:10px;">
+        <div style="font-weight:600; color:#374151;">{{ yorum.isim }}</div>
+        <div style="color:#444; margin:5px 0;">{{ yorum.yorum }}</div>
+        <div style="font-size:0.8em; color:#888; text-align:right;">{{ yorum.eklenme_tarihi|date:"d.m.Y H:i" }}</div>
+    </div>
+    {% empty %}
+    <div style="text-align:center; color:#fff;">Henüz yorum yok.</div>
+    {% endfor %}
+</div>
+
+<!-- Yukarı Çık Butonu -->
+<button id="scrollTopBtn" style="display:none; position:fixed; bottom:20px; right:20px; z-index:999; background:#6366f1; color:#fff; border:none; border-radius:50%; width:50px; height:50px; font-size:24px; cursor:pointer; box-shadow:0 2px 10px rgba(0,0,0,0.2);">↑</button>
+
+<script>
+// Tüm galeriler için script
+document.addEventListener('DOMContentLoaded', function() {
+    // Carousel animasyonu
+    const carousel = document.getElementById('productCarousel');
+    if (carousel) {
+        let isPaused = false;
         let animationId = null;
         let translateX = 0;
-        
-        function initCarousel() {
-            // Temizle ve karıştır
-            carousel.innerHTML = '';
-            const shuffledItems = shuffleArray(originalItems);
-            shuffledItems.forEach(item => carousel.appendChild(item.cloneNode(true)));
-            translateX = 0;
-            
-            // Tek bir item'ın genişliğini hesapla
-            const firstItem = carousel.children[0];
-            if (!firstItem) return;
-            
-            const itemWidth = firstItem.offsetWidth;
-            const itemMargin = parseInt(window.getComputedStyle(firstItem).marginLeft) + 
-                              parseInt(window.getComputedStyle(firstItem).marginRight);
-            const totalItemWidth = itemWidth + itemMargin;
-            
-            // Container ve wrapper genişliği
-            const wrapperWidth = wrapper.offsetWidth;
-            const contentWidth = totalItemWidth * shuffledItems.length;
-            
-            // Ekranı doldurmak için kaç kopya gerekli? (minimum 3 ekran dolusu)
-            const copies = Math.ceil((wrapperWidth * 3) / contentWidth) + 2;
-            
-            // Kopyaları ekle (karıştırılmış listeyi tekrarla)
-            const currentHTML = carousel.innerHTML;
-            for (let i = 0; i < copies; i++) {
-                carousel.innerHTML += currentHTML;
+        let loopWidth = 0;
+
+        const originalItems = Array.from(carousel.children);
+        if (originalItems.length > 1) {
+            originalItems.forEach((item) => {
+                carousel.appendChild(item.cloneNode(true));
+            });
+        }
+
+        function recalculateLoopWidth() {
+            const currentItems = Array.from(carousel.children);
+            if (!currentItems.length) {
+                loopWidth = 0;
+                return;
             }
+
+            loopWidth = currentItems
+                .slice(0, originalItems.length)
+                .reduce((total, item) => total + item.offsetWidth, 0);
+
+            if (translateX <= -loopWidth) {
+                translateX += loopWidth;
+            }
+        }
+        
+        function startAnimation() {
+            if (animationId) cancelAnimationFrame(animationId);
             
-            // Animasyon hızı (piksel/saniye)
-            const speed = 30; // Daha yavaş ve düzgün
-            const distance = contentWidth;
-            
-            // Animasyonu başlat
             let lastTime = performance.now();
+            const speed = 30;
             
             function animate(currentTime) {
+                if (isPaused) return;
+                
                 const deltaTime = (currentTime - lastTime) / 1000;
                 lastTime = currentTime;
                 
                 translateX -= speed * deltaTime;
-                
-                // Bir set tamamlandığında sıfırla
-                if (Math.abs(translateX) >= distance) {
-                    translateX = translateX % distance;
+
+                if (loopWidth > 0 && Math.abs(translateX) >= loopWidth) {
+                    translateX += loopWidth;
                 }
                 
                 carousel.style.transform = `translateX(${translateX}px)`;
@@ -798,335 +329,420 @@ document.addEventListener('DOMContentLoaded', function() {
             animationId = requestAnimationFrame(animate);
         }
         
-        // İlk yükleme
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initCarousel);
-        } else {
-            initCarousel();
-        }
-        
-        // Ekran boyutu değişince yeniden başlat
-        let resizeTimer;
-        window.addEventListener('resize', function() {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(function() {
-                if (animationId) cancelAnimationFrame(animationId);
-                initCarousel();
-            }, 250);
+        carousel.addEventListener('mouseenter', () => { isPaused = true; });
+        carousel.addEventListener('mouseleave', () => { 
+            isPaused = false; 
+            startAnimation();
         });
-        
-        // Hover durumunda durdur
-        let isPaused = false;
-        carousel.addEventListener('mouseenter', function() {
-            isPaused = true;
-            if (animationId) {
-                cancelAnimationFrame(animationId);
-                animationId = null;
-            }
-        });
-        
-        carousel.addEventListener('mouseleave', function() {
-            if (!animationId && !isPaused) {
-                let lastTime = performance.now();
-                const speed = 30;
-                const firstItem = carousel.children[0];
-                const itemWidth = firstItem.offsetWidth;
-                const itemMargin = parseInt(window.getComputedStyle(firstItem).marginLeft) + 
-                                  parseInt(window.getComputedStyle(firstItem).marginRight);
-                const distance = (itemWidth + itemMargin) * shuffledItems.length;
-                
-                function animate(currentTime) {
-                    const deltaTime = (currentTime - lastTime) / 1000;
-                    lastTime = currentTime;
-                    translateX -= speed * deltaTime;
-                    if (Math.abs(translateX) >= distance) {
-                        translateX = translateX % distance;
-                    }
-                    carousel.style.transform = `translateX(${translateX}px)`;
-                    animationId = requestAnimationFrame(animate);
-                }
-                animationId = requestAnimationFrame(animate);
-            }
-            isPaused = false;
-        });
-    })();
-    </script>
-    
-    <!-- Ürünler yatay scrollable satırlarla başlasın -->
-    <div class="product-row-scrollable">
-    {% for urun in urunler %}
-        {% if forloop.counter0 != 0 and forloop.counter0|divisibleby:15 %}
-            </div>
-            <div class="product-row-scrollable">
-        {% endif %}
-        <div class="product-link product-item" data-index="{{ forloop.counter0 }}" style="box-sizing: border-box; display: flex; flex-direction: column; align-items: center; background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 8px; padding: 4px 4px 8px 4px; transition: box-shadow 0.2s; justify-content: flex-start;">
-            <div class="product-body">
-            <div class="product-media product-image-slider" style="position:relative; width:100%; height:100%; min-height:180px; display:flex; align-items:stretch; justify-content:stretch;">
-                <img id="slider-img-{{ urun.id }}" src="" alt="{{ urun.isim }}" style="width:100%; height:100%; object-fit:cover; object-position:center; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.14); background:#fff; touch-action: pan-y; cursor: grab; display:block; margin:0; padding:0;" />
-                <div id="slider-dots-{{ urun.id }}" class="slider-dots" style="position:absolute; left:0; right:0; bottom:6px; display:flex; justify-content:center; gap:6px; z-index:2;"></div>
-                <script>
-                window.productImages = window.productImages || {};
-                window.productSliderIndex = window.productSliderIndex || {};
-                window.productImages['{{ urun.id }}'] = [
-                    {% if urun.resim_url %}'{{ urun.resim_url }}',{% endif %}
-                    {% if urun.resim %}'{{ urun.resim.url }}',{% endif %}
-                    {% for resim in urun.resimler.all|dictsort:'sira' %}
-                        {% if resim.resim_url %}'{{ resim.resim_url }}',{% elif resim.resim %}'{{ resim.resim.url }}',{% endif %}
-                    {% endfor %}
-                ];
-                window.productSliderIndex['{{ urun.id }}'] = 0;
-                (function() {
-                    var imgs = window.productImages['{{ urun.id }}'];
-                    var idx = window.productSliderIndex['{{ urun.id }}'];
-                    var imgTag = document.getElementById('slider-img-{{ urun.id }}');
-                    var dotsDiv = document.getElementById('slider-dots-{{ urun.id }}');
-                    if(imgs.length > 0) {
-                        imgTag.src = imgs[idx];
-                        // Dots oluştur
-                        if (dotsDiv) {
-                            dotsDiv.innerHTML = '';
-                            for (let i = 0; i < imgs.length; i++) {
-                                var dot = document.createElement('span');
-                                dot.className = 'slider-dot' + (i === idx ? ' active' : '');
-                                dot.style.cssText = 'width:9px;height:9px;border-radius:50%;background:' + (i===idx?'#6366f1':'#e5e7eb') + ';display:inline-block;transition:background 0.2s;';
-                                dot.dataset.idx = i;
-                                dot.addEventListener('click', function(e) {
-                                    window.productSliderIndex['{{ urun.id }}'] = i;
-                                    imgTag.src = imgs[i];
-                                    updateDots();
-                                });
-                                dotsDiv.appendChild(dot);
-                            }
-                        }
-                    } else {
-                        imgTag.style.display = 'none';
-                    }
-                    function updateDots() {
-                        if (!dotsDiv) return;
-                        var dots = dotsDiv.querySelectorAll('span');
-                        var activeIdx = window.productSliderIndex['{{ urun.id }}'];
-                        for (let i = 0; i < dots.length; i++) {
-                            dots[i].style.background = (i === activeIdx) ? '#6366f1' : '#e5e7eb';
-                        }
-                    }
-                    // Drag/swipe ile resim değiştir
-                    let startX = 0;
-                    let dragging = false;
-                    imgTag.addEventListener('mousedown', function(e) {
-                        dragging = true;
-                        startX = e.clientX;
-                        imgTag.style.cursor = 'grabbing';
-                    });
-                    imgTag.addEventListener('touchstart', function(e) {
-                        dragging = true;
-                        startX = e.touches[0].clientX;
-                    });
-                    imgTag.addEventListener('mouseup', function(e) {
-                        if (!dragging) return;
-                        let delta = e.clientX - startX;
-                        if (Math.abs(delta) > 30) {
-                            slideImage('{{ urun.id }}', delta < 0 ? 1 : -1);
-                            updateDots();
-                        }
-                        dragging = false;
-                        imgTag.style.cursor = 'grab';
-                    });
-                    imgTag.addEventListener('mouseleave', function(e) {
-                        dragging = false;
-                        imgTag.style.cursor = 'grab';
-                    });
-                    imgTag.addEventListener('touchend', function(e) {
-                        if (!dragging) return;
-                        let delta = e.changedTouches[0].clientX - startX;
-                        if (Math.abs(delta) > 30) {
-                            slideImage('{{ urun.id }}', delta < 0 ? 1 : -1);
-                            updateDots();
-                        }
-                        dragging = false;
-                    });
-                })();
-                </script>
-            </div>
 
-
-            <div class="product-text-scrollable">
-                <div style="max-height: 120px; overflow-y: auto; display: flex; flex-direction: column;">
-                    <div class="auto-scroll-desc" style="display: flex; flex-direction: column;">
-                        {% if urun.ana_baslik %}
-                        <a href="{% url 'urun_affiliate_redirect' urun.id %}" target="_blank" class="product-title" style="text-align:center; font-weight:700; margin-bottom:4px; color:#2563eb; font-size:0.9em; word-break:break-word; padding: 0 8px; text-decoration:underline;">{{ urun.ana_baslik|truncatechars:45 }}</a>
-                        {% else %}
-                        <a href="{% url 'urun_affiliate_redirect' urun.id %}" target="_blank" class="product-title" style="text-align:justify; font-weight:600; margin-bottom:4px; color:#1f2937; word-break:break-word; padding: 0 8px; text-decoration:underline;">{{ urun.isim|truncatechars:45 }}</a>
-                        {% endif %}
-                        {% if urun.durum %}
-                        <div style="color: #e11d48; font-weight: bold; font-size: 0.8em; margin-bottom: 2px; padding: 0 8px;">Durum: {{ urun.durum }}</div>
-                        {% endif %}
-                        {% if urun.alt_baslik %}
-                        <div class="product-subtitle" style="text-align:justify; font-size:0.7em; color:#f59e0b; font-weight:600; margin-bottom:10px; padding: 0 8px;">{{ urun.alt_baslik }}</div>
-                        {% endif %}
-                        {% if urun.aciklama and urun.aciklama != 'CSV ile eklendi' %}
-                        <div class="product-desc" style="text-align:justify; color:#222; font-weight:600; margin-bottom:8px; padding: 0 8px; font-size: 0.65em; overflow:unset; max-height:unset;">
-                            {{ urun.aciklama }}
-                            {% if urun.ozellikler %}
-                                <br><span style="color:#666; font-size:0.95em; font-weight:400;">{{ urun.ozellikler|linebreaksbr }}</span>
-                            {% endif %}
-                        </div>
-                        {% endif %}
-                        {# SEO için etiketler, kullanıcıya görünmez #}
-                        {% if urun.etiketler %}
-                        <div style="display:none;">
-                            <span>{{ urun.etiketler }}</span>
-                        </div>
-                        {% endif %}
-                    </div>
-                <style>
-                .shipping-line.free-animated {
-                    animation: freeKargoAnim 1.2s infinite alternate;
-                }
-                @keyframes freeKargoAnim {
-                    0% { background: #10b981; color: #fff; }
-                    100% { background: #fff; color: #10b981; }
-                }
-                </style>
-                <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    document.querySelectorAll('.shipping-line').forEach(function(el) {
-                        if (el.textContent.includes('Ücretsiz Kargo')) {
-                            el.classList.add('free-animated');
-                        }
-                    });
-                });
-                </script>
-                </div>
-                {# Özellikler ve etiketler ürün kartında gösterilmeyecek #}
-            </div>
-            </div>
-            <div class="stores" style="flex-direction:column; width:100%; padding-top:6px; margin-top:auto;">
-                {% for fiyat in urun.fiyatlar.all %}
-                <div class="store" style="margin-bottom:6px; background:{% if fiyat.magaza.isim == 'eBay' %}#fef08a{% else %}#f6f8ff{% endif %}; border-radius:4px; padding:6px 4px 4px 4px; box-shadow:0 1px 4px rgba(60,100,200,0.04); text-align:center; border-left:3px solid {% if fiyat.magaza.isim == 'eBay' %}#e7900a{% else %}#6366f1{% endif %};">
-                    <div style="font-size:0.75em; color:#222; margin-bottom:2px; font-weight:{% if fiyat.magaza.isim == 'eBay' %}700{% else %}500{% endif %};">
-                        Mağaza: {{ fiyat.magaza.isim }}
-                        {% if fiyat.magaza.isim == 'eBay' %}
-                        <span style="display:inline-block; background:#e11d48; color:#fff; font-size:0.8em; padding:1px 5px; border-radius:3px; margin-left:3px;">{{ urun.durum }}</span>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- Gönderim Bilgisi (Üstte) -->
-                    <div style="font-size:0.72em; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #e5e7eb; height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                        <span style="color:#6b7280; display:inline-block; max-width: 100%; vertical-align:middle; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">📍 {{ fiyat.gonderim_yerinden }}'den gönderiliyor</span>
-                    </div>
-                    
-                    <!-- Fiyat Bilgileri -->
-                    <div style="margin-bottom:4px;">
-                        <div style="color:#6366f1; font-size:0.78em; font-weight:600; white-space:nowrap;">
-                            Ürün: {{ fiyat.fiyat }} {% if fiyat.para_birimi == 'TL' %}₺{% else %}${% endif %}
-                        </div>
-                        {% if fiyat.gonderim_ucreti > 0 %}
-                        <div class="shipping-line" style="color:#f59e0b; font-size:0.68em; font-weight:500;">
-                            + Kargo: {{ fiyat.gonderim_ucreti }} {% if fiyat.para_birimi == 'TL' %}₺{% else %}${% endif %}
-                        </div>
-                        {% elif fiyat.gonderim_ucreti == 0 %}
-                        <div class="shipping-line" style="color:#10b981; font-size:0.68em; font-weight:500;">Ücretsiz Kargo</div>
-                        {% else %}
-                        <div class="shipping-line" style="color:#10b981; font-size:0.68em; font-weight:500;">Ücretsiz Kargo</div>
-                        {% endif %}
-                        <div class="price-total" style="color:#10b981; font-size:0.8em; font-weight:700; margin-top:auto; padding-top:2px; border-top:1px solid #e5e7eb; white-space:nowrap;">
-                            <span style="font-size:1.1em; margin-top:auto; display:block;">Toplam: {{ fiyat.toplam_fiyat|turkish_currency }} {% if fiyat.para_birimi == 'TL' %}₺{% else %}${% endif %}</span>
-                        </div>
-                        
-                    </div>
-                    
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        </a>
-        {% if forloop.counter0|add:1|divisibleby:15 or forloop.last %}</div>{% endif %}
-    {% endfor %}
-</div>
-<div style="text-align:center; margin:32px 0 40px 0;">
-    <button id="dahaFazlaBtn" style="display:none; background:#f59e0b; color:#fff; border:none; border-radius:8px; padding:14px 38px; font-size:1.1em; font-weight:600; box-shadow:0 2px 8px rgba(0,0,0,0.10); cursor:pointer;">Daha Fazla Ürün</button>
-</div>
-<div style="max-width: 500px; margin: 40px auto 0 auto; padding: 0 10px;">
-    <div style="display:flex; justify-content:center; margin-bottom:4px;">
-        <button id="yorumAcBtn" style="background:#fff; color:#222; border:none; border-radius:8px; padding:10px 20px; font-size:1em; font-weight:700; cursor:pointer; min-width:180px; min-height:36px; box-shadow:0 2px 8px rgba(0,0,0,0.10);">Yorum Bırakmak İster misiniz?</button>
-    </div>
-    <div id="yorumFormKapsayici" style="display:none; padding: 24px; background: #f9fafb; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
-        <h2 style="text-align:center; color:#fff; font-size:1.1em; margin-bottom:10px; background:#222; padding:8px 0; border-radius:8px;">Yorum Bırakın</h2>
-        <form method="post" style="display:flex; flex-direction:column; gap:14px; background:#222; border-radius:10px; padding:18px; box-shadow:0 2px 8px rgba(0,0,0,0.12);">
-            {% csrf_token %}
-            <div style="display:flex; flex-direction:column; gap:6px;">
-                <label for="id_isim" style="color:#222; font-weight:600;">Adınız</label>
-                {{ form.isim }}
-                <label for="id_yorum" style="color:#222; font-weight:600;">Yorumunuz</label>
-                {{ form.yorum }}
-            </div>
-            <button type="submit" style="background:#f59e0b; color:#fff; border:none; border-radius:5px; padding:8px 0; font-size:1em; font-weight:700; cursor:pointer; margin-top:4px;">Gönder</button>
-        </form>
-    </div>
-</div>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var btn = document.getElementById('yorumAcBtn');
-        var formDiv = document.getElementById('yorumFormKapsayici');
-        btn.addEventListener('click', function() {
-            if (formDiv.style.display === 'none') {
-                formDiv.style.display = 'block';
-                btn.style.display = 'none';
-            }
-        });
-    });
-</script>
-
-<div style="max-width: 600px; margin: 32px auto 0 auto; padding: 0 10px;">
-    <h2 class="son-yorumlar-baslik" style="text-align:center; color:#e08206; font-size:1em; margin-bottom:8px;">Son Yorumlar</h2>
-    {% for yorum in yorumlar %}
-        <div style="background:#fff; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.06); padding:14px 18px; margin-bottom:14px;">
-            <div class="son-yorumlar-kart" style="background:#fff; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.06); padding:14px 18px; margin-bottom:14px;">
-                <div style="font-weight:600; color:#374151;">{{ yorum.isim }}</div>
-                <div style="color:#444; margin:4px 0 2px 0;">{{ yorum.yorum }}</div>
-                <div style="font-size:0.9em; color:#888; text-align:right;">{{ yorum.eklenme_tarihi|date:"d.m.Y H:i" }}</div>
-            </div>
-        </div>
-    {% empty %}
-        <div class="henuz-yorum-yok" style="text-align:center; color:#888; font-size:0.97em; margin-bottom:8px;">Henüz yorum yok.</div>
-    {% endfor %}
-</div>
-<!-- Yukarı Çık Butonu ve scripti block content'in sonunda -->
-<button id="scrollTopBtn" title="Yukarı Çık" style="display:none; position:fixed; bottom:32px; right:24px; z-index:9999; background:#6366f1; color:#fff; border:none; border-radius:50%; width:48px; height:48px; font-size:2em; box-shadow:0 2px 8px rgba(0,0,0,0.12); cursor:pointer; transition:background 0.2s;">
-    ↑
-</button>
-<div style="text-align:center; margin:32px 0 40px 0;">
-    <!-- Daha Fazla Ürün butonu yukarıya taşındı -->
-</div>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var items = document.querySelectorAll('.product-item');
-    var btn = document.getElementById('dahaFazlaBtn');
-    if(items.length > 90) btn.style.display = 'inline-block';
-    var shown = 90;
-    btn && btn.addEventListener('click', function() {
-        var next = shown + 90;
-        for(var i=shown; i<next && i<items.length; i++) {
-            items[i].style.display = '';
-        }
-        shown = next;
-        if(shown >= items.length) btn.style.display = 'none';
-    });
-});
-</script>
-<script>
-// Yukarı Çık butonunu göster/gizle
-window.addEventListener('scroll', function() {
-    var btn = document.getElementById('scrollTopBtn');
-    if (window.scrollY > 200) {
-        btn.style.display = 'block';
-    } else {
-        btn.style.display = 'none';
+        window.addEventListener('resize', recalculateLoopWidth);
+        recalculateLoopWidth();
+        startAnimation();
     }
+    
+    // Ürün galerileri için script
+    document.querySelectorAll('.product-gallery').forEach((gallery) => {
+        const track = gallery.querySelector('.gallery-track');
+        const items = gallery.querySelectorAll('.gallery-slide');
+        const prevBtn = gallery.querySelector('.prev');
+        const nextBtn = gallery.querySelector('.next');
+        const thumbs = gallery.querySelectorAll('.gallery-thumb');
+        const counter = gallery.querySelector('.gallery-counter');
+        let activeIndex = 0;
+        let touchStartX = 0;
+
+        function updateGallery(index) {
+            if (!items.length) {
+                return;
+            }
+
+            activeIndex = (index + items.length) % items.length;
+            track.style.transform = `translateX(-${activeIndex * 100}%)`;
+
+            thumbs.forEach((thumb, thumbIndex) => {
+                thumb.classList.toggle('is-active', thumbIndex === activeIndex);
+            });
+
+            if (counter) {
+                counter.textContent = `${activeIndex + 1} / ${items.length}`;
+            }
+        }
+        
+        if (items.length <= 1) {
+            gallery.classList.add('is-single-image');
+            if (counter) {
+                counter.style.display = 'none';
+            }
+            return;
+        }
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                updateGallery(activeIndex - 1);
+            });
+        }
+
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                updateGallery(activeIndex + 1);
+            });
+        }
+
+        thumbs.forEach((thumb) => {
+            thumb.addEventListener('click', () => {
+                updateGallery(Number(thumb.dataset.index || 0));
+            });
+        });
+
+        track.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        }, { passive: true });
+
+        track.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].clientX;
+            const diff = touchStartX - touchEndX;
+
+            if (Math.abs(diff) > 50) {
+                updateGallery(diff > 0 ? activeIndex + 1 : activeIndex - 1);
+            }
+        }, { passive: true });
+
+        updateGallery(0);
+    });
+    
+    // Yorum butonu
+    const yorumBtn = document.getElementById('yorumAcBtn');
+    const yorumForm = document.getElementById('yorumFormKapsayici');
+    
+    if (yorumBtn && yorumForm) {
+        yorumBtn.addEventListener('click', function() {
+            yorumForm.style.display = 'block';
+            yorumBtn.style.display = 'none';
+        });
+    }
+    
+    // Yukarı çık butonu
+    const scrollBtn = document.getElementById('scrollTopBtn');
+    window.addEventListener('scroll', function() {
+        scrollBtn.style.display = window.scrollY > 200 ? 'block' : 'none';
+    });
+    
+    scrollBtn.addEventListener('click', function() {
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    });
 });
-// Tıklanınca yukarı animasyonlu kaydır
-document.getElementById('scrollTopBtn').onclick = function() {
-    window.scrollTo({top:0, behavior:'smooth'});
-};
 </script>
+
+<style>
+/* Ürün satırları */
+.products-rows-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.products-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+/* Galeri bileşenleri */
+.gallery-stage {
+    position: relative;
+    height: 220px;
+    overflow: hidden;
+    background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+}
+
+.gallery-track {
+    display: flex;
+    height: 100%;
+    transition: transform 0.35s ease;
+    will-change: transform;
+}
+
+.gallery-slide {
+    flex: 0 0 100%;
+    height: 100%;
+}
+
+.gallery-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    background: #fff;
+}
+
+.gallery-empty {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+    color: #fff;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.gallery-counter {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(17, 24, 39, 0.72);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    z-index: 2;
+}
+
+.gallery-thumbnails {
+    display: flex;
+    gap: 6px;
+    padding: 8px;
+    overflow-x: auto;
+    background: #fff;
+    scrollbar-width: thin;
+}
+
+.gallery-thumb {
+    flex: 0 0 46px;
+    width: 46px;
+    height: 46px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 0;
+    overflow: hidden;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gallery-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.gallery-thumb.is-active {
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+}
+
+.gallery-thumb:hover {
+    transform: translateY(-1px);
+}
+
+.product-gallery.is-single-image .gallery-nav,
+.product-gallery.is-single-image .gallery-thumbnails {
+    display: none;
+}
+
+.detail-scroll {
+    overflow-y: auto;
+    padding-right: 6px;
+    line-height: 1.45;
+    scrollbar-width: thin;
+}
+
+.detail-content-scroll {
+    flex: 1;
+    min-height: 52px;
+    max-height: 170px;
+    margin-bottom: 8px;
+}
+
+.detail-main-title {
+    font-size: 0.92em;
+    color: #2563eb;
+    margin-bottom: 4px;
+    line-height: 1.3;
+    min-height: calc(1.3em * 2);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.detail-sub-title {
+    font-size: 0.87em;
+    color: #7c3aed;
+    margin-bottom: 4px;
+    line-height: 1.3;
+    min-height: calc(1.3em * 2);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.detail-description {
+    font-size: 0.85em;
+    color: #666;
+    margin-bottom: 0;
+    line-height: 1.35;
+}
+
+/* Hover efektleri */
+.gallery-nav {
+    opacity: 0;
+    transition: opacity 0.3s;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.88);
+    border: none;
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.product-gallery:hover .gallery-nav {
+    opacity: 1;
+}
+
+.gallery-nav.prev {
+    left: 10px;
+}
+
+.gallery-nav.next {
+    right: 10px;
+}
+
+.gallery-nav:hover {
+    background: rgba(255,255,255,0.95) !important;
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* Responsive düzenlemeler */
+@media (max-width: 768px) {
+    .products-rows-container {
+        padding: 8px !important;
+    }
+    .products-row {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        gap: 8px !important;
+        padding-bottom: 8px !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+    .products-row .product-card {
+        flex: 0 0 165px !important;
+        width: 165px !important;
+    }
+
+    /* Galeri küçültme */
+    .gallery-stage {
+        height: 122px;
+    }
+    .gallery-thumbnails {
+        padding: 3px 4px !important;
+        gap: 3px !important;
+    }
+    .gallery-thumb {
+        flex-basis: 32px !important;
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 6px !important;
+    }
+    .gallery-counter {
+        font-size: 0.65em !important;
+        padding: 2px 5px !important;
+    }
+    .gallery-nav {
+        display: none !important;
+    }
+    .gallery-stage {
+        touch-action: pan-y;
+    }
+
+    /* Ürün detayları küçültme */
+    .product-details {
+        padding: 6px !important;
+    }
+    .product-details h3 {
+        font-size: 0.76em !important;
+        margin-bottom: 3px !important;
+    }
+    .detail-content-scroll {
+        flex: 0 0 auto !important;
+        min-height: 0 !important;
+        max-height: 108px !important;
+        font-size: 0.75em !important;
+        margin-bottom: 4px !important;
+    }
+    .detail-main-title {
+        font-size: 0.8em !important;
+        margin-bottom: 3px !important;
+    }
+    .detail-sub-title {
+        font-size: 0.75em !important;
+        margin-bottom: 3px !important;
+    }
+    .detail-description {
+        font-size: 0.72em !important;
+    }
+
+    /* Fiyat kartları küçültme */
+    .price-item {
+        padding: 4px 5px !important;
+        margin-bottom: 2px !important;
+        font-size: 0.75em !important;
+    }
+    .price-item > div {
+        font-size: 0.8em !important;
+    }
+    .prices {
+        margin-top: auto !important;
+        padding-top: 4px !important;
+    }
+
+    .carousel-circle {
+        width: 60px !important;
+        height: 60px !important;
+    }
+
+    .search-filter-row {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 8px !important;
+        justify-content: flex-start !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        padding-bottom: 4px !important;
+    }
+    .search-form, .filter-form {
+        width: auto !important;
+        flex: 0 0 auto !important;
+    }
+    .search-form input, .filter-form select {
+        width: 140px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .products-row .product-card {
+        flex: 0 0 150px !important;
+        width: 150px !important;
+    }
+    .gallery-stage {
+        height: 108px;
+    }
+    .detail-content-scroll {
+        max-height: 96px !important;
+    }
+}
+</style>
+
 {% endblock %}
