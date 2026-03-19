@@ -17,10 +17,12 @@ class Urun(models.Model):
 	alt_baslik = models.CharField(max_length=200, blank=True, verbose_name="Alt Başlık")
 	etiketler = models.CharField(max_length=500, blank=True, verbose_name="Etiketler")
 	ozellikler = models.TextField(blank=True, verbose_name="Özellikler")
+	durum = models.CharField(max_length=100, blank=True, null=True, verbose_name="Durum")
 	resim = models.ImageField(upload_to='urun_resimleri/', blank=True, null=True)  # Dosya yükleme için
 	resim_url = models.URLField(max_length=500, blank=True, null=True, help_text='Resim URL (yer kaplamaz)')  # URL için
 	source_url = models.URLField(max_length=1000, blank=True, null=True, unique=True, help_text='Ürünün kaynak URL adresi (tekrarları önler)')
 	urun_kodu = models.CharField(max_length=12, unique=True, blank=True, null=True, help_text='Kısa arama kodu (otomatik)')
+	item_id = models.CharField(max_length=50, unique=True, blank=True, null=True, help_text='eBay ürün ID')
 	sira = models.PositiveIntegerField(default=0, blank=True, null=True, help_text="Ürün sırası (küçükten büyüğe önde)")
 
 	def __str__(self):
@@ -54,6 +56,7 @@ class Fiyat(models.Model):
 	gonderim_ucreti = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text='Kargo ücreti')
 	gonderim_yerinden = models.CharField(max_length=100, default='Çin', help_text='Hangi ülkeden gönderiliyor')
 	gonderim_durumu = models.BooleanField(default=True, help_text='Gönderilebiliyor mu?')
+	ucretsiz_kargo = models.BooleanField(default=False, help_text='Ücretsiz kargo bilgisi eBay/API tarafından doğrulandı mı?')
 
 	def __str__(self):
 		sembol = '₺' if self.para_birimi == 'TL' else '$'

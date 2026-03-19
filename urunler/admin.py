@@ -27,7 +27,7 @@ from .utils.deeplink import build_admitad_deeplink
 class FiyatInline(admin.TabularInline):
 	model = Fiyat
 	extra = 1
-	fields = ('magaza', 'fiyat', 'para_birimi', 'gonderim_ucreti', 'gonderim_yerinden', 'gonderim_durumu', 'affiliate_link')
+	fields = ('magaza', 'fiyat', 'para_birimi', 'gonderim_ucreti', 'ucretsiz_kargo', 'gonderim_yerinden', 'gonderim_durumu', 'affiliate_link')
 	readonly_fields = ('toplam_fiyat_goster',)
 	
 	def toplam_fiyat_goster(self, obj):
@@ -501,4 +501,8 @@ class FiyatAdmin(admin.ModelAdmin):
 @admin.register(ClickLog)
 class ClickLogAdmin(admin.ModelAdmin):
 	list_display = ("id", "timestamp", "user", "link_type", "urun")
+	list_filter = ("link_type", "timestamp")
+	search_fields = ("urun__isim", "subid", "user__username")
+	ordering = ("-timestamp",)
+	date_hierarchy = "timestamp"
 

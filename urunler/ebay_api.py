@@ -38,7 +38,7 @@ class EbayAPIConnector:
     PRODUCTION_AUTH_URL = "https://api.ebay.com/identity/v1/oauth2/token"
     PRODUCTION_API_URL = "https://api.ebay.com/buy/browse/v1"
     
-    def __init__(self, client_id: str, client_secret: str, sandbox: bool = True):
+    def __init__(self, client_id: str, client_secret: str, sandbox: bool = True, ship_to_country: str = "TR"):
         """
         Initialize eBay API Connector
         
@@ -46,10 +46,12 @@ class EbayAPIConnector:
             client_id: eBay Developer App ID (Client ID)
             client_secret: eBay Developer Cert ID (Client Secret)
             sandbox: Use sandbox environment (default: True)
+            ship_to_country: End user's delivery country for shipping estimates
         """
         self.client_id = client_id
         self.client_secret = client_secret
         self.sandbox = sandbox
+        self.ship_to_country = (ship_to_country or "TR").upper()
         
         self.auth_url = self.SANDBOX_AUTH_URL if sandbox else self.PRODUCTION_AUTH_URL
         self.api_url = self.SANDBOX_API_URL if sandbox else self.PRODUCTION_API_URL
@@ -68,6 +70,49 @@ class EbayAPIConnector:
         adapter = HTTPAdapter(max_retries=retry_strategy)
         self.session.mount("https://", adapter)
         self.session.mount("http://", adapter)
+
+    def _build_api_headers(self) -> Dict[str, str]:
+        return {
+            "Authorization": f"{self.token_type} {self.token}",
+            "Content-Type": "application/json",
+            "X-EBAY-C-MARKETPLACE-ID": "EBAY_US",
+            "X-EBAY-C-ENDUSERCTX": f"contextualLocation=country={self.ship_to_country}",
+        }
+
+    @staticmethod
+    def _parse_shipping_cost(option: Dict) -> float:
+        shipping_cost = option.get("shippingCost") or {}
+        try:
+            return float(shipping_cost.get("value", 0) or 0)
+        except (TypeError, ValueError):
+            return 0
+
+    def _select_shipping_option(self, shipping_options: List[Dict]) -> Optional[Dict]:
+        ranked_options = []
+        for option in shipping_options:
+            cost_type = (option.get("shippingCostType") or "").upper()
+            cost_value = self._parse_shipping_cost(option)
+
+            if cost_type == "FREE":
+                priority = (0, 0)
+            elif cost_type == "FIXED" and cost_value == 0:
+                priority = (1, 0)
+            elif cost_type == "FIXED":
+                priority = (2, cost_value)
+            elif cost_type == "CALCULATED" and cost_value > 0:
+                priority = (3, cost_value)
+            elif cost_type == "CALCULATED":
+                priority = (4, float("inf"))
+            else:
+                priority = (5, cost_value)
+
+            ranked_options.append((priority, option))
+
+        if not ranked_options:
+            return None
+
+        ranked_options.sort(key=lambda pair: pair[0])
+        return ranked_options[0][1]
         
     def get_oauth_token(self) -> Optional[str]:
         """
@@ -146,10 +191,7 @@ class EbayAPIConnector:
                 return None
         
         try:
-            headers = {
-                "Authorization": f"{self.token_type} {self.token}",
-                "Content-Type": "application/json"
-            }
+            headers = self._build_api_headers()
             
             params = {
                 "q": q,
@@ -199,10 +241,7 @@ class EbayAPIConnector:
                 return None
         
         try:
-            headers = {
-                "Authorization": f"{self.token_type} {self.token}",
-                "Content-Type": "application/json"
-            }
+            headers = self._build_api_headers()
             
             url = f"{self.api_url}/item/{item_id}"
             response = self.session.get(url, headers=headers, timeout=30)  # Increased timeout
@@ -247,26 +286,31 @@ class EbayAPIConnector:
                 "currency": item.get("price", {}).get("currency", "USD") if item.get("price") else "USD",
                 "condition": item.get("condition", "Unknown"),
                 "image_url": item.get("image", {}).get("imageUrl") if item.get("image") else None,
+                "additional_images": [img.get("imageUrl") for img in item.get("additionalImages", []) if img.get("imageUrl")],
                 "affiliate_url": item.get("itemAffiliateWebUrl"),
                 "item_web_url": item.get("itemWebUrl"),
                 "category": item.get("categories")[0].get("categoryName") if item.get("categories") else None,
                 "seller_feedback_score": item.get("seller", {}).get("feedbackScore", 0),
                 "shipping_cost": 0,
+                "shipping_cost_type": None,
                 "shipping_origin": shipping_origin,
                 "shipping_available": False,
+                "shipping_is_free": False,
             }
             
             # Parse shipping info
             if item.get("shippingOptions"):
-                shipping = item["shippingOptions"][0]
-                parsed_item["shipping_cost"] = float(
-                    shipping.get("shippingCost", {}).get("value", 0)
-                ) if shipping.get("shippingCost") else 0
-                shipping_cost_type = shipping.get("shippingCostType")
+                shipping = self._select_shipping_option(item["shippingOptions"])
+                shipping_cost_type = (shipping or {}).get("shippingCostType")
+                parsed_item["shipping_cost_type"] = shipping_cost_type
+                parsed_item["shipping_cost"] = self._parse_shipping_cost(shipping or {})
                 if shipping_cost_type in {"FIXED", "CALCULATED", "FREE"}:
                     parsed_item["shipping_available"] = True
                 if shipping_cost_type == "FREE":
                     parsed_item["shipping_cost"] = 0
+                    parsed_item["shipping_is_free"] = True
+                elif shipping_cost_type == "FIXED" and parsed_item["shipping_cost"] == 0:
+                    parsed_item["shipping_is_free"] = True
             
             # Parse category
             if item.get("categories"):

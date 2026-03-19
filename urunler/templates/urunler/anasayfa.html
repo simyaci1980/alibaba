@@ -90,7 +90,7 @@
     <div class="product-card" style="background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column;">
         
         <!-- Resim Galerisi Container -->
-        <div class="product-gallery" style="position: relative; overflow: hidden;">
+        <div class="product-gallery" data-affiliate-url="{% url 'urun_affiliate_redirect' urun.id %}" role="link" tabindex="0" aria-label="{{ urun.isim }} urununu magazada incele" style="position: relative; overflow: hidden; cursor: pointer;">
             <div class="gallery-stage">
                 <div class="gallery-track">
                     {% if urun.resim_url %}
@@ -168,9 +168,6 @@
         
         <!-- Ürün Detayları -->
         <div class="product-details" style="padding: 12px; display: flex; flex-direction: column; flex: 1;">
-            <h3 style="margin: 0 0 8px 0; font-size: 1.1em; color: #333;">{{ urun.isim|truncatechars:50 }}</h3>
-
-            {% if urun.ana_baslik or urun.alt_baslik or urun.ozellikler or urun.aciklama and urun.aciklama != 'CSV ile eklendi' %}
             <div class="detail-scroll detail-content-scroll">
                 <div class="detail-main-title">{% if urun.ana_baslik %}{{ urun.ana_baslik }}{% else %}&nbsp;{% endif %}</div>
 
@@ -186,31 +183,34 @@
                     {% endif %}
                 </div>
             </div>
-            {% endif %}
             
             <!-- Fiyatlar -->
             <div class="prices" style="margin-top: auto; padding-top: 8px;">
                 {% for fiyat in urun.fiyatlar.all|slice:":3" %}
-                <div class="price-item" style="background: {% if fiyat.magaza.isim == 'eBay' %}#fef08a{% else %}#f0f4ff{% endif %}; padding: 6px; border-radius: 6px; margin-bottom: 4px; border-left: 3px solid {% if fiyat.magaza.isim == 'eBay' %}#e7900a{% else %}#6366f1{% endif %};">
-                    <div style="font-weight: 600; font-size: 0.9em; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <div class="price-item"{% if fiyat.affiliate_link %} role="link" tabindex="0" onclick="window.open('{% url 'fiyat_affiliate_redirect' fiyat.id %}', '_blank', 'noopener');" onkeydown="if(event.key==='Enter' || event.key===' '){event.preventDefault(); window.open('{% url 'fiyat_affiliate_redirect' fiyat.id %}', '_blank', 'noopener');}"{% endif %} style="background: {% if fiyat.magaza.isim == 'eBay' %}#fef08a{% else %}#f0f4ff{% endif %}; padding: 6px; border-radius: 6px; margin-bottom: 4px; border-left: 3px solid {% if fiyat.magaza.isim == 'eBay' %}#e7900a{% else %}#6366f1{% endif %};{% if fiyat.affiliate_link %} cursor: pointer;{% endif %}">
+                    <div class="price-store-row">
                         <span>{{ fiyat.magaza.isim }}</span>
                         {% if fiyat.magaza.isim == 'eBay' and urun.durum %}
                         <span style="font-size: 0.78em; font-weight: 700; background: #fff7d6; color: #7a4d00; border: 1px solid #e8b24a; border-radius: 999px; padding: 1px 7px;">{{ urun.durum }}</span>
                         {% endif %}
                     </div>
-                    <div style="font-size: 0.85em;">Ürün: {{ fiyat.fiyat }} {{ fiyat.para_birimi }}</div>
-                    <div style="font-size: 0.8em; color: {% if fiyat.gonderim_ucreti == 0 %}#10b981{% else %}#f59e0b{% endif %};">
-                        {% if fiyat.gonderim_ucreti == 0 %}
+                    <div class="price-line">Ürün: {{ fiyat.fiyat }} {{ fiyat.para_birimi }}</div>
+                    <div class="shipping-line{% if fiyat.ucretsiz_kargo %} free-shipping{% endif %}">
+                        {% if fiyat.ucretsiz_kargo %}
                             Ücretsiz Kargo
-                        {% else %}
+                        {% elif fiyat.gonderim_ucreti > 0 %}
                             Kargo: {{ fiyat.gonderim_ucreti }} {{ fiyat.para_birimi }}
+                        {% elif fiyat.gonderim_durumu %}
+                            Kargo: Konuma göre hesaplanır
+                        {% else %}
+                            Kargo bilgisi yok
                         {% endif %}
                     </div>
-                    <div style="font-weight: 700; color: #10b981; margin-top: 4px; border-top: 1px solid #ddd; padding-top: 4px;">
+                    <div class="price-total-line">
                         Toplam: {{ fiyat.toplam_fiyat|turkish_currency }} {{ fiyat.para_birimi }}
                     </div>
                     {% if fiyat.affiliate_link %}
-                    <a href="{% url 'fiyat_affiliate_redirect' fiyat.id %}" target="_blank" rel="noopener sponsored nofollow" style="display: inline-block; margin-top: 4px; background: #111827; color: #fff; text-decoration: none; font-weight: 700; font-size: 0.8em; padding: 5px 9px; border-radius: 8px;">
+                    <a href="{% url 'fiyat_affiliate_redirect' fiyat.id %}" target="_blank" rel="noopener sponsored nofollow" onclick="event.stopPropagation();" style="display: inline-block; margin-top: 4px; background: #111827; color: #fff; text-decoration: none; font-weight: 700; font-size: 0.8em; padding: 5px 9px; border-radius: 8px;">
                         Magazada Incele
                     </a>
                     {% endif %}
@@ -348,8 +348,31 @@ document.addEventListener('DOMContentLoaded', function() {
         const nextBtn = gallery.querySelector('.next');
         const thumbs = gallery.querySelectorAll('.gallery-thumb');
         const counter = gallery.querySelector('.gallery-counter');
+        const affiliateUrl = gallery.dataset.affiliateUrl;
         let activeIndex = 0;
         let touchStartX = 0;
+        let recentlySwiped = false;
+
+        function openAffiliateIfAllowed(event) {
+            if (!affiliateUrl) {
+                return;
+            }
+            if (recentlySwiped) {
+                return;
+            }
+            if (event.target.closest('.gallery-nav, .gallery-thumb')) {
+                return;
+            }
+            window.open(affiliateUrl, '_blank', 'noopener');
+        }
+
+        gallery.addEventListener('click', openAffiliateIfAllowed);
+        gallery.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openAffiliateIfAllowed(event);
+            }
+        });
 
         function updateGallery(index) {
             if (!items.length) {
@@ -403,6 +426,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const diff = touchStartX - touchEndX;
 
             if (Math.abs(diff) > 50) {
+                recentlySwiped = true;
+                setTimeout(() => { recentlySwiped = false; }, 250);
                 updateGallery(diff > 0 ? activeIndex + 1 : activeIndex - 1);
             }
         }, { passive: true });
@@ -443,7 +468,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .products-row {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 16px;
     margin-bottom: 20px;
 }
@@ -472,6 +497,8 @@ document.addEventListener('DOMContentLoaded', function() {
     width: 100%;
     height: 100%;
     object-fit: contain;
+    object-position: center;
+    transform: scale(1.1);
     display: block;
     background: #fff;
 }
@@ -559,34 +586,104 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .detail-main-title {
-    font-size: 0.92em;
-    color: #2563eb;
-    margin-bottom: 4px;
+    font-size: 0.98em;
+    color: #1e3a8a;
+    font-weight: 700;
+    margin-bottom: 6px;
     line-height: 1.3;
     min-height: calc(1.3em * 2);
+    background: linear-gradient(90deg, #eef2ff 0%, #f8faff 100%);
+    border-left: 3px solid #2563eb;
+    border-radius: 8px;
+    padding: 5px 7px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    text-align: justify;
+    text-justify: inter-word;
 }
 
 .detail-sub-title {
-    font-size: 0.87em;
-    color: #7c3aed;
+    font-size: 0.93em;
+    color: #9d174d;
+    font-weight: 600;
     margin-bottom: 4px;
     line-height: 1.3;
     min-height: calc(1.3em * 2);
+    background: linear-gradient(90deg, #fff1f7 0%, #fff7fb 100%);
+    border-left: 2px solid #ec4899;
+    border-radius: 7px;
+    padding: 4px 6px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    text-align: justify;
+    text-justify: inter-word;
 }
 
 .detail-description {
-    font-size: 0.85em;
-    color: #666;
+    font-size: 0.96em;
+    color: #0f172a;
+    font-weight: 500;
     margin-bottom: 0;
     line-height: 1.35;
+    text-align: justify;
+    text-justify: inter-word;
+}
+
+.price-store-row {
+    font-weight: 700;
+    font-size: 0.92em;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.price-line {
+    font-size: 0.89em;
+    color: #1f2937;
+    line-height: 1.2;
+}
+
+.shipping-line {
+    font-size: 0.88em;
+    font-weight: 600;
+    color: #f59e0b;
+    line-height: 1.2;
+}
+
+.shipping-line.free-shipping {
+    color: #059669;
+    display: inline-block;
+    font-weight: 800;
+    animation: free-shipping-pulse 1.05s ease-in-out infinite;
+}
+
+.price-total-line {
+    font-weight: 800;
+    font-size: 0.92em;
+    color: #10b981;
+    line-height: 1.22;
+    margin-top: 4px;
+    border-top: 1px solid #ddd;
+    padding-top: 4px;
+}
+
+@keyframes free-shipping-pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+        text-shadow: 0 0 0 rgba(16, 185, 129, 0);
+    }
+    50% {
+        opacity: 0.55;
+        transform: scale(1.06);
+        text-shadow: 0 0 16px rgba(16, 185, 129, 0.8), 0 0 24px rgba(16, 185, 129, 0.45);
+    }
 }
 
 /* Hover efektleri */
@@ -638,8 +735,8 @@ document.addEventListener('DOMContentLoaded', function() {
         scrollbar-width: thin;
     }
     .products-row .product-card {
-        flex: 0 0 165px !important;
-        width: 165px !important;
+        flex: 0 0 218px !important;
+        width: 218px !important;
     }
 
     /* Galeri küçültme */
@@ -671,37 +768,50 @@ document.addEventListener('DOMContentLoaded', function() {
     .product-details {
         padding: 6px !important;
     }
-    .product-details h3 {
-        font-size: 0.76em !important;
-        margin-bottom: 3px !important;
-    }
     .detail-content-scroll {
         flex: 0 0 auto !important;
         min-height: 0 !important;
-        max-height: 108px !important;
+        max-height: 138px !important;
         font-size: 0.75em !important;
         margin-bottom: 4px !important;
     }
     .detail-main-title {
-        font-size: 0.8em !important;
-        margin-bottom: 3px !important;
+        font-size: 0.92em !important;
+        margin-bottom: 4px !important;
+        padding: 4px 6px !important;
+        border-radius: 7px !important;
+        border-left-width: 2px !important;
     }
     .detail-sub-title {
-        font-size: 0.75em !important;
+        font-size: 0.87em !important;
         margin-bottom: 3px !important;
     }
     .detail-description {
-        font-size: 0.72em !important;
+        font-size: 0.9em !important;
     }
 
     /* Fiyat kartları küçültme */
     .price-item {
         padding: 4px 5px !important;
         margin-bottom: 2px !important;
-        font-size: 0.75em !important;
+        font-size: 0.92em !important;
     }
     .price-item > div {
-        font-size: 0.8em !important;
+        line-height: 1.2 !important;
+    }
+    .price-store-row {
+        font-size: 0.93em !important;
+    }
+    .price-line {
+        font-size: 0.89em !important;
+    }
+    .shipping-line {
+        font-size: 0.91em !important;
+    }
+    .price-total-line {
+        font-size: 0.95em !important;
+        margin-top: 3px !important;
+        padding-top: 3px !important;
     }
     .prices {
         margin-top: auto !important;
@@ -733,14 +843,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 @media (max-width: 480px) {
     .products-row .product-card {
-        flex: 0 0 150px !important;
-        width: 150px !important;
+        flex: 0 0 202px !important;
+        width: 202px !important;
     }
     .gallery-stage {
         height: 108px;
     }
     .detail-content-scroll {
-        max-height: 96px !important;
+        max-height: 124px !important;
     }
 }
 </style>
