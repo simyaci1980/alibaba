@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Check icon">
+  <circle cx="64" cy="64" r="52" fill="#ffffff"/>
+  <circle cx="64" cy="64" r="50" fill="none" stroke="#16a34a" stroke-width="8"/>
+  <path d="M36 66 L55 84 L93 42" fill="none" stroke="#16a34a" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,4 +1,5 @@
 {% extends 'urunler/base.html' %}
+{% load static %}
 
 {% block title %}Ana Sayfa | KOLAY BUL EKSPRES{% endblock %}
 
@@ -89,9 +90,9 @@
     <!-- Ürün Kartı -->
     <div class="product-card" data-urun-id="{{ urun.id }}" style="position: relative; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column;">
         
-        <!-- Seçim Checkbox'ı -->
+        <!-- Karşılaştırma Seçimi (+) -->
         <div style="position: absolute; top: 8px; right: 8px; z-index: 10;">
-            <input type="checkbox" class="urun-checkbox" value="{{ urun.id }}" aria-label="{{ urun.isim }} seç" style="width: 20px; height: 20px; cursor: pointer; accent-color: #ff9800;">
+            <input type="checkbox" class="urun-checkbox" value="{{ urun.id }}" aria-label="{{ urun.isim }} ürününü karşılaştırma için seç" style="appearance:none; -webkit-appearance:none; width:28px; height:28px; border-radius:50%; border:2px solid #faf6f6; background-color:#bc1111; background-image:url('{% static "icons/compare-plus.svg" %}'); background-size:70% 70%; background-position:center; background-repeat:no-repeat; cursor:pointer; display:grid; place-items:center; position:relative; box-shadow:0 2px 8px rgba(0, 0, 0, 0.589); transition:all 0.18s ease;">
         </div>
         
         <!-- Resim Galerisi Container -->
@@ -558,6 +559,14 @@ document.addEventListener('DOMContentLoaded', function() {
     transform: translateY(-1px);
 }
 
+.urun-checkbox:checked {
+    background-color: #0ea44b !important;
+    background-image: url('{% static "icons/compare-check.svg" %}') !important;
+    background-size: 72% 72% !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
 .product-gallery.is-single-image .gallery-nav,
 .product-gallery.is-single-image .gallery-thumbnails {
     display: none;
@@ -973,12 +982,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const MAX_SELECTED = 5;
     
     // localStorage'dan seçimleri geri yükle
+    function getCheckboxProductId(checkbox) {
+        const parsed = Number.parseInt(checkbox.value, 10);
+        return Number.isNaN(parsed) ? null : parsed;
+    }
+
     const savedSelections = localStorage.getItem('selectedProducts');
     if (savedSelections) {
         try {
             const selections = JSON.parse(savedSelections);
             checkboxes.forEach(checkbox => {
-                if (selections.includes(parseInt(checkbox.value))) {
+                const productId = getCheckboxProductId(checkbox);
+                if (productId !== null && selections.includes(productId)) {
                     checkbox.checked = true;
                 }
             });
@@ -1000,7 +1015,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // localStorage'a kaydet
         const selectedIds = Array.from(document.querySelectorAll('.urun-checkbox:checked'))
-            .map(cb => parseInt(cb.value));
+            .map(cb => getCheckboxProductId(cb))
+            .filter(id => id !== null);
         localStorage.setItem('selectedProducts', JSON.stringify(selectedIds));
     }
     
@@ -1028,6 +1044,7 @@ document.addEventListener('DOMContentLoaded', function() {
     compareBtn.addEventListener('click', function() {
         const selectedIds = Array.from(document.querySelectorAll('.urun-checkbox:checked'))
             .map(cb => cb.value)
+            .filter(value => value && !Number.isNaN(Number.parseInt(value, 10)))
             .join(',');
         
         if (selectedIds) {
