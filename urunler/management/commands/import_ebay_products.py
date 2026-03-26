@@ -6,7 +6,7 @@ Fetches products from eBay Browse API and saves to database
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from urunler.ebay_api import EbayAPIConnector
-from urunler.models import Urun, Magaza, Fiyat, UrunResim
+from urunler.models import Urun, Magaza, Fiyat, UrunResim, KategoriSema
 from decimal import Decimal
 import logging
 import re
@@ -17,6 +17,58 @@ import json
 from urllib.parse import urlencode, urlparse, parse_qsl, urlunparse
 
 logger = logging.getLogger(__name__)
+
+
+RETRO_HANDHELD_SCHEMA = [
+    {"key": "ekran_boyutu",   "label": "Ekran Boyutu",       "zorunlu": True,  "kaynak": "description"},
+    {"key": "cozunurluk",     "label": "Çözünürlük",         "zorunlu": True,  "kaynak": "description"},
+    {"key": "cpu",            "label": "İşlemci (CPU)",      "zorunlu": True,  "kaynak": "description"},
+    {"key": "ram",            "label": "RAM",                "zorunlu": True,  "kaynak": "description"},
+    {"key": "depolama",       "label": "Depolama",           "zorunlu": True,  "kaynak": "description"},
+    {"key": "batarya",        "label": "Batarya",            "zorunlu": False, "kaynak": "description"},
+    {"key": "baglanti",       "label": "Bağlantı",           "zorunlu": False, "kaynak": "description"},
+    {"key": "isletim_sistemi","label": "İşletim Sistemi",    "zorunlu": False, "kaynak": "description"},
+    {"key": "hdmi",           "label": "HDMI Çıkışı",        "zorunlu": False, "kaynak": "description"},
+    {"key": "ocr_adayi",      "label": "OCR Adayı (Görsel)", "zorunlu": False, "kaynak": "pipeline"},
+]
+
+
+DETAIL_KEY_MAP = {
+    'ekran': 'ekran_boyutu',
+    'cozunurluk': 'cozunurluk',
+    'cpu': 'cpu',
+    'ram': 'ram',
+    'depolama': 'depolama',
+    'batarya': 'batarya',
+    'baglanti': 'baglanti',
+    'isletim sistemi': 'isletim_sistemi',
+    'isletim_sistemi': 'isletim_sistemi',
+    'cikis': 'hdmi',
+    'kontrolcu': 'kontrolcu',
+    'oyun': 'oyun_sayisi',
+    'kutu icerigi': 'kutu_icerigi',
+}
+
+
+ASPECT_KEY_MAP = {
+    'screen size': 'ekran_boyutu',
+    'display size': 'ekran_boyutu',
+    'resolution': 'cozunurluk',
+    'processor': 'cpu',
+    'cpu model': 'cpu',
+    'ram size': 'ram',
+    'memory': 'ram',
+    'storage capacity': 'depolama',
+    'hard drive capacity': 'depolama',
+    'battery capacity': 'batarya',
+    'operating system': 'isletim_sistemi',
+    'os': 'isletim_sistemi',
+    'connectivity': 'baglanti',
+    'bluetooth': 'baglanti',
+    'wifi': 'baglanti',
+    'hdmi': 'hdmi',
+    'controller': 'kontrolcu',
+}
 
 
 def build_epn_rover_url(item_url: str, campaign_id: str, custom_id: int | None = None) -> str:
@@ -145,8 +197,73 @@ class Command(BaseCommand):
         def clean_html(raw_text: str) -> str:
             if not raw_text:
                 return ''
+            raw_text = raw_text.replace('&nbsp;', ' ')
             cleaned = re.sub(r'<[^>]+>', ' ', raw_text)
             return re.sub(r'\s+', ' ', cleaned).strip()
+
+        def parse_description_specs(description_html: str, already_seen: set[str]) -> tuple[list[str], bool]:
+            """
+            Extract comparison-friendly specs from HTML description text.
+            Returns (spec_lines, is_ocr_candidate).
+            """
+            if not description_html:
+                return [], False
+
+            # Image-heavy listings usually have many <img> tags and little real text.
+            img_count = len(re.findall(r'<img\b', description_html, flags=re.IGNORECASE))
+            text = clean_html(description_html)
+            lower = text.lower()
+            ocr_candidate = img_count >= 3 and len(text) < 180
+
+            lines: list[str] = []
+
+            def add_line(key: str, value: str):
+                k = key.strip()
+                v = value.strip(' .;,:')
+                if not k or not v:
+                    return
+                normalized = f"{k.lower()}:{v.lower()}"
+                if normalized in already_seen:
+                    return
+                already_seen.add(normalized)
+                lines.append(f"{k}: {v}")
+
+            patterns = [
+                ("Ekran", r'(\d+(?:[\.,]\d+)?)\s*(?:inch|inches|in\b|\")\s*(?:hd|ips|lcd|oled|rgb)?'),
+                ("Cozunurluk", r'(\d{3,4}\s*[xX]\s*\d{3,4})'),
+                ("CPU", r'cpu\s*[:\-]\s*([^\n\r\.;]{3,120})'),
+                ("RAM", r'ram\s*[:\-]\s*([^\n\r\.;]{1,80})'),
+                ("Depolama", r'(?:storage|storage capacity)\s*[:\-]\s*([^\n\r\.;]{1,80})'),
+                ("Batarya", r'(?:battery)\s*[:\-]\s*([^\n\r\.;]{1,120})'),
+                ("Baglanti", r'(?:connectivity|other function)\s*[:\-]\s*([^\n\r\.;]{3,180})'),
+                ("Isletim Sistemi", r'(?:system|os)\s*[:\-]\s*([^\n\r\.;]{2,80})'),
+            ]
+
+            for key, pattern in patterns:
+                m = re.search(pattern, lower, flags=re.IGNORECASE)
+                if m:
+                    add_line(key, m.group(1))
+
+            # Useful implicit signals
+            if 'hdmi' in lower:
+                add_line('Cikis', 'HDMI')
+            if 'type-c' in lower or 'usb-c' in lower:
+                add_line('Baglanti', 'Type-C')
+            if 'controller' in lower:
+                m = re.search(r'(\d+)\s*(?:wired\s+)?controllers?', lower)
+                if m:
+                    add_line('Kontrolcu', f"{m.group(1)} adet")
+                else:
+                    add_line('Kontrolcu', 'Dahil')
+            if 'preloaded games' in lower or 'games' in lower:
+                m = re.search(r'(\d{1,3}(?:[\.,]\d{3}){1,2}\+?|\d{3,5}\+?)\s*(?:preloaded\s+)?games?', lower)
+                if m:
+                    game_count = m.group(1).replace('.', '').replace(',', '')
+                    add_line('Oyun', game_count)
+            if 'what’s in the box' in lower or "what's in the box" in lower:
+                add_line('Kutu Icerigi', 'Mevcut')
+
+            return lines, ocr_candidate
 
         def normalize_url(url):
             """URL'deki gereksiz parametreleri temizle, küçük harfe çevir"""
@@ -156,6 +273,52 @@ class Command(BaseCommand):
             # Sadece ana yol ve temel parametreler kalsın
             clean_path = parsed.path.lower()
             return urlunparse((parsed.scheme, parsed.netloc, clean_path, '', '', ''))
+
+        def normalize_image_url(url: str) -> str:
+            if not url:
+                return ''
+            normalized = str(url).strip()
+            if normalized.startswith('//'):
+                normalized = f"https:{normalized}"
+            normalized = re.sub(r'^https:///+', 'https://', normalized)
+            normalized = re.sub(r'^http:///+', 'http://', normalized)
+            return normalized
+
+        def ensure_retro_kategori() -> KategoriSema:
+            kategori, _ = KategoriSema.objects.update_or_create(
+                slug='retro-handheld',
+                defaults={
+                    'isim': 'Retro El Konsolu',
+                    'alanlar': RETRO_HANDHELD_SCHEMA,
+                    'aktif': True,
+                }
+            )
+            return kategori
+
+        def build_detaylar_from_specs(spec_lines: list[str], is_ocr_candidate: bool) -> dict:
+            detaylar: dict[str, object] = {}
+            for line in spec_lines:
+                if ':' not in line:
+                    continue
+                key_part, value_part = line.split(':', 1)
+                src_key = key_part.strip().lower()
+                dst_key = DETAIL_KEY_MAP.get(src_key)
+                if not dst_key:
+                    continue
+                value = value_part.strip()
+                if value:
+                    detaylar[dst_key] = value
+            if is_ocr_candidate:
+                detaylar['ocr_adayi'] = True
+            return detaylar
+
+        def apply_aspect_to_detaylar(detaylar: dict, key: str, value: str):
+            if not key or not value:
+                return
+            normalized_key = key.strip().lower()
+            mapped = ASPECT_KEY_MAP.get(normalized_key)
+            if mapped and mapped not in detaylar:
+                detaylar[mapped] = value.strip()
 
         # Get credentials from settings or environment
         if use_sandbox:
@@ -231,6 +394,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('✓ Created eBay store'))
 
         # Import products
+        retro_kategori = ensure_retro_kategori()
         imported_count = 0
         skipped_count = 0
 
@@ -252,17 +416,40 @@ class Command(BaseCommand):
                 subtitle = subtitle or f"Durum: {condition_tr}"
                 subtitle_tr = tr_text(subtitle)
 
+                description_html = ''
+                if details:
+                    description_html = details.get('description') or ''
+                description_text = clean_html(description_html)
+
                 ozellikler_lines = []
+                seen_specs = set()
+                detaylar: dict[str, object] = {}
                 if details and details.get('localizedAspects'):
                     for aspect in details.get('localizedAspects', []):
                         key = tr_text(aspect.get('name') or '')
+                        raw_key = (aspect.get('name') or '').strip()
                         values = aspect.get('value') or []
                         if isinstance(values, list):
                             value_text = ', '.join([tr_text(v) for v in values if v])
+                            raw_value_text = ', '.join([str(v) for v in values if v])
                         else:
                             value_text = tr_text(str(values))
+                            raw_value_text = str(values)
                         if key and value_text:
-                            ozellikler_lines.append(f"{key}: {value_text}")
+                            line = f"{key}: {value_text}"
+                            sig = f"{key.lower()}:{value_text.lower()}"
+                            if sig not in seen_specs:
+                                seen_specs.add(sig)
+                                ozellikler_lines.append(line)
+                            apply_aspect_to_detaylar(detaylar, raw_key, raw_value_text)
+
+                extracted_specs, is_ocr_candidate = parse_description_specs(description_html, seen_specs)
+                detaylar.update(build_detaylar_from_specs(extracted_specs, is_ocr_candidate))
+                if extracted_specs:
+                    ozellikler_lines.append('--- Description Cikarimlari ---')
+                    ozellikler_lines.extend([tr_text(x) for x in extracted_specs])
+                if is_ocr_candidate:
+                    ozellikler_lines.append('Not: OCR adayi (aciklama metni dusuk, gorsel agirlikli)')
 
                 ozellikler_lines.append(f"Kategori: {category_tr}")
                 ozellikler_lines.append(f"Gönderim Yeri: {item.get('shipping_origin', 'Belirtilmedi')}")
@@ -291,11 +478,12 @@ class Command(BaseCommand):
                 etiket_set.extend(title_words[:6])
                 etiketler = ', '.join(dict.fromkeys([x for x in etiket_set if x]))[:500]
 
-                aciklama = f"Kategori: {category_tr}"
+                aciklama = description_text[:5000] if description_text else f"Kategori: {category_tr}"
 
                 # Gelişmiş güncelleme: source_url ve item_id ile kontrol
                 norm_aff_url = normalize_url(item.get('affiliate_url') or '')
                 norm_web_url = normalize_url(item.get('item_web_url') or '')
+                primary_image_url = normalize_image_url(item.get('image_url') or '')
                 product = None
                 created = False
                 # Önce source_url (affiliate_url) ile dene
@@ -314,12 +502,14 @@ class Command(BaseCommand):
                         source_url=norm_aff_url or norm_web_url,
                         isim=title_tr[:200],
                         aciklama=aciklama,
-                        ana_baslik=title_tr[:200],
-                        alt_baslik=subtitle_tr[:200],
+                        ana_baslik=title_tr,
+                        alt_baslik=subtitle_tr,
                         etiketler=etiketler,
                         ozellikler='\n'.join(ozellikler_lines)[:5000],
+                        kategori=retro_kategori,
+                        detaylar=detaylar,
                         durum=condition_tr,
-                        resim_url=item['image_url'],
+                        resim_url=primary_image_url,
                         urun_kodu=generate_unique_code(),
                         item_id=item.get('item_id') if hasattr(Urun, 'item_id') else None
                     )
@@ -330,13 +520,15 @@ class Command(BaseCommand):
                     # Tüm alanları güncelle
                     product.isim = title_tr[:200]
                     product.aciklama = aciklama
-                    product.ana_baslik = title_tr[:200]
-                    product.alt_baslik = subtitle_tr[:200]
+                    product.ana_baslik = title_tr
+                    product.alt_baslik = subtitle_tr
                     product.etiketler = etiketler
                     product.ozellikler = '\n'.join(ozellikler_lines)[:5000]
+                    product.kategori = retro_kategori
+                    product.detaylar = detaylar
                     product.durum = condition_tr
-                    if item['image_url']:
-                        product.resim_url = item['image_url']
+                    if primary_image_url:
+                        product.resim_url = primary_image_url
                     if hasattr(product, 'item_id') and item.get('item_id'):
                         product.item_id = item['item_id']
                     product.save()
@@ -372,10 +564,12 @@ class Command(BaseCommand):
                 # Tüm resimleri ekle (ana ve ek resimler)
                 image_urls = []
                 if item.get('image_url'):
-                    image_urls.append(item['image_url'])
+                    image_urls.append(normalize_image_url(item['image_url']))
                 if item.get('additional_images'):
-                    image_urls.extend([url for url in item['additional_images'] if url])
+                    image_urls.extend([normalize_image_url(url) for url in item['additional_images'] if url])
                 for idx, img_url in enumerate(image_urls):
+                    if not img_url:
+                        continue
                     UrunResim.objects.get_or_create(
                         urun=product,
                         resim_url=img_url,

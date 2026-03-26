@@ -20,10 +20,12 @@ from django.views.generic import RedirectView
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.sitemaps.views import sitemap
-from urunler.sitemaps import StaticViewSitemap
+from urunler.sitemaps import StaticViewSitemap, UrunSitemap
+from urunler.views import aliexpress_callback_view
 
 sitemaps = {
     'static': StaticViewSitemap,
+    'urunler': UrunSitemap,
 }
 
 urlpatterns = [
@@ -32,6 +34,7 @@ urlpatterns = [
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
     path('favicon.ico', RedirectView.as_view(url='/static/urunler/favicon.ico', permanent=True)),
     path('robots.txt', RedirectView.as_view(url='/static/robots.txt', permanent=True)),
+    path('aliexpress/callback', aliexpress_callback_view, name='aliexpress_callback'),
 ]
 
 if settings.DEBUG:

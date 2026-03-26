@@ -21,7 +21,7 @@ class Command(BaseCommand):
             return
 
         magaza, _ = Magaza.objects.get_or_create(
-            isim='AliExpress',
+            isim='AliExpress (CSV)',
             defaults={'web_adresi': 'https://www.aliexpress.com'}
         )
 

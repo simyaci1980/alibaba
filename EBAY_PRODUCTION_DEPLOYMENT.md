@@ -1,146 +1,161 @@
-# eBay Integration - Production Deployment Guide
+# eBay Affiliate Sistemi - Canlı Ortam Dağıtım Rehberi
 
-## Current Status ✅
-- **Code**: Complete and tested
-- **Database Schema**: Ready (no migrations needed)
-- **API Credentials**: Configured in `settings.py`
-- **Network Protection**: Retry logic and timeout handling implemented
+## Güncel Durum ✅
+- **Kod**: Tamamlandı ve test edildi
+- **Veritabanı Şeması**: Hazır (göç gerekmiyor)
+- **API Kimlik Bilgileri**: `settings.py`'da yapılandırıldı
+- **Ağ Koruması**: Yeniden deneme mantığı ve zaman aşımı işleme uygulandı
 
-## Network Issue Resolution
-Local development environment has network restrictions preventing eBay API access. **This is solved by deploying to PythonAnywhere** which has unrestricted network access.
+## Ağ Hatasının Çözümü
+Yerel geliştirme ortamında eBay API'sine erişimi kısıtlayan ağ kısıtlamaları var. **Bu, sınırsız ağ erişimine sahip PythonAnywhere'e dağıtılarak çözülür**.
 
-## Deployment Steps
+## Dağıtım Adımları
 
-### Step 1: Push Changes to Git
+### Adım 1: Değişiklikleri Git'e Gönderme
 ```bash
 cd c:\Users\ab111777\Desktop\alibaba
 
-# Stage all changes
+# Tüm değişiklikleri hazırla
 git add -A
 
-# Commit with clear message
-git commit -m "eBay Integration: Add network resilience, fix OAuth endpoints"
+# Net bir mesajla commit et
+git commit -m "eBay Entegrasyonu: Ağ esnekliği ekle, OAuth uç noktalarını düzelt"
 
-# Push to main branch
+# Ana dalına gönder
 git push origin main
 ```
 
-### Step 2: SSH into PythonAnywhere
+### Adım 2: PythonAnywhere'e SSH ile Bağlanma
 ```bash
-# Start SSH session
-ssh yourusername@yourusername.pythonanywhere.com
+# SSH oturumu başlat
+ssh kullanici_adi@kullanici_adi.pythonanywhere.com
 
-# Navigate to web app directory
-cd /home/yourusername/mysite  # or your app directory
+# Web uygulaması dizinine git
+cd /home/kullanici_adi/alibaba  # veya kendi uygulama dizini
 ```
 
-### Step 3: Pull Latest Code
+### Adım 3: En Son Kodları Çekme
 ```bash
-# Pull the latest changes
+# En son değişiklikleri çek
 git pull origin main
 
-# Install any new dependencies (if needed)
+# Yeni bağımlılıkları yükle (gerekirse)
 pip install -r requirements.txt
 
-# Collect static files
+# Statik dosyaları topla
 python manage.py collectstatic --noinput
 
-# Run migrations (just in case)
+# Veritabanı göçlerini çalıştır
 python manage.py migrate
 ```
 
-### Step 4: Import Real eBay Products
+### Adım 4: eBay'dan Gerçek Ürünleri İçeri Aktarma
 ```bash
-# Test with sandbox first (recommended)
-python manage.py import_ebay_products "smartwatch" --limit=5 --sandbox
+# Önce sandbox'ta test et (önerilir)
+python3.10 manage.py import_ebay_products "smartwatch" --limit=5 --sandbox
 
-# Once confirmed, import from PRODUCTION
-python manage.py import_ebay_products "drone" --limit=10
-python manage.py import_ebay_products "trimui smart pro" --limit=10
-python manage.py import_ebay_products "gaming laptop" --limit=15
+# Doğrulandıktan sonra, CANLIDAN import et
+python3.10 manage.py import_ebay_products "drone" --limit=20 --translate-tr
+python3.10 manage.py import_ebay_products "laptop" --limit=20 --translate-tr
+python3.10 manage.py import_ebay_products "telefon" --limit=20 --translate-tr
 ```
 
-### Step 5: Verify in Browser
-Visit your website and confirm:
-- eBay products appear with **yellow background** and **orange left border**
-- **🏆 Orijinal** badge shows on eBay items
-- Product images load properly
-- Prices display in USD
-- Affiliate links are correct
+**Komut Parametreleri:**
+- `"drone"` = Aratılacak ürün adı
+- `--limit=20` = İçeri aktarılacak ürün sayısı (1-200)
+- `--translate-tr` = Başlıkları Türkçeye çevir
+- `--sandbox` = Sandbox ortamını kullan (isteğe bağlı)
 
-## What Was Fixed
+### Adım 5: Tarayıcıda Doğrulama
+Siteyi ziyaret edin ve şunları kontrol edin:
+- eBay ürünleri **sarı arka plan** ve **turuncu sol sınırla** görünsün
+- **🏆 Orijinal** rozeti eBay ürünlerinde gözüksün
+- Ürün resimleri düzgün yüklensin
+- Fiyatlar USD cinsinden gösterilsin
+- Affiliate linkler doğru olsun
 
-### 1. **Network Resilience** (ebay_api.py)
+## Yapılan Düzeltmeler
+
+### 1. **Ağ Esnekliği** (ebay_api.py)
 ```python
-# Added HTTPAdapter with retry strategy
+# Yeniden deneme stratejisi ile HTTPAdapter eklendi
 retry_strategy = Retry(
-    total=3,  # Retry up to 3 times
-    backoff_factor=1,  # Wait 1s, 2s, 4s between retries
-    status_forcelist=[429, 500, 502, 503, 504],  # Retry on these status codes
+    total=3,  # En fazla 3 kez yeniden dene
+    backoff_factor=1,  # Denemeler arası 1s, 2s, 4s bekle
+    status_forcelist=[429, 500, 502, 503, 504],  # Bu status kodlarında yeniden dene
     allowed_methods=["POST", "GET"]
 )
 ```
 
-### 2. **Increased Timeouts**
-- Changed from 10s → **30 seconds** for OAuth token requests
-- Changed from 15s → **30 seconds** for API search requests
+### 2. **Artan Zaman Aşımı Değerleri**
+- OAuth token talepleri: 10s → **30 saniye**
+- API arama talepleri: 15s → **30 saniye**
 
-### 3. **Better Exception Handling**
-- Specific catch for `requests.exceptions.Timeout`
-- Specific catch for `requests.exceptions.ConnectionError`
-- Detailed error logging for debugging
+### 3. **Daha İyi İstisna Yönetimi**
+- `requests.exceptions.Timeout` için özel yakalama
+- `requests.exceptions.ConnectionError` için özel yakalama
+- Hata ayıklamada ayrıntılı günlükleme
 
-### 4. **Corrected OAuth Endpoints**
-- Production: `https://api.ebay.com/oauth2/token`
+### 4. **Düzeltilmiş OAuth Uç Noktaları**
+- Canlı: `https://api.ebay.com/oauth2/token`
 - Sandbox: `https://api.sandbox.ebay.com/oauth2/token`
 
-## Monitoring After Deployment
+## Dağıtım Sonrası İzleme
 
-### Check Affiliate Clicks in eBay Partner Network
-1. Log into [https://publisher.ebaypartnernetwork.com](https://publisher.ebaypartnernetwork.com)
-2. Navigate to **Reports** → **Click Reports**
-3. Check for clicks on your campaign ID: **5339143578**
+### eBay Partner Network'de Affiliate Tıklamalarını Kontrol Etme
+1. [https://publisher.ebaypartnernetwork.com](https://publisher.ebaypartnernetwork.com) adresine giriş yapın
+2. **Reports** → **Click Reports** seçeneğine gidin
+3. Kampanya ID'nizi kontrol edin: **5339143578**
+4. **Customid** sütununda ürün kodlarınızı (5 haneli) göreceksiniz
 
-### Django Logs
-On PythonAnywhere, check logs for any API errors:
+### Django Günlükleri
+PythonAnywhere'de API hatalarını kontrol edin:
 ```bash
-# View recent API activity
-tail -f /home/yourusername/mysite/ebay_api.log
+# Son API aktivitesini görüntüle
+tail -f /home/kullanici_adi/alibaba/ebay_api.log
 ```
 
-## Troubleshooting
+## Sorun Giderme
 
-### If products aren't importing:
+### Ürünler import edilmiyorsa:
 ```bash
-# Run with verbose logging
-python manage.py import_ebay_products "drone" --limit=5 -v 3
+# Ayrıntılı günlükleme ile çalıştır
+python3.10 manage.py import_ebay_products "drone" --limit=5 -v 3
 ```
 
-### If images aren't showing:
-- Check that `UrunResim.resim_url` contains full eBay image URLs
-- Verify eBay image URLs are not blocked by CORS
+### Resimler gösterilmiyorsa:
+- `UrunResim.resim_url` tam eBay resim URL'leri içerdiğini kontrol edin
+- eBay resim URL'lerinin CORS tarafından engellenmediğini doğrulayın
 
-### If affiliate links aren't working:
-- Verify campaign ID is correct: `5339143578`
-- Check link format: `https://ebay.com/itm/{item_id}?campid=5339143578&customid={custom_id}`
+### Affiliate linkler çalışmıyorsa:
+- Kampanya ID'nin doğru olduğunu doğrulayın: `5339143578`
+- Link formatını kontrol edin: `https://www.ebay.com/itm/{item_id}?mkcid=1&mkrid=711-53200-19255-0&siteid=0&campid=5339143578&toolid=10001&mkevt=1&customid={urun_kodu}`
 
-## Configuration Files
+## Yapılandırma Dosyaları
 
-### settings.py (already configured)
+### settings.py (zaten yapılandırıldı)
 ```python
-EBAY_PRODUCTION_CLIENT_ID = 'AliAltns-rnkarlat-PRD-...'
+EBAY_PRODUCTION_CLIENT_ID = 'AliAltns-...-PRD-...'
 EBAY_PRODUCTION_CLIENT_SECRET = 'PRD-...'
 EBAY_CAMPAIGN_ID = '5339143578'
 ```
 
-### Database Models (no changes needed)
-- ✅ `Urun` - Product name, description, images
-- ✅ `Magaza` - Store name (eBay created automatically)
-- ✅ `Fiyat` - Price, affiliate_link, contact info
-- ✅ `UrunResim` - Product images with URLs
+### Veritabanı Modelleri (değişikliğe ihtiyaç yok)
+- ✅ `Urun` - Ürün adı, açıklama, resimler
+- ✅ `Magaza` - Mağaza adı (eBay otomatik oluşturulur)
+- ✅ `Fiyat` - Fiyat, affiliate_link, iletişim bilgileri
+- ✅ `UrunResim` - Ürün resimleri URL'lerle
+- ✅ `ClickLog` - Tıklama izleme ve alt ID'ler
 
-## Caching
-OAuth tokens are automatically cached for 1 hour to reduce API calls:
+## Affiliate Takibi
+
+Her eBay ürünü için:
+- **Ürün Kodu**: 5 haneli benzersiz kod (42567, 89123 vb)
+- **Customid**: Ürün kodu = EPN raporunda hangi ürüne tıklandığını gösterir
+- **Takipler**: EPN Reports → Customid sütununda yer alır
+
+## Önbelleğe Alma
+OAuth tokenları otomatik olarak 1 saat süreyle önbelleğe alınır (API çağrılarını azaltmak için):
 ```python
 CACHES = {
     'default': {
@@ -150,26 +165,26 @@ CACHES = {
 }
 ```
 
-## Next Steps (Optional)
+## Sonraki Adımlar (İsteğe Bağlı)
 
-### 1. **Schedule Automated Imports**
-Use Celery Beat to update products daily:
+### 1. **Otomatik Import Zamanlaması**
+Celery Beat kullanarak ürünleri günlük güncelleyin:
 ```bash
 python -m celery -A urun_karsilastirma worker -B
 ```
 
-### 2. **Track Performance**
-- Monitor affiliate click-through rates
-- Track which products get the most clicks
-- Adjust import searches based on performance
+### 2. **Performansı İzleyin**
+- Affiliate tıklama oranlarını izleyin
+- En çok tıklanan ürünleri takip edin
+- Performansa göre arama terimlerini ayarlayın
 
-### 3. **Expand to Other Affiliate Networks**
-- Already have AliExpress integration ✅
-- eBay integrated ✅
-- Consider: Amazon Associates, Admitad, etc.
+### 3. **Diğer Affiliate Ağlarına Genişlet**
+- AliExpress entegrasyonu zaten var ✅
+- eBay entegrasyonu tamamlandı ✅
+- Şunları düşünün: Amazon Associates, Admitad, vb.
 
 ---
 
-**Status**: Ready for production deployment  
-**Last Updated**: 2026-03-03  
-**Environment**: PythonAnywhere (production) or local (with network access)
+**Durum**: Canlı ortama dağıtım için hazır  
+**Son Güncelleme**: 2026-03-04  
+**Ortam**: PythonAnywhere (canlı) veya yerel (ağ erişimi gerekli)

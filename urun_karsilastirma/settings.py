@@ -170,6 +170,11 @@ EBAY_PRODUCTION_CLIENT_SECRET = config('EBAY_PRODUCTION_CLIENT_SECRET', default=
 # eBay Partner Network Campaign ID
 EBAY_CAMPAIGN_ID = config('EBAY_CAMPAIGN_ID', default='')
 
+# ===== AliExpress Affiliates API CREDENTIALS =====
+ALIEXPRESS_APP_KEY = config('ALIEXPRESS_APP_KEY', default='')
+ALIEXPRESS_APP_SECRET = config('ALIEXPRESS_APP_SECRET', default='')
+ALIEXPRESS_TRACKING_ID = config('ALIEXPRESS_TRACKING_ID', default='kolaybulexpres')
+
 # Caching for tokens (in-memory cache)
 CACHES = {
     'default': {

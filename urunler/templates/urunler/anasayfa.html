@@ -87,7 +87,12 @@
     {% for urun in urunler %}
     {% if forloop.counter0|divisibleby:20 %}<div class="products-row">{% endif %}
     <!-- Ürün Kartı -->
-    <div class="product-card" style="background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column;">
+    <div class="product-card" data-urun-id="{{ urun.id }}" style="position: relative; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column;">
+        
+        <!-- Seçim Checkbox'ı -->
+        <div style="position: absolute; top: 8px; right: 8px; z-index: 10;">
+            <input type="checkbox" class="urun-checkbox" value="{{ urun.id }}" aria-label="{{ urun.isim }} seç" style="width: 20px; height: 20px; cursor: pointer; accent-color: #ff9800;">
+        </div>
         
         <!-- Resim Galerisi Container -->
         <div class="product-gallery" data-affiliate-url="{% url 'urun_affiliate_redirect' urun.id %}" role="link" tabindex="0" aria-label="{{ urun.isim }} urununu magazada incele" style="position: relative; overflow: hidden; cursor: pointer;">
@@ -169,12 +174,19 @@
         <!-- Ürün Detayları -->
         <div class="product-details" style="padding: 12px; display: flex; flex-direction: column; flex: 1;">
             <div class="detail-scroll detail-content-scroll">
-                <div class="detail-main-title">{% if urun.ana_baslik %}{{ urun.ana_baslik }}{% else %}&nbsp;{% endif %}</div>
-
-                <div class="detail-sub-title">{% if urun.alt_baslik %}{{ urun.alt_baslik }}{% else %}&nbsp;{% endif %}</div>
+                <div class="detail-main-title">{% if urun.ana_baslik %}{{ urun.ana_baslik }}{% else %}{{ urun.isim }}{% endif %}</div>
 
                 <div class="detail-description">
-                    {% if urun.ozellikler %}
+                    {% if urun.home_detail_rows %}
+                    <div class="detail-spec-list">
+                        {% for row in urun.home_detail_rows %}
+                        <div class="detail-spec-row">
+                            <div class="detail-spec-label">{{ row.label }}</div>
+                            <div class="detail-spec-value">{{ row.value }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% elif urun.ozellikler %}
                     {{ urun.ozellikler|linebreaksbr }}
                     {% elif urun.aciklama and urun.aciklama != 'CSV ile eklendi' %}
                     {{ urun.aciklama|linebreaksbr }}
@@ -186,6 +198,11 @@
             
             <!-- Fiyatlar -->
             <div class="prices" style="margin-top: auto; padding-top: 8px;">
+                    {% if urun.slug and not urun.fiyatlar.all|slice:":1" %}
+                <div style="margin-bottom:8px;">
+                    <a href="{% url 'urun_detay' urun.slug %}" style="display:inline-block; text-decoration:none; background:#f59e0b; color:#111; font-weight:700; font-size:0.82em; padding:6px 10px; border-radius:8px;">Urun Detayi</a>
+                </div>
+                {% endif %}
                 {% for fiyat in urun.fiyatlar.all|slice:":3" %}
                 <div class="price-item"{% if fiyat.affiliate_link %} role="link" tabindex="0" onclick="window.open('{% url 'fiyat_affiliate_redirect' fiyat.id %}', '_blank', 'noopener');" onkeydown="if(event.key==='Enter' || event.key===' '){event.preventDefault(); window.open('{% url 'fiyat_affiliate_redirect' fiyat.id %}', '_blank', 'noopener');}"{% endif %} style="background: {% if fiyat.magaza.isim == 'eBay' %}#fef08a{% else %}#f0f4ff{% endif %}; padding: 6px; border-radius: 6px; margin-bottom: 4px; border-left: 3px solid {% if fiyat.magaza.isim == 'eBay' %}#e7900a{% else %}#6366f1{% endif %};{% if fiyat.affiliate_link %} cursor: pointer;{% endif %}">
                     <div class="price-store-row">
@@ -209,10 +226,19 @@
                     <div class="price-total-line">
                         Toplam: {{ fiyat.toplam_fiyat|turkish_currency }} {{ fiyat.para_birimi }}
                     </div>
-                    {% if fiyat.affiliate_link %}
-                    <a href="{% url 'fiyat_affiliate_redirect' fiyat.id %}" target="_blank" rel="noopener sponsored nofollow" onclick="event.stopPropagation();" style="display: inline-block; margin-top: 4px; background: #111827; color: #fff; text-decoration: none; font-weight: 700; font-size: 0.8em; padding: 5px 9px; border-radius: 8px;">
-                        Magazada Incele
-                    </a>
+                    {% if urun.slug or fiyat.affiliate_link %}
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; align-items:center;">
+                        {% if urun.slug %}
+                        <a href="{% url 'urun_detay' urun.slug %}" onclick="event.stopPropagation();" style="display:inline-block; text-decoration:none; background:#f59e0b; color:#111; font-weight:700; font-size:0.8em; padding:5px 9px; border-radius:8px;">
+                            Urun Detayi
+                        </a>
+                        {% endif %}
+                        {% if fiyat.affiliate_link %}
+                        <a href="{% url 'fiyat_affiliate_redirect' fiyat.id %}" target="_blank" rel="noopener sponsored nofollow" onclick="event.stopPropagation();" style="display:inline-block; background:#111827; color:#fff; text-decoration:none; font-weight:700; font-size:0.8em; padding:5px 9px; border-radius:8px;">
+                            Magazada Incele
+                        </a>
+                        {% endif %}
+                    </div>
                     {% endif %}
                 </div>
                 {% endfor %}
@@ -503,44 +529,10 @@ document.addEventListener('DOMContentLoaded', function() {
     background: #fff;
 }
 
-.gallery-empty {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    text-align: center;
-    color: #fff;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.gallery-counter {
-    position: absolute;
-    right: 10px;
-    bottom: 10px;
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: rgba(17, 24, 39, 0.72);
-    color: #fff;
-    font-size: 0.78rem;
-    font-weight: 700;
-    z-index: 2;
-}
-
-.gallery-thumbnails {
-    display: flex;
-    gap: 6px;
-    padding: 8px;
-    overflow-x: auto;
-    background: #fff;
-    scrollbar-width: thin;
-}
-
 .gallery-thumb {
-    flex: 0 0 46px;
-    width: 46px;
-    height: 46px;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
     border: 2px solid #e5e7eb;
     border-radius: 10px;
     padding: 0;
@@ -571,6 +563,30 @@ document.addEventListener('DOMContentLoaded', function() {
     display: none;
 }
 
+.gallery-thumbnails {
+    display: flex;
+    gap: 6px;
+    padding: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+    scrollbar-width: thin;
+}
+
+.gallery-counter {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    background: rgba(17, 24, 39, 0.78);
+    color: #fff;
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-size: 0.74em;
+    font-weight: 700;
+    z-index: 2;
+}
+
 .detail-scroll {
     overflow-y: auto;
     padding-right: 6px;
@@ -596,12 +612,12 @@ document.addEventListener('DOMContentLoaded', function() {
     border-left: 3px solid #2563eb;
     border-radius: 8px;
     padding: 5px 7px;
+    overflow: hidden;
     display: -webkit-box;
+    line-clamp: 2;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-align: justify;
-    text-justify: inter-word;
+    overflow-wrap: anywhere;
 }
 
 .detail-sub-title {
@@ -611,14 +627,14 @@ document.addEventListener('DOMContentLoaded', function() {
     margin-bottom: 4px;
     line-height: 1.3;
     min-height: calc(1.3em * 2);
+    max-height: calc(1.3em * 2 + 8px);
     background: linear-gradient(90deg, #fff1f7 0%, #fff7fb 100%);
     border-left: 2px solid #ec4899;
     border-radius: 7px;
     padding: 4px 6px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
     text-align: justify;
     text-justify: inter-word;
 }
@@ -631,6 +647,42 @@ document.addEventListener('DOMContentLoaded', function() {
     line-height: 1.35;
     text-align: justify;
     text-justify: inter-word;
+}
+
+.detail-spec-list {
+    display: grid;
+    gap: 6px;
+}
+
+.detail-spec-row {
+    display: grid;
+    grid-template-columns: minmax(84px, 40%) minmax(0, 1fr);
+    gap: 8px;
+    align-items: start;
+    padding: 5px 6px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.detail-spec-label {
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.25;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.detail-spec-value {
+    color: #334155;
+    line-height: 1.25;
+    min-width: 0;
+    display: -webkit-box;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
 }
 
 .price-store-row {
@@ -647,6 +699,7 @@ document.addEventListener('DOMContentLoaded', function() {
     font-size: 0.89em;
     color: #1f2937;
     line-height: 1.2;
+    overflow-wrap: anywhere;
 }
 
 .shipping-line {
@@ -654,6 +707,7 @@ document.addEventListener('DOMContentLoaded', function() {
     font-weight: 600;
     color: #f59e0b;
     line-height: 1.2;
+    overflow-wrap: anywhere;
 }
 
 .shipping-line.free-shipping {
@@ -671,6 +725,7 @@ document.addEventListener('DOMContentLoaded', function() {
     margin-top: 4px;
     border-top: 1px solid #ddd;
     padding-top: 4px;
+    overflow-wrap: anywhere;
 }
 
 @keyframes free-shipping-pulse {
@@ -775,19 +830,21 @@ document.addEventListener('DOMContentLoaded', function() {
         font-size: 0.75em !important;
         margin-bottom: 4px !important;
     }
-    .detail-main-title {
-        font-size: 0.92em !important;
-        margin-bottom: 4px !important;
-        padding: 4px 6px !important;
-        border-radius: 7px !important;
-        border-left-width: 2px !important;
-    }
-    .detail-sub-title {
-        font-size: 0.87em !important;
-        margin-bottom: 3px !important;
-    }
     .detail-description {
         font-size: 0.9em !important;
+    }
+    .detail-spec-list {
+        gap: 4px !important;
+    }
+    .detail-spec-row {
+        grid-template-columns: minmax(76px, 42%) minmax(0, 1fr) !important;
+        gap: 6px !important;
+        padding: 4px 5px !important;
+        border-radius: 7px !important;
+    }
+    .detail-spec-label,
+    .detail-spec-value {
+        line-height: 1.18 !important;
     }
 
     /* Fiyat kartları küçültme */
@@ -852,7 +909,135 @@ document.addEventListener('DOMContentLoaded', function() {
     .detail-content-scroll {
         max-height: 124px !important;
     }
+    
+    /* Sticky Bar Mobil Optimizasyonu */
+    .comparison-sticky-bar {
+        padding: 8px 10px !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+    
+    .comparison-sticky-info {
+        flex-direction: row !important;
+        width: 100% !important;
+    }
+    
+    .comparison-sticky-text {
+        font-size: 0.9em !important;
+    }
+    
+    .comparison-sticky-actions {
+        width: 100% !important;
+        gap: 6px !important;
+    }
+    
+    .comparison-sticky-actions button {
+        flex: 1 !important;
+        padding: 6px 10px !important;
+        font-size: 0.9em !important;
+    }
+    
+    #selected-count {
+        font-size: 1em !important;
+    }
+}
+
+/* Tablet Optimizasyonu (768px-1024px) */
+@media (min-width: 481px) and (max-width: 1024px) {
+    .comparison-sticky-bar {
+        flex-wrap: nowrap !important;
+        padding: 10px 12px !important;
+    }
 }
 </style>
+
+<!-- Sticky Karşılaştırma Bar -->
+<div id="comparison-sticky-bar" style="position: fixed; bottom: 0; left: 0; right: 0; background: #111; color: #fff; padding: 12px 16px; box-shadow: 0 -2px 8px rgba(0,0,0,0.2); z-index: 999; display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;" class="comparison-sticky-bar">
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;" class="comparison-sticky-info">
+        <span id="selected-count" style="font-weight: 700; font-size: 1.1em;">0</span>
+        <span class="comparison-sticky-text">ürün seçildi (maksimum 5)</span>
+    </div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;" class="comparison-sticky-actions">
+        <button id="clear-selection-btn" style="background: #ef4444; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.95em;">Temizle</button>
+        <button id="compare-btn" style="background: #ff9800; color: #111; border: none; padding: 8px 18px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.95em;" disabled>Karşılaştır</button>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('.urun-checkbox');
+    const comparisonBar = document.getElementById('comparison-sticky-bar');
+    const selectedCountEl = document.getElementById('selected-count');
+    const clearBtn = document.getElementById('clear-selection-btn');
+    const compareBtn = document.getElementById('compare-btn');
+    const MAX_SELECTED = 5;
+    
+    // localStorage'dan seçimleri geri yükle
+    const savedSelections = localStorage.getItem('selectedProducts');
+    if (savedSelections) {
+        try {
+            const selections = JSON.parse(savedSelections);
+            checkboxes.forEach(checkbox => {
+                if (selections.includes(parseInt(checkbox.value))) {
+                    checkbox.checked = true;
+                }
+            });
+        } catch (e) {
+            console.error('Seçimler yüklenemedı:', e);
+        }
+    }
+    
+    function updateSelectionState() {
+        const checkedCount = document.querySelectorAll('.urun-checkbox:checked').length;
+        selectedCountEl.textContent = checkedCount;
+        
+        if (checkedCount > 0) {
+            comparisonBar.style.display = 'flex';
+            compareBtn.disabled = false;
+        } else {
+            comparisonBar.style.display = 'none';
+        }
+        
+        // localStorage'a kaydet
+        const selectedIds = Array.from(document.querySelectorAll('.urun-checkbox:checked'))
+            .map(cb => parseInt(cb.value));
+        localStorage.setItem('selectedProducts', JSON.stringify(selectedIds));
+    }
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function(e) {
+            const checkedCount = document.querySelectorAll('.urun-checkbox:checked').length;
+            
+            // Max seçim kontrolü
+            if (this.checked && checkedCount > MAX_SELECTED) {
+                this.checked = false;
+                alert(`Maksimum ${MAX_SELECTED} ürün seçebilirsiniz.`);
+                return;
+            }
+            
+            updateSelectionState();
+        });
+    });
+    
+    clearBtn.addEventListener('click', function() {
+        checkboxes.forEach(checkbox => checkbox.checked = false);
+        localStorage.removeItem('selectedProducts');
+        updateSelectionState();
+    });
+    
+    compareBtn.addEventListener('click', function() {
+        const selectedIds = Array.from(document.querySelectorAll('.urun-checkbox:checked'))
+            .map(cb => cb.value)
+            .join(',');
+        
+        if (selectedIds) {
+            window.location.href = `{% url 'urun_karsilastir' %}?ids=${selectedIds}`;
+        }
+    });
+    
+    // İlk yüklemede durumu güncelle
+    updateSelectionState();
+});
+</script>
 
 {% endblock %}

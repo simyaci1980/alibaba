@@ -1,6 +1,7 @@
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.text import slugify
 
 class Magaza(models.Model):
 	isim = models.CharField(max_length=100)
@@ -10,13 +11,30 @@ class Magaza(models.Model):
 		return self.isim
 
 
+class KategoriSema(models.Model):
+	slug = models.SlugField(max_length=80, unique=True, help_text='Kategori URL kimligi (or. retro-handheld)')
+	isim = models.CharField(max_length=120)
+	alanlar = models.JSONField(default=list, blank=True, help_text='Kategoriye ozel alan semasi')
+	aktif = models.BooleanField(default=True)
+
+	class Meta:
+		verbose_name = 'Kategori Semasi'
+		verbose_name_plural = 'Kategori Semalari'
+
+	def __str__(self):
+		return self.isim
+
+
 class Urun(models.Model):
 	isim = models.CharField(max_length=200)
 	aciklama = models.TextField(blank=True)
-	ana_baslik = models.CharField(max_length=200, blank=True, verbose_name="Ana Başlık")
-	alt_baslik = models.CharField(max_length=200, blank=True, verbose_name="Alt Başlık")
+	ana_baslik = models.CharField(max_length=500, blank=True, verbose_name="Ana Başlık")
+	alt_baslik = models.CharField(max_length=500, blank=True, verbose_name="Alt Başlık")
 	etiketler = models.CharField(max_length=500, blank=True, verbose_name="Etiketler")
 	ozellikler = models.TextField(blank=True, verbose_name="Özellikler")
+	kategori = models.ForeignKey(KategoriSema, on_delete=models.SET_NULL, blank=True, null=True, related_name='urunler')
+	detaylar = models.JSONField(default=dict, blank=True, help_text='Kategori semasina gore yapisal urun alanlari')
+	slug = models.SlugField(max_length=255, unique=True, blank=True, null=True, db_index=True)
 	durum = models.CharField(max_length=100, blank=True, null=True, verbose_name="Durum")
 	resim = models.ImageField(upload_to='urun_resimleri/', blank=True, null=True)  # Dosya yükleme için
 	resim_url = models.URLField(max_length=500, blank=True, null=True, help_text='Resim URL (yer kaplamaz)')  # URL için
@@ -24,6 +42,18 @@ class Urun(models.Model):
 	urun_kodu = models.CharField(max_length=12, unique=True, blank=True, null=True, help_text='Kısa arama kodu (otomatik)')
 	item_id = models.CharField(max_length=50, unique=True, blank=True, null=True, help_text='eBay ürün ID')
 	sira = models.PositiveIntegerField(default=0, blank=True, null=True, help_text="Ürün sırası (küçükten büyüğe önde)")
+
+	def save(self, *args, **kwargs):
+		if not self.slug:
+			base_text = self.ana_baslik or self.isim or self.urun_kodu or 'urun'
+			base_slug = slugify(base_text)[:230] or f"urun-{self.urun_kodu or 'x'}"
+			candidate = base_slug
+			i = 2
+			while Urun.objects.exclude(pk=self.pk).filter(slug=candidate).exists():
+				candidate = f"{base_slug[:220]}-{i}"
+				i += 1
+			self.slug = candidate
+		super().save(*args, **kwargs)
 
 	def __str__(self):
 		return f"{self.isim} ({self.urun_kodu})" if self.urun_kodu else self.isim

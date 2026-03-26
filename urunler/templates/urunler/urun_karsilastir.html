@@ -1,0 +1,270 @@
+{% extends 'urunler/base.html' %}
+
+{% block title %}{{ meta_title }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 1600px; margin: 24px auto; padding: 0 16px;" class="comparison-container">
+    <nav style="margin-bottom: 14px; font-size: 0.9em;">
+        <a href="{% url 'anasayfa' %}" style="color:#fff; text-decoration:none; background:#111; padding:6px 10px; border-radius:8px;">Ana Sayfa</a>
+    </nav>
+
+    <article style="background:#fff; border-radius:14px; padding:18px; box-shadow:0 8px 25px rgba(0,0,0,0.12);">
+        <header style="margin-bottom:20px;">
+            <h1 style="margin:0; font-size:1.5em; color:#111;">Ürün Karşılaştırması ({{ urunler|length }})</h1>
+        </header>
+
+        <!-- 3 bölüm birlikte kayar — tek scroll konteyneri -->
+        <div class="comparison-scroll-outer">
+        <div class="comparison-scroll-inner">
+
+        <!-- Ürün Başlıkları (Sütun Başlıkları) -->
+        <div style="margin-bottom: 20px;" class="comparison-header-wrapper">
+            <table style="table-layout:fixed; width:100%; border-collapse:collapse;" class="comparison-table-header">
+                <thead>
+                    <tr>
+                        <th style="text-align:left; width:160px; min-width:160px; padding:14px; background:#1f2937; border:2px solid #111; font-weight:900; color:#fff; font-size:0.95em;">ÖZELLIKLER</th>
+                        {% for urun in urunler %}
+                        <th style="padding:16px 12px; background:linear-gradient(180deg, #111 0%, #1f2937 100%); color:#fff; border:2px solid #111; font-weight:900; width:220px; min-width:220px;">
+                            <div style="text-align:center;">
+                                <!-- Ürün Başlığı -->
+                                <div style="font-size:0.92em; margin-bottom:10px; font-weight:800; color:#ff9800; text-transform:uppercase; letter-spacing:0.5px;">{{ urun.isim|truncatechars:45 }}</div>
+                                
+                                <!-- Ürün Resmi -->
+                                {% if urun.resim_url or urun.resim %}
+                                <div style="margin-bottom:10px;">
+                                    <img src="{% if urun.resim_url %}{{ urun.resim_url }}{% else %}{{ urun.resim.url }}{% endif %}" alt="{{ urun.isim }}" style="max-width:100%; max-height:90px; border-radius:8px; box-shadow:0 4px 8px rgba(255,152,0,0.3);">
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Fiyat Badge -->
+                                <div style="font-size:0.88em; color:#10b981; font-weight:900; background:#0f172a; padding:8px 10px; border-radius:6px; border:2px solid #10b981;">
+                                    {% if urun.fiyatlar.all %}
+                                        {% with min_fiyat=urun.fiyatlar.all|dictsort:"toplam_fiyat"|first %}
+                                        💰 {{ min_fiyat.toplam_fiyat|floatformat:0 }} {{ min_fiyat.para_birimi }}
+                                        {% endwith %}
+                                    {% else %}
+                                        Fiyat yok
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+        <!-- Teknik Özellikler Karşılaştırma Tablosu -->
+        {% if karsilastirma_satir %}
+        <div style="margin-bottom: 20px;" class="comparison-data-wrapper">
+            <table style="table-layout:fixed; width:100%; border-collapse:collapse;" class="comparison-table-data">
+                <tbody>
+                    {% for satir in karsilastirma_satir %}
+                    <tr style="background:{% if forloop.counter|divisibleby:2 %}#fafafa{% else %}#fff{% endif %};">
+                        <td style="text-align:left; width:160px; min-width:160px; padding:14px; background:#f3f4f6; border:1px solid #d1d5db; font-weight:800; color:#111; font-size:0.93em; text-transform:uppercase; letter-spacing:0.3px; border-left:4px solid #ff9800;">
+                            {{ satir.label }}
+                        </td>
+                        {% for deger in satir.degerler %}
+                        <td style="padding:14px 12px; border:1px solid #d1d5db; color:#1f2937; width:220px; min-width:220px; font-weight:500; font-size:0.95em;">
+                            <div style="word-break:break-word; overflow-wrap:anywhere; padding:8px; border-radius:6px;
+                                {% if deger != 'Belirtilmemiş' and satir.degerler|length > 1 %}
+                                    {% if forloop.counter0 == 0 %}
+                                        background:#dbeafe; border-left:3px solid #3b82f6;
+                                    {% else %}
+                                        {% with first_val=satir.degerler|first %}
+                                        {% if deger != first_val %}
+                                            background:#fef08a; border-left:3px solid #ca8a04;
+                                        {% else %}
+                                            background:#f0fdf4; border-left:3px solid #22c55e;
+                                        {% endif %}
+                                        {% endwith %}
+                                    {% endif %}
+                                {% endif %}
+                            ">
+                                {{ deger }}
+                            </div>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+
+                    <tr style="background:#fff7ed;">
+                        <td style="text-align:left; width:160px; min-width:160px; padding:14px; background:#1f2937; border:1px solid #d1d5db; font-weight:900; color:#fff; font-size:0.93em; text-transform:uppercase; letter-spacing:0.3px; border-left:4px solid #ff9800;">MAĞAZA TEKLİFLERİ</td>
+                        {% for urun in urunler %}
+                        <td style="padding:14px 12px; border:1px solid #d1d5db; color:#1f2937; width:220px; min-width:220px; vertical-align:top;">
+                            <div style="display:flex; flex-direction:column; gap:10px;">
+                                {% for fiyat in urun.fiyatlar.all|slice:":3" %}
+                                <div style="padding:10px; background:#fff; border-radius:8px; border-left:4px solid {% if fiyat.magaza.isim == 'eBay' %}#f59e0b{% else %}#6366f1{% endif %}; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+                                    <div style="font-weight:800; color:#1f2937; font-size:0.92em; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                                        {% if fiyat.magaza.isim == 'eBay' %}
+                                        <span style="background:#f59e0b; color:#fff; padding:2px 6px; border-radius:4px; font-size:0.78em; font-weight:900;">{{ fiyat.magaza.isim }}</span>
+                                        {% else %}
+                                        <span style="background:#6366f1; color:#fff; padding:2px 6px; border-radius:4px; font-size:0.78em; font-weight:900;">{{ fiyat.magaza.isim }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div style="color:#374151; font-size:0.86em; margin-bottom:4px; font-weight:700;">
+                                        Ürün: <span style="color:#10b981; font-weight:900;">{{ fiyat.fiyat }}</span> {{ fiyat.para_birimi }}
+                                    </div>
+                                    <div style="color:#6b7280; font-size:0.82em; margin-bottom:6px;">
+                                        {% if fiyat.ucretsiz_kargo %}
+                                        <span style="background:#d1fae5; color:#065f46; padding:2px 6px; border-radius:4px; font-weight:700;">Ücretsiz kargo</span>
+                                        {% elif fiyat.gonderim_ucreti > 0 %}
+                                        Kargo: <span style="color:#f59e0b; font-weight:700;">{{ fiyat.gonderim_ucreti }}</span>
+                                        {% else %}
+                                        Kargo: Konum göre
+                                        {% endif %}
+                                    </div>
+                                    <div style="color:#fff; font-size:0.82em; margin-top:6px; padding-top:6px; border-top:1px solid #e5e7eb;">
+                                        <span style="background:#10b981; color:#fff; padding:3px 8px; border-radius:6px; font-weight:900;">Toplam: {{ fiyat.toplam_fiyat|floatformat:2 }} {{ fiyat.para_birimi }}</span>
+                                    </div>
+                                    {% if fiyat.affiliate_link %}
+                                    <a href="{% url 'fiyat_affiliate_redirect' fiyat.id %}" target="_blank" rel="noopener sponsored" style="display:inline-block; margin-top:8px; text-decoration:none; background:linear-gradient(90deg, #ff9800 0%, #f59e0b 100%); color:#111; border-radius:6px; padding:7px 10px; font-weight:800; font-size:0.82em; text-align:center; width:100%; box-sizing:border-box;">Magazada Incele</a>
+                                    {% endif %}
+                                </div>
+                                {% empty %}
+                                <div style="color:#6b7280; font-size:0.85em; text-align:center; padding:12px; background:#f9fafb; border-radius:8px;">
+                                    Fiyat bilgisi yok
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="padding:20px; background:#f0fdf4; border:1px solid #dcfce7; border-radius:8px; color:#166534; text-align:center;">
+            Seçilen ürünlerde karşılaştırılabilir teknik özellik bulunamadı.
+        </div>
+        {% endif %}
+        </div><!-- /comparison-scroll-inner -->
+        </div><!-- /comparison-scroll-outer -->
+    </article>
+</div>
+
+<style>
+/* ===== MASAÜSTÜ ===== */
+/* tablolar 1600px konteynerde sabit genişlikte, ayrı scroll gerekmez */
+.comparison-header-wrapper,
+.comparison-data-wrapper {
+    overflow-x: visible;
+}
+
+
+/* ===== MOBİL: ürün kartları gibi yatay kayan tablo ===== */
+@media (max-width: 768px) {
+
+    .comparison-container {
+        padding: 0 0 !important;
+    }
+
+    article {
+        padding: 10px 6px !important;
+        border-radius: 10px !important;
+    }
+
+    h1 {
+        font-size: 1.1em !important;
+        padding: 0 6px;
+    }
+
+    /* Tek scroll: başlık + teknik tablo + mağaza birlikte kayar */
+    .comparison-scroll-outer {
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: thin !important;
+        padding-bottom: 2px;
+    }
+
+    .comparison-scroll-inner {
+        width: max-content !important;
+        min-width: 100% !important;
+    }
+
+    .comparison-header-wrapper,
+    .comparison-data-wrapper {
+        overflow: visible !important;
+    }
+
+    /* Tablolar sabit genişlikte, kartlar gibi yan yana */
+    .comparison-table-header,
+    .comparison-table-data {
+        table-layout: fixed !important;
+        /* özellik sütunu 110px + her ürün 180px → 5 ürün = 110 + 900 = 1010px */
+        width: max-content !important;
+    }
+
+    /* Özellik etiketi sütunu */
+    .comparison-table-header thead th:first-child {
+        width: 110px !important;
+        min-width: 110px !important;
+        font-size: 0.75em !important;
+        padding: 8px !important;
+        position: sticky !important;
+        left: 0 !important;
+        z-index: 2 !important;
+        background: #1f2937 !important;
+    }
+
+    .comparison-table-data tbody td:first-child {
+        width: 110px !important;
+        min-width: 110px !important;
+        font-size: 0.72em !important;
+        padding: 8px 6px !important;
+        position: sticky !important;
+        left: 0 !important;
+        z-index: 1 !important;
+        background: #f3f4f6 !important;
+    }
+
+    /* Ürün sütunları — kart genişliği */
+    .comparison-table-header thead th:not(:first-child) {
+        width: 180px !important;
+        min-width: 180px !important;
+        padding: 10px 8px !important;
+    }
+
+    .comparison-table-data tbody td:not(:first-child) {
+        width: 180px !important;
+        min-width: 180px !important;
+        padding: 10px 8px !important;
+        font-size: 0.88em !important;
+    }
+
+    /* Başlık içindeki ürün adı biraz küçülsün */
+    .comparison-table-header thead th div {
+        font-size: 0.78em !important;
+    }
+
+    .comparison-table-header thead th img {
+        max-height: 60px !important;
+    }
+
+    /* Fiyat badge küçük ekranda kompakt */
+    .comparison-table-header thead th .price-badge {
+        font-size: 0.78em !important;
+        padding: 5px 6px !important;
+    }
+
+    /* Mağaza teklifleri mobilde yatay kayan */
+}
+
+@media (max-width: 480px) {
+    .comparison-table-header thead th:not(:first-child),
+    .comparison-table-data tbody td:not(:first-child) {
+        width: 160px !important;
+        min-width: 160px !important;
+    }
+
+    .comparison-table-header thead th:first-child,
+    .comparison-table-data tbody td:first-child {
+        width: 95px !important;
+        min-width: 95px !important;
+    }
+
+}
+</style>
+
+{% endblock %}

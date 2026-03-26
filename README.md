@@ -252,6 +252,325 @@ Admin panelinde "Ürün Ekle" (+ buton) ile klasik şekilde ürün ekleyebilirsi
 - ⏳ Otomatik fiyat güncelleme (scheduler)
 - ⏳ JavaScript rendering ile fiyat çekme (Selenium/Playwright)
 
+## eBay Affiliate Ürünleri Canlıya Ekleme (PythonAnywhere)
+
+**Amaç:** eBay'dan ürünleri otomatik olarak çekip, EPN (eBay Partner Network) affiliate linklerini ekleyerek canlı siteye yayınlamak.
+
+### Adım 1: Kodları Çekme
+```bash
+cd ~/alibaba
+git pull origin main
+```
+
+### Adım 2: eBay Ürünlerini İçeri Aktarma
+
+Aşağıdaki komutu PythonAnywhere bash konsolunda çalıştırın:
+
+```bash
+python3.10 manage.py import_ebay_products "laptop" --limit=20 --translate-tr
+```
+
+**Parametre Açıklaması:**
+- `"laptop"` = Aratılacak ürün adı (drone, telefon, bilgisayar, vb olabilir)
+- `--limit=20` = Kaç ürün import edilecek (1-200 arası, varsayılan: 20)
+- `--translate-tr` = Ürün başlıkları otomatik Türkçeye çevrilsin
+
+**Örnek komutlar:**
+```bash
+# 10 drone ürünü
+python3.10 manage.py import_ebay_products "drone" --limit=10 --translate-tr
+
+# 50 telefon ürünü
+python3.10 manage.py import_ebay_products "telefon" --limit=50 --translate-tr
+
+# 100 Gaming ürünü
+python3.10 manage.py import_ebay_products "gaming" --limit=100 --translate-tr
+```
+
+### Adım 3: Web Uygulamasını Yeniden Başlatma
+PythonAnywhere → **Web** sekmesi → **Reload** (yeşil düğme)
+
+### Adım 4: Sonuç
+
+- Ürünler **5 haneli benzersiz kod** ile kaydedilir (ör: `42567`)
+- Her ürün **EPN affiliate linki** alır (`campid=5339143578` ile)
+- **customid** parametresi ürün koduna eşit olur
+- EPN raporunda hangi ürüne tıklandığını görebilirsiniz
+
+### Affiliate Takibi
+
+eBay Partner Network dashboard'ında:
+- **Customid** = Ürün kodunuz (42567, 89123, vb)
+- **Reports** → Tıklamaları ve dönüşümleri görebilirsiniz
+
+---
+
+## AliExpress API Entegrasyonu
+
+**Durum:** ✅ Aktif ve çalışıyor  
+**API Tipi:** AliExpress Portals API (Affiliates API)  
+**Kimlik Doğrulama:** MD5 Signature
+
+### Ön Gereksinimler
+
+1. **AliExpress Portals hesabı** oluşturun: https://portals.aliexpress.com
+2. **App Key** ve **App Secret** alın
+3. `.env` dosyasına ekleyin:
+
+```env
+ALIEXPRESS_APP_KEY=528840
+ALIEXPRESS_APP_SECRET=your_app_secret_here
+```
+
+### API Bağlantısını Test Etme
+
+Önce API'nin çalıştığından emin olun:
+
+```bash
+python test_aliexpress_api.py
+```
+
+**Beklenen Çıktı:**
+```
+============================================================
+AliExpress Portals API Integration Test
+============================================================
+
+✓ App Key: 528840
+✓ App Secret: mOfqET9Rse...
+
+[1] Searching for 'wireless headphones' (limit: 5)...
+------------------------------------------------------------
+✓ API Response received
+
+✓ Found 5 products:
+============================================================
+
+[1] AI Translation Headphones True Wireless Earbuds...
+    Product ID: 1005010796035063
+    Price: 15.96 USD
+    ...
+✓ AliExpress API Connection Test PASSED
+```
+
+### AliExpress Ürünlerini Veritabanına Ekleme
+
+#### Temel Kullanım
+
+```bash
+python manage.py import_aliexpress_products "arama_terimi" --limit=SAYI
+```
+
+#### 📋 Örnek Komutlar
+
+**1. 5 Ürün Test İmportu (Önerilen Başlangıç):**
+```bash
+python manage.py import_aliexpress_products "wireless headphones" --limit=5
+```
+
+**2. Laptop Ürünleri:**
+```bash
+python manage.py import_aliexpress_products "laptop" --limit=20
+```
+
+**3. Drone Ürünleri:**
+```bash
+python manage.py import_aliexpress_products "drone" --limit=15
+```
+
+**4. Smart Watch Ürünleri:**
+```bash
+python manage.py import_aliexpress_products "smart watch" --limit=10
+```
+
+**5. Gaming Mouse:**
+```bash
+python manage.py import_aliexpress_products "gaming mouse" --limit=25
+```
+
+#### 🎯 Gelişmiş Parametreler
+
+**Fiyat Filtresi ile:**
+```bash
+# 50-200 USD arası ürünler
+python manage.py import_aliexpress_products "drone" --limit=10 --min-price=50 --max-price=200
+```
+
+**Tracking ID ile (Affiliate Takibi):**
+```bash
+python manage.py import_aliexpress_products "laptop" --limit=20 --tracking-id=mylaptops2024
+```
+
+**Kombine Kullanım:**
+```bash
+python manage.py import_aliexpress_products "mechanical keyboard" \
+  --limit=30 \
+  --min-price=30 \
+  --max-price=150 \
+  --tracking-id=keyboards_march
+```
+
+#### 📊 Komut Parametreleri
+
+| Parametre | Açıklama | Zorunlu | Örnek |
+|-----------|----------|---------|-------|
+| `search_query` | Arama terimi | ✅ Evet | `"wireless headphones"` |
+| `--limit` | Ürün sayısı (max: 50) | ❌ Hayır | `--limit=20` |
+| `--min-price` | Min fiyat (USD) | ❌ Hayır | `--min-price=10` |
+| `--max-price` | Max fiyat (USD) | ❌ Hayır | `--max-price=100` |
+| `--tracking-id` | Takip kodu | ❌ Hayır | `--tracking-id=myid` |
+
+#### 🎬 İmport İşlemi Çıktısı
+
+```bash
+$ python manage.py import_aliexpress_products "wireless headphones" --limit=5
+
+✓ Using AliExpress Portals API
+Searching for: "wireless headphones" (limit: 5)
+✓ Found 5 products
+Processing...
+  ✓ Created: Danny Gen4 V1 TWS Bluetooth 5.4 Earphone...
+  ✓ Created: AI Translation Headphones True Wireless...
+  ✓ Created: Choice Lenovo LP7 OWS Wireless Bluetooth...
+  ✓ Created: MSAI T23 AI Translator Earbuds...
+  ✓ Created: Q16S AI Translation Real Time Translator...
+
+=== IMPORT SUMMARY ===
+✓ Successfully imported: 5
+Total processed: 5
+```
+
+### İmport Edilen Ürünleri Kontrol Etme
+
+```bash
+python check_aliexpress_products.py
+```
+
+**Beklenen Çıktı:**
+```
+======================================================================
+ALIEXPRESS IMPORTED PRODUCTS
+======================================================================
+
+✓ AliExpress Store: https://www.aliexpress.com
+
+✓ Found 5 wireless/audio products
+
+[1] Q16S AI Translation Real Time Translator Earbuds...
+    Product Code: 37967
+    Price: 32.69 USD
+    Store: AliExpress
+    Affiliate: https://s.click.aliexpress.com/...
+    Image: ✓
+    
+[2] MSAI T23 AI Translator Earbuds...
+    Product Code: 50069
+    Price: 20.20 USD
+    ...
+```
+
+### 🗄️ Veritabanı Yapısı
+
+AliExpress ürünleri şu şekilde kaydedilir:
+
+**Mağaza (Magaza):**
+- `isim`: "AliExpress"
+- `web_adresi`: "https://www.aliexpress.com/"
+
+**Ürün (Urun):**
+- `isim`: Ürün başlığı (max 200 karakter)
+- `urun_kodu`: 5 haneli benzersiz kod (örn: `37967`)
+- `ana_baslik`: Tam ürün başlığı
+- `alt_baslik`: Kategori + indirim bilgisi
+- `etiketler`: Otomatik oluşturulan etiketler
+- `ozellikler`: Kategori, ID, indirim, komisyon vb.
+- `resim_url`: Ürün görseli URL
+- `source_url`: Orijinal AliExpress URL (duplicate kontrolü)
+
+**Fiyat (Fiyat):**
+- `fiyat`: Ürün fiyatı (USD)
+- `para_birimi`: "USD"
+- `affiliate_link`: AliExpress promotion link
+- `gonderim_ucreti`: 0 (genelde ücretsiz)
+- `gonderim_yerinden`: "Çin"
+
+**Resim (UrunResim):**
+- `resim_url`: Ürün görseli (URL olarak kaydedilir, indirilmez)
+
+### 🔐 Özellikler
+
+✅ **Duplicate Control** - Aynı ürün tekrar eklenmez (`source_url` kontrolü)  
+✅ **Otomatik Etiketleme** - Kategori + başlık kelimelerinden  
+✅ **Affiliate Link** - Her ürün için promotion link oluşturulur  
+✅ **Benzersiz Kod** - 5 haneli unique product code  
+✅ **Resim URL** - Görseller URL olarak kaydedilir (disk alanı tasarrufu)  
+✅ **Error Handling** - Hatalı ürünler atlanır, import devam eder  
+✅ **Retry Mechanism** - API hataları için 3 deneme  
+
+### 🚀 PythonAnywhere'de Kullanım
+
+**1. SSH/Bash Konsolunda:**
+```bash
+cd ~/alibaba
+source .venv/bin/activate  # Varsa
+python3.10 manage.py import_aliexpress_products "laptop" --limit=20
+```
+
+**2. Credentials'ları Kontrol Edin:**
+```bash
+# .env dosyasında olmalı
+cat .env | grep ALIEXPRESS
+```
+
+**3. Web App'i Reload Edin:**
+PythonAnywhere → **Web** → **Reload** ✅
+
+### 📈 API Limitleri
+
+- **Max ürün/istek:** 50
+- **Request signature:** MD5 hash
+- **Response format:** JSON
+- **Pagination:** `page_no` parametresi ile
+
+### 🆚 eBay vs AliExpress Karşılaştırma
+
+| Özellik | eBay API | AliExpress API |
+|---------|----------|----------------|
+| **Authentication** | OAuth 2.0 | MD5 Signature |
+| **Max/Request** | 200 ürün | 50 ürün |
+| **Para Birimi** | USD | USD |
+| **Fiyat Filtresi** | ✅ Var | ✅ Var |
+| **Affiliate Sistem** | EPN (Campaign ID) | Promotion Links |
+| **Kargo Bilgisi** | Detaylı | Genelde Çin |
+| **Durum** | ✅ Aktif | ✅ Aktif |
+
+### ⚠️ Sorun Giderme
+
+**1. "Signature does not conform" Hatası:**
+```bash
+# .env dosyasındaki credentials'ları kontrol edin
+echo $ALIEXPRESS_APP_KEY
+echo $ALIEXPRESS_APP_SECRET
+```
+
+**2. "No products found" Uyarısı:**
+- Farklı arama terimi deneyin
+- Daha düşük limit ayarlayın
+- Fiyat filtrelerini kaldırın
+
+**3. "Failed to fetch products":**
+- İnternet bağlantınızı kontrol edin
+- `test_aliexpress_api.py` ile test edin
+- API credentials'larınızı doğrulayın
+
+### 📚 Daha Fazla Bilgi
+
+- **API Docs:** https://developers.aliexpress.com/
+- **Portals:** https://portals.aliexpress.com/
+- **Test Script:** `test_aliexpress_api.py`
+- **Connector Code:** `urunler/aliexpress_api.py`
+- **Management Command:** `urunler/management/commands/import_aliexpress_products.py`
+
 SONRA :
 
 1. **CI/CD** - GitHub Actions ile otomatik deploy

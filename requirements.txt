@@ -1,5 +1,7 @@
 beautifulsoup4==4.14.3
 Django==5.2.11
+playwright==1.53.0
 python-decouple==3.8
 python-dotenv==1.2.1
+rapidocr-onnxruntime==1.4.4
 requests==2.32.5

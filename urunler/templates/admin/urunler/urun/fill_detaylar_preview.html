@@ -1,0 +1,201 @@
+{% extends "admin/base_site.html" %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .fill-preview-page,
+    .fill-preview-page * {
+        box-sizing: border-box;
+    }
+
+    .fill-preview-page {
+        max-width: 1100px;
+        margin: 24px auto;
+        color: #0f172a !important;
+    }
+
+    .fill-preview-page h1,
+    .fill-preview-page h2,
+    .fill-preview-page p,
+    .fill-preview-page td,
+    .fill-preview-page th,
+    .fill-preview-page span,
+    .fill-preview-page strong,
+    .fill-preview-page a,
+    .fill-preview-page label {
+        color: inherit;
+    }
+
+    .fill-preview-card,
+    .fill-preview-grid > div,
+    .fill-preview-table-wrap,
+    .fill-preview-actions {
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .fill-preview-card {
+        margin-bottom: 16px;
+        padding: 12px 14px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 10px;
+        color: #1e3a8a !important;
+        overflow-wrap: anywhere;
+    }
+
+    .fill-preview-grid {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+    }
+
+    .fill-preview-grid > div {
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .fill-preview-table-wrap {
+        overflow: auto;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: #ffffff;
+    }
+
+    .fill-preview-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 900px;
+        background: #ffffff;
+    }
+
+    .fill-preview-table thead th {
+        background: #0f172a;
+        color: #ffffff !important;
+    }
+
+    .fill-preview-table th,
+    .fill-preview-table td {
+        padding: 10px 12px;
+        text-align: left;
+        border-top: 1px solid #e5e7eb;
+        overflow-wrap: anywhere;
+    }
+
+    .fill-preview-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 16px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .fill-preview-submit,
+    .fill-preview-cancel {
+        text-decoration: none;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+    }
+
+    .fill-preview-submit {
+        background: #0ea5e9;
+        color: #ffffff !important;
+    }
+
+    .fill-preview-cancel {
+        background: #e5e7eb;
+        color: #111827 !important;
+        border: 1px solid #cbd5e1;
+    }
+
+    .fill-preview-table input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: #16a34a;
+        color-scheme: light;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fill-preview-page">
+    <h1 style="margin-bottom:8px; color:#0f172a;">Kaynaktan Doldur Önizleme</h1>
+    <p style="margin:0 0 16px 0; color:#6b7280 !important;">Ürün: <strong>{{ urun.isim }}</strong></p>
+    <div class="fill-preview-card">
+        Kaynak URL: <a href="{{ source_url }}" target="_blank" rel="noopener">{{ source_url }}</a>
+    </div>
+    <div class="fill-preview-grid">
+        <div style="padding:10px 12px; border-radius:10px; background:#f8fafc; border:1px solid #e2e8f0; color:#0f172a;">
+            <strong>API</strong>: {{ diagnostics.api_matched }} alan
+        </div>
+        <div style="padding:10px 12px; border-radius:10px; background:#f8fafc; border:1px solid #e2e8f0; color:#0f172a;">
+            <strong>HTML</strong>: {{ diagnostics.html_matched }} alan
+        </div>
+        <div style="padding:10px 12px; border-radius:10px; background:#ecfeff; border:1px solid #a5f3fc; color:#0e7490;">
+            <strong>Açıklama</strong>: metinden {{ diagnostics.desc_text_matched }} alan, kayıtlı metinden {{ diagnostics.saved_desc_text_matched }} alan, görsel OCR {{ diagnostics.desc_ocr_matched }} alan ({{ diagnostics.desc_image_count }} görsel)
+        </div>
+        <div style="padding:10px 12px; border-radius:10px; background:#fff7ed; border:1px solid #fdba74; color:#9a3412;">
+            <strong>OCR</strong>: {{ diagnostics.ocr_matched }} alan, kaynakta {{ diagnostics.ocr_image_count }} görsel, üründe {{ diagnostics.ocr_known_image_count }} görsel tarandı
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="fill-preview-table-wrap">
+            <table class="fill-preview-table">
+                <thead>
+                    <tr>
+                        <th style="width:56px;">Uygula</th>
+                        <th>Alan</th>
+                        <th>Mevcut</th>
+                        <th>Önerilen</th>
+                        <th style="width:92px;">Kaynak</th>
+                        <th style="width:120px;">Durum</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in preview_rows %}
+                    {% if row.can_apply %}
+                    <tr style="border-top:1px solid #e5e7eb; background:#f0fdf4;">
+                    {% else %}
+                    <tr style="border-top:1px solid #e5e7eb; background:#f8fafc; opacity:0.8;">
+                    {% endif %}
+                        <td style="padding:10px 12px;">
+                            {% if row.can_apply %}
+                            <input type="checkbox" name="selected_keys" value="{{ row.key }}" checked>
+                            {% else %}
+                            <span style="color:#94a3b8;">-</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding:10px 12px; font-weight:700; color:#0f172a;">{{ row.label }}</td>
+                        <td style="padding:10px 12px; color:#475569;">{{ row.old_value }}</td>
+                        <td style="padding:10px 12px; color:#111827; font-weight:600;">{{ row.new_value }}</td>
+                        <td style="padding:10px 12px; color:#334155; font-weight:700;">{{ row.source }}</td>
+                        <td style="padding:10px 12px;">
+                            {% if row.can_apply %}
+                            <span style="display:inline-block; background:#16a34a; color:#fff; border-radius:999px; padding:4px 8px; font-size:0.82em; font-weight:700;">Eksik, uygulanabilir</span>
+                            {% else %}
+                            <span style="display:inline-block; background:#cbd5e1; color:#334155; border-radius:999px; padding:4px 8px; font-size:0.82em; font-weight:700;">Dolu, korunacak</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="padding:16px; color:#64748b;">Öneri bulunamadı.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="fill-preview-actions">
+            <button type="submit" class="fill-preview-submit">Seçilenleri Uygula</button>
+            <a href="/admin/urunler/urun/{{ urun.id }}/change/" class="fill-preview-cancel">İptal</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

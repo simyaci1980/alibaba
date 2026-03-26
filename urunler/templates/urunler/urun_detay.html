@@ -1,0 +1,486 @@
+{% extends 'urunler/base.html' %}
+
+{% block title %}{{ meta_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block extra_head %}
+<script type="application/ld+json">{{ product_schema_json }}</script>
+<style>
+    .detay-kart {
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        padding: 12px;
+        margin-bottom: 14px;
+        min-width: 0;
+    }
+
+    .detay-kart h3 {
+        margin: 0 0 8px 0;
+        font-size: 0.98em;
+        color: #0f172a;
+    }
+
+    .detay-muted {
+        color: #64748b;
+        font-size: 0.84em;
+        margin-bottom: 8px;
+    }
+
+    .detay-aciklama {
+        font-size: 0.95em;
+        line-height: 1.6;
+        color: #1f2937;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 10px 12px;
+        white-space: pre-line;
+        max-height: 260px;
+        overflow-y: auto;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .detay-notlar-list {
+        display: grid;
+        gap: 6px;
+        min-width: 0;
+    }
+
+    .detay-notlar-row {
+        display: grid;
+        grid-template-columns: minmax(128px, 220px) minmax(0, 1fr);
+        gap: 10px;
+        align-items: start;
+        padding: 7px 8px;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        background: #ffffff;
+        min-width: 0;
+    }
+
+    .detay-notlar-label {
+        font-size: 0.98em;
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: 0.2px;
+        min-width: 0;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .detay-notlar-value {
+        font-size: 0.95em;
+        color: #1f2937;
+        line-height: 1.45;
+        min-width: 0;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .detay-notlar-baslik {
+        margin-top: 8px;
+        margin-bottom: 4px;
+        font-size: 0.9em;
+        font-weight: 700;
+        color: #334155;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+    }
+
+    .detay-orijinal-toggle {
+        display: inline-block;
+        margin-bottom: 8px;
+        color: #1d4ed8;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9em;
+    }
+
+    .urun-detay-layout {
+        display: grid;
+        grid-template-columns: minmax(280px, 420px) 1fr;
+        gap: 16px;
+        align-items: start;
+    }
+
+    .urun-detay-layout > section {
+        min-width: 0;
+        overflow-x: hidden;
+    }
+
+    .urun-gallery-main {
+        position: relative;
+        overflow: hidden;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        background: #fff;
+        aspect-ratio: 1 / 1;
+    }
+
+    .urun-gallery-track {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        transition: transform 0.28s ease;
+        will-change: transform;
+    }
+
+    .urun-gallery-slide {
+        min-width: 100%;
+        height: 100%;
+    }
+
+    .urun-gallery-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #fff;
+    }
+
+    .urun-gallery-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 36px;
+        height: 36px;
+        border: none;
+        border-radius: 999px;
+        background: rgba(17, 24, 39, 0.72);
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+        z-index: 4;
+    }
+
+    .urun-gallery-prev { left: 8px; }
+    .urun-gallery-next { right: 8px; }
+
+    .urun-gallery-counter {
+        position: absolute;
+        right: 8px;
+        bottom: 8px;
+        background: rgba(17, 24, 39, 0.72);
+        color: #fff;
+        border-radius: 999px;
+        padding: 4px 9px;
+        font-size: 0.8em;
+        font-weight: 700;
+        z-index: 4;
+    }
+
+    .urun-thumbs {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    .urun-thumb-btn {
+        flex: 0 0 auto;
+        width: 64px;
+        height: 64px;
+        border: 2px solid #d1d5db;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #fff;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .urun-thumb-btn.active {
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.35);
+    }
+
+    .urun-thumb-btn img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .detay-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    .detay-table th,
+    .detay-table td {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        min-width: 0;
+    }
+
+    @media (max-width: 900px) {
+        .urun-detay-layout {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .detay-notlar-row {
+            grid-template-columns: 1fr;
+            gap: 4px;
+        }
+
+        .urun-gallery-main {
+            aspect-ratio: 4 / 3;
+        }
+
+        .urun-gallery-nav {
+            width: 40px;
+            height: 40px;
+            background: rgba(17, 24, 39, 0.82);
+        }
+
+        .urun-thumb-btn {
+            width: 58px;
+            height: 58px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 1100px; margin: 24px auto; padding: 0 16px;">
+    <nav style="margin-bottom: 14px; font-size: 0.9em;">
+        <a href="{% url 'anasayfa' %}" style="color:#fff; text-decoration:none; background:#111; padding:6px 10px; border-radius:8px;">Ana Sayfa</a>
+    </nav>
+
+    <article style="background:#fff; border-radius:14px; padding:18px; box-shadow:0 8px 25px rgba(0,0,0,0.12);">
+        <header style="margin-bottom:14px;">
+            <h1 style="margin:0; font-size:1.5em; color:#111; overflow-wrap:anywhere; word-break:break-word;">{% if urun.ana_baslik %}{{ urun.ana_baslik }}{% else %}{{ urun.isim }}{% endif %}</h1>
+            {% if urun.alt_baslik %}
+            <p style="margin:8px 0 0 0; color:#444; overflow-wrap:anywhere; word-break:break-word;">{{ urun.alt_baslik }}</p>
+            {% endif %}
+        </header>
+
+        <div class="urun-detay-layout">
+            <section>
+                {% if all_image_urls %}
+                <div class="urun-gallery-main" id="urunGalleryMain">
+                    <div class="urun-gallery-track" id="urunGalleryTrack">
+                        {% for img in all_image_urls %}
+                        <div class="urun-gallery-slide">
+                            <img src="{{ img }}" alt="{{ urun.isim }} gorsel {{ forloop.counter }}" onerror="this.style.display='none';">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if all_image_urls|length > 1 %}
+                    <button class="urun-gallery-nav urun-gallery-prev" type="button" id="urunGalleryPrev" aria-label="Onceki gorsel">&#8249;</button>
+                    <button class="urun-gallery-nav urun-gallery-next" type="button" id="urunGalleryNext" aria-label="Sonraki gorsel">&#8250;</button>
+                    {% endif %}
+                    <div class="urun-gallery-counter" id="urunGalleryCounter">1 / {{ all_image_urls|length }}</div>
+                </div>
+
+                {% if all_image_urls|length > 1 %}
+                <div class="urun-thumbs" id="urunThumbs">
+                    {% for img in all_image_urls %}
+                    <button class="urun-thumb-btn{% if forloop.first %} active{% endif %}" type="button" data-index="{{ forloop.counter0 }}" aria-label="{{ forloop.counter }}. gorseli goster">
+                        <img src="{{ img }}" alt="{{ urun.isim }} thumbnail {{ forloop.counter }}" onerror="this.style.display='none';">
+                    </button>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endif %}
+            </section>
+
+            <section>
+                {% if urun.kategori or urun.durum %}
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+                    {% if urun.kategori %}
+                    <div style="display:inline-block; background:#111827; color:#fff; border-radius:999px; padding:5px 10px; font-size:0.82em;">Kategori: {{ urun.kategori.isim }}</div>
+                    {% endif %}
+                    {% if urun.durum %}
+                    <div style="display:inline-block; background:#ecfeff; color:#155e75; border:1px solid #a5f3fc; border-radius:999px; padding:5px 10px; font-size:0.82em; font-weight:600;">Durum: {{ urun.durum }}</div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if detaylar_schema %}
+                <h2 style="font-size:1.05em; margin:8px 0 6px;">Teknik Özellikler</h2>
+                <div style="border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; margin-bottom:14px; background:#fff; box-shadow:0 1px 0 rgba(15,23,42,0.02);">
+                    <table class="detay-table" style="width:100%; border-collapse:collapse;">
+                        <tbody>
+                            {% for alan in detaylar_schema %}
+                            <tr{% if alan.value == 'Belirtilmemiş' %} style="opacity:0.72;"{% endif %}>
+                                <th style="text-align:left; width:40%; background:#f8fafc; padding:9px 10px; border-bottom:1px solid #e5e7eb; color:#374151; font-weight:600; font-size:0.9em; white-space:normal;">
+                                    {{ alan.label }}
+                                    {% if alan.kaynak == "pipeline" %}
+                                    <span style="background:#ea580c; color:#fff; border-radius:3px; padding:1px 4px; font-size:0.72em; font-weight:600; margin-left:4px; vertical-align:middle;">OCR</span>
+                                    {% endif %}
+                                </th>
+                                <td style="padding:9px 10px; border-bottom:1px solid #e5e7eb; color:#1f2937; font-size:0.92em;{% if alan.value == 'Belirtilmemiş' %} color:#6b7280; font-style:italic;{% endif %}">{{ alan.value|default:'Belirtilmemiş' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% elif urun.detaylar %}
+                <h2 style="font-size:1.05em; margin:8px 0;">Teknik Özellikler</h2>
+                <div style="border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; margin-bottom:14px;">
+                    <table class="detay-table" style="width:100%; border-collapse:collapse;">
+                        <tbody>
+                            {% for key, value in urun.detaylar.items %}
+                            <tr>
+                                <th style="text-align:left; width:38%; background:#f9fafb; padding:8px 10px; border-bottom:1px solid #e5e7eb; color:#111827;">{{ key }}</th>
+                                <td style="padding:8px 10px; border-bottom:1px solid #e5e7eb; color:#1f2937;">{{ value }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+
+            </section>
+        </div>
+
+        {% if show_notes_section %}
+        <section style="margin-top:14px;">
+            <h2 style="font-size:1.1em; margin:0 0 8px 0; color:#0f172a;">Açıklama ve Notlar</h2>
+
+            {% if ozellikler_satirlari %}
+            <div class="detay-kart">
+                <h3>Teknik Notlar</h3>
+                <div class="detay-muted">Satır satır teknik notlar (API/OCR/manuel derleme).</div>
+                <div class="detay-notlar-list">
+                    {% for n in ozellikler_satirlari %}
+                        {% if n.tur == 'baslik' %}
+                        <div class="detay-notlar-baslik">{{ n.icerik }}</div>
+                        {% elif n.tur == 'satir' %}
+                        <div class="detay-notlar-row">
+                            <div class="detay-notlar-label">{{ n.label }}</div>
+                            <div class="detay-notlar-value">{{ n.value }}</div>
+                        </div>
+                        {% elif n.tur == 'metin' %}
+                        <div class="detay-notlar-row" style="grid-template-columns:1fr;">
+                            <div class="detay-notlar-value">{{ n.icerik }}</div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if show_description_card %}
+            <div class="detay-kart" style="background:linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%);">
+                <h3>Ürün Açıklaması (Türkçe)</h3>
+                <div class="detay-muted">Mümkünse otomatik Türkçe çeviri gösterilir.</div>
+                <div class="detay-aciklama">{{ aciklama_turkce|default:gosterilecek_aciklama }}</div>
+                {% if aciklama_orijinal_goster %}
+                <details style="margin-top:10px;">
+                    <summary class="detay-orijinal-toggle">Orijinal metni göster/gizle</summary>
+                    <div class="detay-aciklama">{{ urun.aciklama }}</div>
+                </details>
+                {% endif %}
+            </div>
+            {% endif %}
+        </section>
+        {% endif %}
+
+        <section style="margin-top:16px;">
+            <h2 style="font-size:1.05em; margin-bottom:10px;">Magaza Teklifleri</h2>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:10px;">
+                {% for fiyat in fiyatlar %}
+                {% if fiyat.magaza.isim == 'eBay' %}
+                <div style="border:1px solid #e5e7eb; border-radius:10px; padding:10px; background:#fff9db;">
+                {% else %}
+                <div style="border:1px solid #e5e7eb; border-radius:10px; padding:10px; background:#f8fbff;">
+                {% endif %}
+                    <div style="font-weight:700; color:#111827;">{{ fiyat.magaza.isim }}</div>
+                    <div style="margin-top:4px; color:#1f2937;">Fiyat: {{ fiyat.fiyat }} {{ fiyat.para_birimi }}</div>
+                    <div style="margin-top:2px; color:#4b5563;">
+                        {% if fiyat.ucretsiz_kargo %}
+                        Ucretsiz kargo
+                        {% elif fiyat.gonderim_ucreti > 0 %}
+                        Kargo: {{ fiyat.gonderim_ucreti }} {{ fiyat.para_birimi }}
+                        {% else %}
+                        Kargo: Konuma gore
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'fiyat_affiliate_redirect' fiyat.id %}" target="_blank" rel="noopener sponsored nofollow" style="display:inline-block; margin-top:8px; text-decoration:none; background:#111827; color:#fff; border-radius:8px; padding:6px 10px; font-weight:700; font-size:0.86em;">Magazada Incele</a>
+                </div>
+                {% empty %}
+                <div style="color:#374151;">Bu urun icin fiyat bilgisi bulunamadi.</div>
+                {% endfor %}
+            </div>
+        </section>
+    </article>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const track = document.getElementById('urunGalleryTrack');
+    const prevBtn = document.getElementById('urunGalleryPrev');
+    const nextBtn = document.getElementById('urunGalleryNext');
+    const counter = document.getElementById('urunGalleryCounter');
+    const thumbContainer = document.getElementById('urunThumbs');
+
+    if (!track) return;
+
+    const slides = Array.from(track.children);
+    const thumbs = thumbContainer ? Array.from(thumbContainer.querySelectorAll('.urun-thumb-btn')) : [];
+    let index = 0;
+    const total = slides.length;
+
+    function updateGallery(nextIndex) {
+        if (total === 0) return;
+        index = Math.max(0, Math.min(nextIndex, total - 1));
+        track.style.transform = `translateX(-${index * 100}%)`;
+        if (counter) counter.textContent = `${index + 1} / ${total}`;
+        thumbs.forEach((btn, i) => btn.classList.toggle('active', i === index));
+    }
+
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function() {
+            updateGallery((index - 1 + total) % total);
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function() {
+            updateGallery((index + 1) % total);
+        });
+    }
+
+    thumbs.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const target = Number(btn.getAttribute('data-index') || 0);
+            updateGallery(target);
+        });
+    });
+
+    // Mobile swipe support
+    let startX = 0;
+    let deltaX = 0;
+    let dragging = false;
+
+    track.addEventListener('touchstart', function(e) {
+        if (!e.touches || !e.touches.length) return;
+        dragging = true;
+        startX = e.touches[0].clientX;
+        deltaX = 0;
+    }, { passive: true });
+
+    track.addEventListener('touchmove', function(e) {
+        if (!dragging || !e.touches || !e.touches.length) return;
+        deltaX = e.touches[0].clientX - startX;
+    }, { passive: true });
+
+    track.addEventListener('touchend', function() {
+        if (!dragging) return;
+        dragging = false;
+        if (Math.abs(deltaX) < 40) return;
+        if (deltaX > 0) {
+            updateGallery((index - 1 + total) % total);
+        } else {
+            updateGallery((index + 1) % total);
+        }
+    });
+
+    updateGallery(0);
+});
+</script>
+{% endblock %}
