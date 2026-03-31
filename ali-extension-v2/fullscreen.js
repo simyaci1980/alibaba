@@ -4,6 +4,209 @@ let selectedResults = [];
 let currentIndex = 0;
 let editedValues = {}; // Değiştirilen değerleri sakla
 
+const RETRO_SPECS_ORDER = [
+  { key: "marka", label: "Marka" },
+  { key: "model", label: "Model" },
+  { key: "ekran_boyutu", label: "Ekran Boyutu" },
+  { key: "cozunurluk", label: "Cozunurluk" },
+  { key: "ram", label: "RAM" },
+  { key: "depolama", label: "Depolama" },
+  { key: "batarya", label: "Batarya" },
+  { key: "cpu", label: "Islemci" },
+  { key: "baglanti", label: "Baglanti" },
+  { key: "isletim_sistemi", label: "Isletim Sistemi" },
+  { key: "hdmi_cikisi", label: "HDMI Cikisi" },
+  { key: "gonderim_yeri", label: "Gonderim Yeri" }
+];
+
+const SPEC_FIELD_KEYS = [
+  "marka",
+  "model",
+  "ekran_boyutu",
+  "cozunurluk",
+  "cpu",
+  "ram",
+  "depolama",
+  "batarya",
+  "baglanti",
+  "isletim_sistemi",
+  "hdmi_cikisi",
+  "gonderim_yeri"
+];
+
+function escapeHtml(text) {
+  return String(text ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function getSpecValue(specs, key, fallback = "Belirtilmemis") {
+  const value = specs && specs[key] ? String(specs[key]).trim() : "";
+  return value || fallback;
+}
+
+function renderSpecs(product) {
+  const specsList = document.getElementById("specsList");
+  if (!specsList) return;
+
+  const specs = product.detailSpecs || {};
+  specsList.innerHTML = RETRO_SPECS_ORDER.map((item) => {
+    const value = getSpecValue(specs, item.key);
+    return `
+      <div class="specs-row">
+        <div class="specs-label">${item.label}</div>
+        <div class="specs-value">${escapeHtml(value)}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderRawSpecs(product) {
+  const rawList = document.getElementById("rawSpecsList");
+  if (!rawList) return;
+
+  const rows = Array.isArray(product.specPairs) ? product.specPairs : [];
+  if (!rows.length) {
+    rawList.innerHTML = "<div style='padding:6px 2px; color:#64748b;'>Ham ozellik verisi bulunamadi.</div>";
+    return;
+  }
+
+  rawList.innerHTML = rows.map((row) => {
+    const key = escapeHtml(row.key || "");
+    const value = escapeHtml(row.value || "");
+    return `<div style="padding:6px 2px; border-bottom:1px solid #e2e8f0;"><strong>${key}:</strong> ${value}</div>`;
+  }).join("");
+}
+
+function renderTableSpecs(product) {
+  const tbody = document.getElementById("specTableBody");
+  if (!tbody) return;
+
+  const rows = Array.isArray(product.specTable) ? product.specTable : [];
+  
+  // Eger specTable bosssa, overviewContent > navDescContent > tl1Content sirasiyla dene
+  if (!rows.length) {
+    const content = product.overviewContent || product.navDescContent || product.tl1Content || product.description || "";
+    if (!content) {
+      tbody.innerHTML = `<tr><td colspan="2" style="padding:10px; text-align:center; color:#64748b;">Ozellikler tablosu verisi bulunamadi.</td></tr>`;
+      return;
+    }
+    const lines = content.split("\n");
+    tbody.innerHTML = lines.map((line, idx) => {
+      const bgColor = idx % 2 === 0 ? "#f9fafb" : "#ffffff";
+      const textContent = escapeHtml(line.trim());
+      if (!textContent) return "";
+      return `
+        <tr style="background: ${bgColor}; border-bottom: 1px solid #e2e8f0;">
+          <td colspan="2" style="padding: 8px 6px; color: #484d4d; line-height: 1.5;">${textContent}</td>
+        </tr>
+      `;
+    }).filter(html => html).join("");
+    return;
+  }
+
+  tbody.innerHTML = rows.map((row, idx) => {
+    const bgColor = idx % 2 === 0 ? "#f9fafb" : "#ffffff";
+    const key = escapeHtml(row.key || "");
+    const value = escapeHtml(row.value || "");
+    return `
+      <tr style="background: ${bgColor}; border-bottom: 1px solid #e2e8f0;">
+        <td style="padding: 8px 6px; font-weight: 600; color: #374151; width: 45%;">${key}</td>
+        <td style="padding: 8px 6px; color: #484d4d;">${value}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function fillSpecEditor(product) {
+  const specs = product.detailSpecs || {};
+  SPEC_FIELD_KEYS.forEach((key) => {
+    const el = document.getElementById(`spec_${key}`);
+    if (!el) return;
+    if (key === "gonderim_yeri") {
+      el.value = specs[key] || product.shippingFrom || "";
+      return;
+    }
+    el.value = specs[key] || "";
+  });
+}
+
+function collectSpecEditorValues() {
+  const next = {};
+  SPEC_FIELD_KEYS.forEach((key) => {
+    const el = document.getElementById(`spec_${key}`);
+    if (!el) return;
+    const val = (el.value || "").trim();
+    if (val) {
+      next[key] = val;
+    }
+  });
+  return next;
+}
+
+function renderImageGallery(product) {
+  const imgElement   = document.getElementById("productImage");
+  const imgUrlElement = document.getElementById("imageUrl");
+  const thumbsEl      = document.getElementById("imageThumbs");
+  const prevBtn       = document.getElementById("galleryPrev");
+  const nextBtn       = document.getElementById("galleryNext");
+  const counterEl     = document.getElementById("galleryCounter");
+  if (!imgElement || !imgUrlElement || !thumbsEl) return;
+
+  const images = Array.isArray(product.imageUrls) && product.imageUrls.length
+    ? product.imageUrls
+    : (product.imageUrl ? [product.imageUrl] : []);
+
+  if (!images.length) {
+    imgElement.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23ccc' width='200' height='200'/%3E%3Ctext x='50%' y='50%' text-anchor='middle' dy='.3em' fill='%23999' font-size='14'%3EGorsel yok%3C/text%3E%3C/svg%3E";
+    imgUrlElement.textContent = "(Gorsel Bulunamadi)";
+    thumbsEl.innerHTML = "";
+    if (counterEl) counterEl.textContent = "0 / 0";
+    return;
+  }
+
+  let activeIndex = 0;
+
+  function setActive(index) {
+    activeIndex = ((index % images.length) + images.length) % images.length;
+    imgElement.src = images[activeIndex];
+    imgUrlElement.textContent = images[activeIndex];
+    if (counterEl) counterEl.textContent = `${activeIndex + 1} / ${images.length}`;
+    thumbsEl.querySelectorAll(".thumb-btn").forEach((btn, i) => {
+      btn.classList.toggle("active", i === activeIndex);
+      if (i === activeIndex) btn.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    });
+  }
+
+  thumbsEl.innerHTML = images.map((url, idx) => `
+    <button type="button" class="thumb-btn ${idx === 0 ? "active" : ""}" data-index="${idx}" title="Gorsel ${idx + 1}">
+      <img src="${escapeHtml(url)}" alt="Gorsel ${idx + 1}" loading="lazy" />
+    </button>
+  `).join("");
+
+  thumbsEl.querySelectorAll(".thumb-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const index = Number(btn.dataset.index || 0);
+      if (!Number.isNaN(index)) setActive(index);
+    });
+  });
+
+  if (prevBtn) { prevBtn.onclick = () => setActive(activeIndex - 1); }
+  if (nextBtn) { nextBtn.onclick = () => setActive(activeIndex + 1); }
+
+  // Klavye yön tuslari (sadece galeri odakta)
+  document.addEventListener("keydown", (e) => {
+    if (e.target && e.target.tagName === "INPUT") return; // form alanlari yazarken çalısmasın
+    if (e.key === "ArrowLeft")  { e.preventDefault(); setActive(activeIndex - 1); }
+    if (e.key === "ArrowRight") { e.preventDefault(); setActive(activeIndex + 1); }
+  });
+
+  setActive(0);
+}
+
 // Log mesajlarını göster
 function addLog(message) {
   console.log(message);
@@ -122,18 +325,14 @@ function displayProduct(index) {
     product = { ...product, ...selectedResults[selectedIndex] };
   }
   currentIndex = index;
-  editedValues = {}; // Yeni ürün gösterilince düzenlemeleri sıfırla
+  // editedValues artık resetlenmiyor; allResults'a kaydedilen degerler displayProduct'ta geri okunuyor
 
-  // Görseli ayarla
-  const imgElement = document.getElementById("productImage");
-  const imgUrlElement = document.getElementById("imageUrl");
-  if (product.imageUrl) {
-    imgElement.src = product.imageUrl;
-    imgUrlElement.textContent = product.imageUrl;
-  } else {
-    imgElement.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23ccc' width='200' height='200'/%3E%3Ctext x='50%' y='50%' text-anchor='middle' dy='.3em' fill='%23999' font-size='14'%3EGöbörsel yok%3C/text%3E%3C/svg%3E";
-    imgUrlElement.textContent = "(Görsel Bulunamadı)";
-  }
+  // Görsel galerisi + teknik alan kartı
+  renderImageGallery(product);
+  renderSpecs(product);
+  renderRawSpecs(product);
+  renderTableSpecs(product);
+  fillSpecEditor(product);
 
   // Başlığı ayarla
   document.getElementById("productIndex").textContent = `ürün #${product.index}`;
@@ -147,9 +346,11 @@ function displayProduct(index) {
   const subTitleInput = document.getElementById("subTitleInput");
   const tagsInput = document.getElementById("tagsInput");
   const featuresInput = document.getElementById("featuresInput");
+  const specShippingInput = document.getElementById("spec_gonderim_yeri");
 
   titleInput.value = product.title || "";
-  anaTitleInput.value = product.anaTitle || "";
+  // Baslik metni varsayilan olarak Ana Baslik alanina da yazilsin.
+  anaTitleInput.value = product.anaTitle || product.title || "";
   subTitleInput.value = product.subTitle || "";
   tagsInput.value = product.tags || "";
   featuresInput.value = product.features || "";
@@ -168,6 +369,9 @@ function displayProduct(index) {
 
   shippingInput.value = product.shippingFrom || "";
   shippingInput.placeholder = "Gönderim yerini düzenle (örn: Çin, Fransa)...";
+  if (specShippingInput && !specShippingInput.value) {
+    specShippingInput.value = shippingInput.value || "";
+  }
   
   // Durum
   const statusBadge = document.getElementById("statusBadge");
@@ -212,9 +416,42 @@ function displayProduct(index) {
 
 // CSV oluştur
 function buildCsv(results) {
-  const lines = [
-    "Index,Başlık,Ana Başlık,Alt Başlık,Etiketler,Özellikler,Açıklama,Fiyat,Gönderim Yeri,Gönderim Ücreti,Toplam Fiyat,Resim URL,Link"
+  const headers = [
+    "Index",
+    "Başlık",
+    "Ana Başlık",
+    "Alt Başlık",
+    "Etiketler",
+    "Özellikler",
+    "Açıklama",
+    "Genel Bakış",
+    "Ürün Açıklama Metni",
+    "TL1 İçerik",
+    "Marka",
+    "Model",
+    "Ekran Boyutu",
+    "Çözünürlük",
+    "CPU",
+    "RAM",
+    "Depolama",
+    "Batarya",
+    "Bağlantı",
+    "İşletim Sistemi",
+    "HDMI Çıkışı",
+    "Gönderim Yeri",
+    "Fiyat",
+    "Gönderim Ücreti",
+    "Toplam Fiyat",
+    "Durum",
+    "Resim URL",
+    "Tüm Resim URL'leri",
+    "Ham Özellikler",
+    "Detay Specs JSON",
+    "Spec Pairs JSON",
+    "Spec Table JSON",
+    "Link"
   ];
+  const lines = [headers.join(",")];
   
   results.forEach((r) => {
     const toCsvValue = (v) => {
@@ -226,19 +463,44 @@ function buildCsv(results) {
       return str;
     };
     
+    const specs = r.detailSpecs || {};
+    const rawSpecsText = (r.specPairs || [])
+      .map((item) => `${item?.key || ""}: ${item?.value || ""}`.trim())
+      .filter((item) => item && item !== ":")
+      .join(" | ");
     const values = [
       r.index,
       r.title,
-      r.anaTitle,
-      r.subTitle,
-      r.tags,
+      r.anaTitle || r.title || "",
+      r.subTitle || "",
+      r.tags || "",
       r.features,
       r.description,
+      r.overviewContent || "",
+      r.navDescContent || "",
+      r.tl1Content || "",
+      specs.marka || "",
+      specs.model || "",
+      specs.ekran_boyutu || "",
+      specs.cozunurluk || "",
+      specs.cpu || "",
+      specs.ram || "",
+      specs.depolama || "",
+      specs.batarya || "",
+      specs.baglanti || "",
+      specs.isletim_sistemi || "",
+      specs.hdmi_cikisi || "",
+      specs.gonderim_yeri || r.shippingFrom || "",
       r.price,
-      r.shippingFrom,
       r.shippingFee,
       r.totalPrice,
+      r.status || "",
       r.imageUrl,
+      (r.imageUrls || []).join(" | "),
+      rawSpecsText,
+      JSON.stringify(specs),
+      JSON.stringify(r.specPairs || []),
+      JSON.stringify(r.specTable || []),
       r.productLink
     ].map(toCsvValue);
     lines.push(values.join(","));
@@ -263,6 +525,43 @@ function downloadCsv(content) {
 }
 
 // Ürünü ekle
+function saveCurrentEdits() {
+  if (currentIndex < 0 || currentIndex >= allResults.length) return;
+
+  const product = allResults[currentIndex];
+  const titleInput        = document.getElementById("titleInput");
+  const descriptionInput  = document.getElementById("descriptionInput");
+  const shippingInput     = document.getElementById("shippingInput");
+  const anaTitleInput     = document.getElementById("anaTitleInput");
+  const subTitleInput     = document.getElementById("subTitleInput");
+  const tagsInput         = document.getElementById("tagsInput");
+  const featuresInput     = document.getElementById("featuresInput");
+
+  const updated = { ...product };
+  updated.title       = titleInput?.value       ?? product.title;
+  updated.anaTitle    = anaTitleInput?.value    ?? product.anaTitle;
+  updated.subTitle    = subTitleInput?.value    ?? product.subTitle;
+  updated.tags        = tagsInput?.value        ?? product.tags;
+  updated.features    = featuresInput?.value    ?? product.features;
+  updated.description = descriptionInput?.value ?? product.description;
+  updated.shippingFrom = shippingInput?.value   ?? product.shippingFrom;
+
+  const editedSpecs = collectSpecEditorValues();
+  updated.detailSpecs = { ...(product.detailSpecs || {}), ...editedSpecs };
+  if (updated.detailSpecs.gonderim_yeri) {
+    updated.shippingFrom = updated.detailSpecs.gonderim_yeri;
+  }
+
+  // allResults'a geri yaz
+  allResults[currentIndex] = updated;
+
+  // selectedResults'ta varsa onu da güncelle
+  const selIdx = selectedResults.findIndex(r => r.index === product.index && r.productLink === product.productLink);
+  if (selIdx !== -1) {
+    selectedResults[selIdx] = { ...selectedResults[selIdx], ...updated };
+  }
+}
+
 function addCurrentProduct() {
   if (currentIndex < 0 || currentIndex >= allResults.length) {
     addLog("[ERROR] Geçersiz ürün");
@@ -301,11 +600,18 @@ function addCurrentProduct() {
     addLog(`[EDIT] Gönderim yeri güncellendi: ${shippingInput.value}`);
   }
 
-  // Ana başlık, alt başlık, etiketler, özellikler inputlarını da ekle
-  productToAdd.anaTitle = anaTitleInput.value;
+  // Ana baslik: Baslik alanini temel al (istenen akis)
+  productToAdd.anaTitle = (titleInput.value || anaTitleInput.value || "").trim();
+  // Alt baslik su an ayni sekilde manuel kalsin
   productToAdd.subTitle = subTitleInput.value;
   productToAdd.tags = tagsInput.value;
   productToAdd.features = featuresInput.value;
+  const editedSpecs = collectSpecEditorValues();
+  productToAdd.detailSpecs = { ...(product.detailSpecs || {}), ...editedSpecs };
+  if (productToAdd.detailSpecs.gonderim_yeri) {
+    productToAdd.shippingFrom = productToAdd.detailSpecs.gonderim_yeri;
+  }
+  productToAdd.imageUrls = product.imageUrls || (product.imageUrl ? [product.imageUrl] : []);
   
   if (existingIndex !== -1) {
     // Zaten var, güncelle
@@ -381,6 +687,14 @@ window.addEventListener("keydown", function(e) {
 // DOM Yüklendikten sonra
 document.addEventListener("DOMContentLoaded", () => {
   addLog("[INIT] Sayfa yüklendi");
+
+  const titleInput = document.getElementById("titleInput");
+  const anaTitleInput = document.getElementById("anaTitleInput");
+  if (titleInput && anaTitleInput) {
+    titleInput.addEventListener("input", () => {
+      anaTitleInput.value = titleInput.value;
+    });
+  }
   
   if (!loadData()) {
     return;
@@ -391,13 +705,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // Butonlar
   document.getElementById("prevBtn").addEventListener("click", () => {
     if (currentIndex > 0) {
+      saveCurrentEdits();
       currentIndex--;
       displayProduct(currentIndex);
     }
   });
-  
+
   document.getElementById("nextBtn").addEventListener("click", () => {
     if (currentIndex < allResults.length - 1) {
+      saveCurrentEdits();
       currentIndex++;
       displayProduct(currentIndex);
     }

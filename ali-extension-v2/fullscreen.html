@@ -33,31 +33,183 @@
       padding: 40px;
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      justify-content: flex-start;
+      align-items: stretch;
       background: #f8f9fa;
       border-right: 2px solid #e0e0e0;
+      gap: 16px;
+    }
+
+    .gallery-title,
+    .specs-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .image-gallery {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .spec-editor-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .spec-editor-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .spec-field-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .spec-field-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      padding-left: 2px;
     }
     
+    .gallery-main-wrap {
+      position: relative;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
     .product-image {
-      max-width: 400px;
-      max-height: 400px;
+      width: 100%;
+      max-height: 360px;
       object-fit: contain;
       border-radius: 8px;
       background: white;
-      padding: 20px;
+      padding: 12px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
+      display: block;
+    }
+
+    .gallery-nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.45);
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 18px;
+      z-index: 10;
+      transition: background 0.2s;
+      line-height: 1;
+      padding: 0;
+    }
+
+    .gallery-nav-btn:hover { background: rgba(37,99,235,0.8); }
+    .gallery-nav-prev { left: 6px; }
+    .gallery-nav-next { right: 6px; }
+
+    .gallery-counter {
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      pointer-events: none;
+    }
+
+    .image-thumbs {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .thumb-btn {
+      width: 100%;
+      border: 2px solid #d1d5db;
+      background: #fff;
+      border-radius: 6px;
+      padding: 0;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .thumb-btn.active {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+
+    .thumb-btn img {
+      width: 100%;
+      height: 56px;
+      object-fit: cover;
+      display: block;
     }
     
     .image-url {
       font-size: 11px;
       color: #999;
-      text-align: center;
+      text-align: left;
       word-break: break-all;
-      max-width: 400px;
       max-height: 60px;
       overflow-y: auto;
+    }
+
+    .specs-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .specs-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .specs-row {
+      display: grid;
+      grid-template-columns: minmax(110px, 40%) minmax(0, 1fr);
+      gap: 8px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #f9fafb;
+      padding: 7px 8px;
+      font-size: 13px;
+      line-height: 1.25;
+    }
+
+    .specs-label {
+      color: #374151;
+      font-weight: 700;
+    }
+
+    .specs-value {
+      color: #111827;
+      overflow-wrap: anywhere;
     }
     
     .right-panel {
@@ -66,9 +218,16 @@
       flex-direction: column;
       justify-content: space-between;
     }
+
+    .product-top-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      align-items: start;
+    }
     
     .product-header {
-      margin-bottom: 30px;
+      margin-bottom: 20px;
     }
     
     .product-index {
@@ -322,6 +481,10 @@
       .container {
         grid-template-columns: 1fr;
       }
+
+      .product-top-layout {
+        grid-template-columns: 1fr;
+      }
       
       .left-panel {
         border-right: none;
@@ -355,17 +518,96 @@
   <div class="container">
     <!-- SOL PANEL - ÜRÜN RESMİ -->
     <div class="left-panel">
-      <img id="productImage" class="product-image" src="" alt="Ürün">
-      <div class="image-url" id="imageUrl"></div>
+      <div class="image-gallery">
+        <div class="gallery-title">Urun Gorselleri</div>
+        <div class="gallery-main-wrap">
+          <button class="gallery-nav-btn gallery-nav-prev" id="galleryPrev" title="Onceki">&#8249;</button>
+          <img id="productImage" class="product-image" src="" alt="Ürün">
+          <button class="gallery-nav-btn gallery-nav-next" id="galleryNext" title="Sonraki">&#8250;</button>
+          <div class="gallery-counter" id="galleryCounter">1 / 1</div>
+        </div>
+        <div class="image-thumbs" id="imageThumbs"></div>
+        <div class="image-url" id="imageUrl"></div>
+      </div>
+
+      <div class="specs-card" style="margin-top: 10px;">
+        <div class="specs-title">Gelen Ham Ozellikler</div>
+        <div id="rawSpecsList" style="max-height: 160px; overflow: auto; font-size: 12px; line-height: 1.35; color: #334155;"></div>
+      </div>
+
+      <div class="specs-card" style="margin-top: 10px;">
+        <div class="specs-title">Ozellikler Tablosu</div>
+        <div id="tableSpecsList" style="max-height: 200px; overflow: auto; font-size: 12px;">
+          <table style="width: 100%; border-collapse: collapse; background: #fff;">
+            <tbody id="specTableBody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
     
     <!-- SAĞ PANEL - ÜRÜN DETAYLARı -->
     <div class="right-panel">
       <div>
-        <div class="product-header">
-          <div class="product-index" id="productIndex"></div>
-          <div class="product-title" id="productTitle"></div>
-          <div id="statusBadge" class="status-badge"></div>
+        <div class="product-top-layout">
+          <div class="spec-editor-card">
+            <div class="specs-title">Teknik Alanlar (Admin Senkron)</div>
+            <div id="specEditor" class="spec-editor-grid">
+              <div class="spec-field-wrap">
+                <label class="spec-field-label" for="spec_marka">Marka</label>
+                <input id="spec_marka" type="text" class="edit-field" placeholder="—" style="width: 100%; padding: 9px; border: 2px solid #ddd; border-radius: 4px; font-size: 14px;">
+              </div>
+              <div class="spec-field-wrap">
+                <label class="spec-field-label" for="spec_model">Model</label>
+                <input id="spec_model" type="text" class="edit-field" placeholder="—" style="width: 100%; padding: 9px; border: 2px solid #ddd; border-radius: 4px; font-size: 14px;">
+              </div>
+              <div class="spec-field-wrap">
+                <label class="spec-field-label" for="spec_ekran_boyutu">Ekran Boyutu</label>
+                <input id="spec_ekran_boyutu" type="text" class="edit-field" placeholder="—" style="width: 100%; padding: 9px; border: 2px solid #ddd; border-radius: 4px; font-size: 14px;">
+              </div>
+              <div class="spec-field-wrap">
+                <label class="spec-field-label" for="spec_cozunurluk">Çözünürlük</label>
+                <input id="spec_cozunurluk" type="text" class="edit-field" placeholder="—" style="width: 100%; padding: 9px; border: 2px solid #ddd; border-radius: 4px; font-size: 14px;">
+              </div>
+              <div class="spec-field-wrap">
+                <label class="spec-field-label" for="spec_cpu">İşlemci (CPU)</label>
+                <input id="spec_cpu" type="text" class="edit-field" placeholder="—" style="width: 100%; padding: 9px; border: 2px solid #ddd; border-radius: 4px; font-size: 14px;">
+              </div>
+              <div class="spec-field-wrap">
+                <label class="spec-field-label" for="spec_ram">RAM</label>
+                <input id="spec_ram" type="text" class="edit-field" placeholder="—" style="width: 100%; padding: 9px; border: 2px solid #ddd; border-radius: 4px; font-size: 14px;">
+              </div>
+              <div class="spec-field-wrap">
+                <label class="spec-field-label" for="spec_depolama">Depolama</label>
+                <input id="spec_depolama" type="text" class="edit-field" placeholder="—" style="width: 100%; padding: 9px; border: 2px solid #ddd; border-radius: 4px; font-size: 14px;">
+              </div>
+              <div class="spec-field-wrap">
+                <label class="spec-field-label" for="spec_batarya">Batarya</label>
+                <input id="spec_batarya" type="text" class="edit-field" placeholder="—" style="width: 100%; padding: 9px; border: 2px solid #ddd; border-radius: 4px; font-size: 14px;">
+              </div>
+              <div class="spec-field-wrap">
+                <label class="spec-field-label" for="spec_baglanti">Bağlantı</label>
+                <input id="spec_baglanti" type="text" class="edit-field" placeholder="—" style="width: 100%; padding: 9px; border: 2px solid #ddd; border-radius: 4px; font-size: 14px;">
+              </div>
+              <div class="spec-field-wrap">
+                <label class="spec-field-label" for="spec_isletim_sistemi">İşletim Sistemi</label>
+                <input id="spec_isletim_sistemi" type="text" class="edit-field" placeholder="—" style="width: 100%; padding: 9px; border: 2px solid #ddd; border-radius: 4px; font-size: 14px;">
+              </div>
+              <div class="spec-field-wrap">
+                <label class="spec-field-label" for="spec_hdmi_cikisi">HDMI Çıkışı</label>
+                <input id="spec_hdmi_cikisi" type="text" class="edit-field" placeholder="—" style="width: 100%; padding: 9px; border: 2px solid #ddd; border-radius: 4px; font-size: 14px;">
+              </div>
+              <div class="spec-field-wrap">
+                <label class="spec-field-label" for="spec_gonderim_yeri">Gönderim Yeri</label>
+                <input id="spec_gonderim_yeri" type="text" class="edit-field" placeholder="—" style="width: 100%; padding: 9px; border: 2px solid #ddd; border-radius: 4px; font-size: 14px;">
+              </div>
+            </div>
+          </div>
+
+          <div class="product-header">
+            <div class="product-index" id="productIndex"></div>
+            <div class="product-title" id="productTitle"></div>
+            <div id="statusBadge" class="status-badge"></div>
+          </div>
         </div>
         
         <div class="selected-count" id="selectedCount" style="display: none;">
@@ -396,7 +638,6 @@
             <span class="detail-label">Özellikler:</span>
           </div>
           <input id="featuresInput" type="text" class="edit-field" placeholder="Örn: Renk=Kırmızı, Materyal=Kumaş" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 2px solid #ddd; border-radius: 4px; font-size: 15px;">
-          
           <div class="detail-row" id="descriptionRow" style="display: none;">
             <span class="detail-label">Açıklama:</span>
           </div>

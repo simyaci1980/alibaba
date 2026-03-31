@@ -343,8 +343,6 @@
 
             {% if ozellikler_satirlari %}
             <div class="detay-kart">
-                <h3>Teknik Notlar</h3>
-                <div class="detay-muted">Satır satır teknik notlar (API/OCR/manuel derleme).</div>
                 <div class="detay-notlar-list">
                     {% for n in ozellikler_satirlari %}
                         {% if n.tur == 'baslik' %}
@@ -366,9 +364,8 @@
 
             {% if show_description_card %}
             <div class="detay-kart" style="background:linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%);">
-                <h3>Ürün Açıklaması (Türkçe)</h3>
-                <div class="detay-muted">Mümkünse otomatik Türkçe çeviri gösterilir.</div>
-                <div class="detay-aciklama">{{ aciklama_turkce|default:gosterilecek_aciklama }}</div>
+                <h3>Ürün Açıklaması</h3>
+                <div class="detay-aciklama">{{ gosterilecek_aciklama }}</div>
                 {% if aciklama_orijinal_goster %}
                 <details style="margin-top:10px;">
                     <summary class="detay-orijinal-toggle">Orijinal metni göster/gizle</summary>

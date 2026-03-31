@@ -1,5 +1,4 @@
 {% extends 'urunler/base.html' %}
-{% load static %}
 
 {% block title %}Ana Sayfa | KOLAY BUL EKSPRES{% endblock %}
 
@@ -11,13 +10,13 @@
         <a href="{% url 'urun_affiliate_redirect' urun.id %}" target="_blank" class="carousel-item" style="flex: 0 0 auto; margin: 0 8px; text-decoration: none; cursor: pointer;" data-urun-id="{{ urun.id }}">
             <div class="carousel-circle" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background: #fff; transition: transform 0.2s, box-shadow 0.2s;">
                 {% if urun.resim_url %}
-                    <img src="{{ urun.resim_url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.parentElement.innerHTML='{{ urun.isim|truncatechars:10 }}';">
+                    <img src="{{ urun.resim_url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="const wrap=this.parentElement; this.remove(); wrap.textContent='{{ urun.isim|truncatechars:10|escapejs }}'; wrap.style.display='flex'; wrap.style.alignItems='center'; wrap.style.justifyContent='center'; wrap.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; wrap.style.color='#fff'; wrap.style.fontSize='0.7em'; wrap.style.textAlign='center';">
                 {% elif urun.resim and urun.resim.name %}
-                    <img src="{{ urun.resim.url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.parentElement.innerHTML='{{ urun.isim|truncatechars:10 }}';">
+                    <img src="{{ urun.resim.url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="const wrap=this.parentElement; this.remove(); wrap.textContent='{{ urun.isim|truncatechars:10|escapejs }}'; wrap.style.display='flex'; wrap.style.alignItems='center'; wrap.style.justifyContent='center'; wrap.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; wrap.style.color='#fff'; wrap.style.fontSize='0.7em'; wrap.style.textAlign='center';">
                 {% elif urun.resimler.all|length > 0 %}
                     {% with first_image=urun.resimler.all.0 %}
                         {% if first_image.resim and first_image.resim.name %}
-                            <img src="{{ first_image.resim.url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.parentElement.innerHTML='{{ urun.isim|truncatechars:10 }}';">
+                            <img src="{{ first_image.resim.url }}" alt="{{ urun.isim }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="const wrap=this.parentElement; this.remove(); wrap.textContent='{{ urun.isim|truncatechars:10|escapejs }}'; wrap.style.display='flex'; wrap.style.alignItems='center'; wrap.style.justifyContent='center'; wrap.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; wrap.style.color='#fff'; wrap.style.fontSize='0.7em'; wrap.style.textAlign='center';">
                         {% else %}
                             <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; font-size:0.7em; text-align:center;">{{ urun.isim|truncatechars:10 }}</div>
                         {% endif %}
@@ -90,22 +89,17 @@
     <!-- Ürün Kartı -->
     <div class="product-card" data-urun-id="{{ urun.id }}" style="position: relative; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column;">
         
-        <!-- Karşılaştırma Seçimi (+) -->
-        <div style="position: absolute; top: 8px; right: 8px; z-index: 10;">
-            <input type="checkbox" class="urun-checkbox" value="{{ urun.id }}" aria-label="{{ urun.isim }} ürününü karşılaştırma için seç" style="appearance:none; -webkit-appearance:none; width:28px; height:28px; border-radius:50%; border:2px solid #faf6f6; background-color:#bc1111; background-image:url('{% static "icons/compare-plus.svg" %}'); background-size:70% 70%; background-position:center; background-repeat:no-repeat; cursor:pointer; display:grid; place-items:center; position:relative; box-shadow:0 2px 8px rgba(0, 0, 0, 0.589); transition:all 0.18s ease;">
-        </div>
-        
         <!-- Resim Galerisi Container -->
         <div class="product-gallery" data-affiliate-url="{% url 'urun_affiliate_redirect' urun.id %}" role="link" tabindex="0" aria-label="{{ urun.isim }} urununu magazada incele" style="position: relative; overflow: hidden; cursor: pointer;">
             <div class="gallery-stage">
                 <div class="gallery-track">
                     {% if urun.resim_url %}
                     <div class="gallery-slide">
-                        <img src="{{ urun.resim_url }}" alt="{{ urun.isim }}" class="gallery-image" onerror="this.parentElement.innerHTML='<div class=\'gallery-empty\'>{{ urun.isim|truncatechars:50 }}</div>'">
+                        <img src="{{ urun.resim_url }}" alt="{{ urun.isim }}" class="gallery-image" onerror="var slide=this.parentElement; var fallback=document.createElement('div'); fallback.className='gallery-empty'; fallback.textContent='{{ urun.isim|truncatechars:50|escapejs }}'; slide.replaceChildren(fallback);">
                     </div>
                     {% elif urun.resim and urun.resim.name %}
                     <div class="gallery-slide">
-                        <img src="{{ urun.resim.url }}" alt="{{ urun.isim }}" class="gallery-image" onerror="this.parentElement.innerHTML='<div class=\'gallery-empty\'>{{ urun.isim|truncatechars:50 }}</div>'">
+                        <img src="{{ urun.resim.url }}" alt="{{ urun.isim }}" class="gallery-image" onerror="var slide=this.parentElement; var fallback=document.createElement('div'); fallback.className='gallery-empty'; fallback.textContent='{{ urun.isim|truncatechars:50|escapejs }}'; slide.replaceChildren(fallback);">
                     </div>
                     {% endif %}
 
@@ -200,8 +194,9 @@
             <!-- Fiyatlar -->
             <div class="prices" style="margin-top: auto; padding-top: 8px;">
                     {% if urun.slug and not urun.fiyatlar.all|slice:":1" %}
-                <div style="margin-bottom:8px;">
-                    <a href="{% url 'urun_detay' urun.slug %}" style="display:inline-block; text-decoration:none; background:#f59e0b; color:#111; font-weight:700; font-size:0.82em; padding:6px 10px; border-radius:8px;">Urun Detayi</a>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; align-items:center;">
+                    <a href="{% url 'urun_detay' urun.slug %}" style="display:inline-block; text-decoration:none; background:#f59e0b; color:#111; font-weight:700; font-size:0.82em; padding:6px 10px; border-radius:8px;">Ürün Detayı</a>
+                    <button type="button" class="urun-karsilastir-btn" data-urun-id="{{ urun.id }}" onclick="event.stopPropagation();" style="display:inline-block; background:#bc1111; color:#fff; border:none; font-weight:700; font-size:0.86em; line-height:1.2; padding:7px 11px; border-radius:8px; cursor:pointer; transition:background 0.18s; font-family:inherit;">Karşılaştır</button>
                 </div>
                 {% endif %}
                 {% for fiyat in urun.fiyatlar.all|slice:":3" %}
@@ -228,15 +223,16 @@
                         Toplam: {{ fiyat.toplam_fiyat|turkish_currency }} {{ fiyat.para_birimi }}
                     </div>
                     {% if urun.slug or fiyat.affiliate_link %}
-                    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; align-items:center;">
+                    <div class="product-action-row" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; align-items:center;">
                         {% if urun.slug %}
                         <a href="{% url 'urun_detay' urun.slug %}" onclick="event.stopPropagation();" style="display:inline-block; text-decoration:none; background:#f59e0b; color:#111; font-weight:700; font-size:0.8em; padding:5px 9px; border-radius:8px;">
-                            Urun Detayi
+                            Ürün Detayı
                         </a>
                         {% endif %}
+                        <button type="button" class="urun-karsilastir-btn" data-urun-id="{{ urun.id }}" onclick="event.stopPropagation();" style="display:inline-block; background:#bc1111; color:#fff; border:none; font-weight:700; font-size:0.84em; line-height:1.2; padding:6px 10px; border-radius:8px; cursor:pointer; transition:background 0.18s; font-family:inherit;">Karşılaştır</button>
                         {% if fiyat.affiliate_link %}
-                        <a href="{% url 'fiyat_affiliate_redirect' fiyat.id %}" target="_blank" rel="noopener sponsored nofollow" onclick="event.stopPropagation();" style="display:inline-block; background:#111827; color:#fff; text-decoration:none; font-weight:700; font-size:0.8em; padding:5px 9px; border-radius:8px;">
-                            Magazada Incele
+                        <a href="{% url 'fiyat_affiliate_redirect' fiyat.id %}" target="_blank" rel="noopener sponsored nofollow" onclick="event.stopPropagation();" class="magazada-incele-btn" style="display:inline-block; background:#16a34a; color:#fff; text-decoration:none; font-weight:700; font-size:0.8em; padding:5px 9px; border-radius:8px;">
+                            Mağazada İncele
                         </a>
                         {% endif %}
                     </div>
@@ -559,14 +555,6 @@ document.addEventListener('DOMContentLoaded', function() {
     transform: translateY(-1px);
 }
 
-.urun-checkbox:checked {
-    background-color: #0ea44b !important;
-    background-image: url('{% static "icons/compare-check.svg" %}') !important;
-    background-size: 72% 72% !important;
-    background-position: center !important;
-    background-repeat: no-repeat !important;
-}
-
 .product-gallery.is-single-image .gallery-nav,
 .product-gallery.is-single-image .gallery-thumbnails {
     display: none;
@@ -784,6 +772,15 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 /* Responsive düzenlemeler */
+@media (min-width: 769px) {
+    .product-action-row .magazada-incele-btn {
+        display: block;
+        margin-inline: auto;
+        padding-inline: 12px !important;
+        text-align: center;
+    }
+}
+
 @media (max-width: 768px) {
     .products-rows-container {
         padding: 8px !important;
@@ -803,9 +800,10 @@ document.addEventListener('DOMContentLoaded', function() {
         width: 218px !important;
     }
 
-    /* Galeri küçültme */
+    /* Galeri: sabit yükseklik yerine orantılı boyut */
     .gallery-stage {
-        height: 122px;
+        height: auto !important;
+        aspect-ratio: 1 / 1;
     }
     .gallery-thumbnails {
         padding: 3px 4px !important;
@@ -884,6 +882,27 @@ document.addEventListener('DOMContentLoaded', function() {
         padding-top: 4px !important;
     }
 
+    /* Ürün Detayı + Karşılaştır yan yana */
+    .prices .urun-karsilastir-btn,
+    .prices a[href*="urun_detay"] {
+        font-size: 0.62em !important;
+        padding: 3px 5px !important;
+        white-space: nowrap;
+    }
+
+    .product-action-row {
+        gap: 4px !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+    }
+
+    .product-action-row .magazada-incele-btn {
+        flex: 0 0 calc(100% - 12px);
+        margin: 0 auto;
+        text-align: center;
+        order: 3;
+    }
+
     .carousel-circle {
         width: 60px !important;
         height: 60px !important;
@@ -904,6 +923,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     .search-form input, .filter-form select {
         width: 140px !important;
+    }
+
+    /* Resim orantılı tam doldurma */
+    .gallery-image {
+        object-fit: cover !important;
+        object-position: center !important;
+        transform: none !important;
+        width: 100% !important;
+        height: 100% !important;
     }
 }
 
@@ -974,84 +1002,77 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const checkboxes = document.querySelectorAll('.urun-checkbox');
     const comparisonBar = document.getElementById('comparison-sticky-bar');
     const selectedCountEl = document.getElementById('selected-count');
     const clearBtn = document.getElementById('clear-selection-btn');
     const compareBtn = document.getElementById('compare-btn');
     const MAX_SELECTED = 5;
-    
-    // localStorage'dan seçimleri geri yükle
-    function getCheckboxProductId(checkbox) {
-        const parsed = Number.parseInt(checkbox.value, 10);
-        return Number.isNaN(parsed) ? null : parsed;
+
+    // Seçili ürün id'lerini tutan set
+    let selectedIds = new Set();
+
+    // localStorage'dan geri yükle
+    try {
+        const saved = JSON.parse(localStorage.getItem('selectedProducts') || '[]');
+        saved.forEach(id => selectedIds.add(Number(id)));
+    } catch(e) {}
+
+    function saveToStorage() {
+        localStorage.setItem('selectedProducts', JSON.stringify([...selectedIds]));
     }
 
-    const savedSelections = localStorage.getItem('selectedProducts');
-    if (savedSelections) {
-        try {
-            const selections = JSON.parse(savedSelections);
-            checkboxes.forEach(checkbox => {
-                const productId = getCheckboxProductId(checkbox);
-                if (productId !== null && selections.includes(productId)) {
-                    checkbox.checked = true;
-                }
-            });
-        } catch (e) {
-            console.error('Seçimler yüklenemedı:', e);
-        }
-    }
-    
-    function updateSelectionState() {
-        const checkedCount = document.querySelectorAll('.urun-checkbox:checked').length;
-        selectedCountEl.textContent = checkedCount;
-        
-        if (checkedCount > 0) {
-            comparisonBar.style.display = 'flex';
-            compareBtn.disabled = false;
-        } else {
-            comparisonBar.style.display = 'none';
-        }
-        
-        // localStorage'a kaydet
-        const selectedIds = Array.from(document.querySelectorAll('.urun-checkbox:checked'))
-            .map(cb => getCheckboxProductId(cb))
-            .filter(id => id !== null);
-        localStorage.setItem('selectedProducts', JSON.stringify(selectedIds));
-    }
-    
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function(e) {
-            const checkedCount = document.querySelectorAll('.urun-checkbox:checked').length;
-            
-            // Max seçim kontrolü
-            if (this.checked && checkedCount > MAX_SELECTED) {
-                this.checked = false;
-                alert(`Maksimum ${MAX_SELECTED} ürün seçebilirsiniz.`);
-                return;
+    function updateUI() {
+        const count = selectedIds.size;
+        selectedCountEl.textContent = count;
+        comparisonBar.style.display = count > 0 ? 'flex' : 'none';
+        compareBtn.disabled = count === 0;
+
+        // Buton görsellerini güncelle
+        document.querySelectorAll('.urun-karsilastir-btn').forEach(btn => {
+            const id = Number(btn.dataset.urunId);
+            if (selectedIds.has(id)) {
+                btn.textContent = '✓ Seçildi';
+                btn.style.background = '#059669';
+            } else {
+                btn.textContent = 'Karşılaştır';
+                btn.style.background = '#bc1111';
             }
-            
-            updateSelectionState();
+        });
+    }
+
+    // Sayfa yüklendiğinde buton görsellerini hemen güncelle
+    updateUI();
+
+    // Karşılaştır butonlarına tıklama
+    document.querySelectorAll('.urun-karsilastir-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = Number(this.dataset.urunId);
+            if (selectedIds.has(id)) {
+                selectedIds.delete(id);
+            } else {
+                if (selectedIds.size >= MAX_SELECTED) {
+                    alert(`Maksimum ${MAX_SELECTED} ürün seçebilirsiniz.`);
+                    return;
+                }
+                selectedIds.add(id);
+            }
+            saveToStorage();
+            updateUI();
         });
     });
-    
+
     clearBtn.addEventListener('click', function() {
-        checkboxes.forEach(checkbox => checkbox.checked = false);
-        localStorage.removeItem('selectedProducts');
-        updateSelectionState();
+        selectedIds.clear();
+        saveToStorage();
+        updateUI();
     });
-    
+
     compareBtn.addEventListener('click', function() {
-        const selectedIds = Array.from(document.querySelectorAll('.urun-checkbox:checked'))
-            .map(cb => cb.value)
-            .filter(value => value && !Number.isNaN(Number.parseInt(value, 10)))
-            .join(',');
-        
-        if (selectedIds) {
-            window.location.href = `{% url 'urun_karsilastir' %}?ids=${selectedIds}`;
+        if (selectedIds.size > 0) {
+            window.location.href = `{% url 'urun_karsilastir' %}?ids=${[...selectedIds].join(',')}`;
         }
     });
-    
+
     // İlk yüklemede durumu güncelle
     updateSelectionState();
 });

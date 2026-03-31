@@ -3,12 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <style>
-    body { width: 900px; padding: 15px; font-family: Arial; margin: 0; }
+    body {
+      width: 460px;
+      max-height: 640px;
+      padding: 10px;
+      font-family: Arial;
+      margin: 0;
+      overflow: hidden;
+      background: #f4f6f8;
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid #d9dee3;
+      border-radius: 8px;
+      padding: 10px;
+    }
     
     #searchSection { display: block; }
     #resultsSection { display: none; }
     
     button { width: 100%; padding: 10px; cursor: pointer; margin: 5px 0; }
+
+    .run-status {
+      font-size: 12px;
+      padding: 7px 9px;
+      border-radius: 6px;
+      margin-top: 6px;
+      background: #eef2f7;
+      color: #334155;
+      border: 1px solid #dbe3ec;
+      font-weight: 600;
+    }
     
     .result-card {
       background: white;
@@ -63,6 +89,10 @@
       display: flex;
       gap: 5px;
       margin-top: 10px;
+      position: sticky;
+      bottom: 0;
+      background: #fff;
+      padding-top: 6px;
     }
     
     .navigation button {
@@ -76,11 +106,19 @@
       font-size: 14px;
       color: #666;
     }
+
+    #resultsSection {
+      max-height: 600px;
+      overflow: auto;
+    }
   </style>
 </head>
 <body>
-  <div id="searchSection">
+  <div id="runStatus" class="run-status panel" style="margin-bottom: 8px;">Durum: Hazır</div>
+
+  <div id="searchSection" class="panel">
     <button id="findBtn">Ürünleri Bul ve Çerçevele</button>
+    <button id="openDetailBtn" style="background:#667eea; color:#fff; border:none; border-radius:4px; font-weight:600;">📖 Detaylı Görünüm Aç</button>
     <div id="totalCount" style="margin-top: 8px; font-size: 12px; color: #333;">
       Sayfadaki ürün sayısı: -
     </div>
@@ -88,12 +126,12 @@
       <input id="rangeStart" type="number" min="1" placeholder="Başlangıç (örn 1)" style="flex:1; padding: 6px;" />
       <input id="rangeEnd" type="number" min="1" placeholder="Bitiş (örn 20)" style="flex:1; padding: 6px;" />
     </div>
-    <div style="font-size: 11px; color: #c92a2a; margin-top: 4px; font-weight: bold;">
+    <div id="rangeWarning" style="font-size: 11px; color: #c92a2a; margin-top: 4px; font-weight: bold; display: none;">
       ⚠️ Aralık zorunlu: Başlangıç ve bitiş değerini giriniz!
     </div>
   </div>
   
-  <div id="resultsSection">
+  <div id="resultsSection" class="panel">
     <button id="backBtn">← Aramaya Dön</button>
     <div id="progressMsg" style="text-align: center; color: #666; padding: 10px; display: none;">İlk 20 ürün kontrol ediliyor...</div>
     <div id="notification" style="text-align: center; background: #d4edda; color: #155724; padding: 8px; border-radius: 4px; margin-bottom: 10px; display: none; font-size: 13px;"></div>

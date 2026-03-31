@@ -2,62 +2,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.db.models import Q, Case, When, IntegerField, Prefetch
 from django.core.paginator import Paginator
-from django.core.cache import cache
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 import json
 import re
-import hashlib
-import importlib
 from .models import Urun, UrunResim, Fiyat, ClickLog, Yorum
 from .forms import YorumForm
 from django.http import HttpResponse
 from django.utils.safestring import mark_safe
-
-_TR_TRANSLATOR = None
-_TR_TRANSLATOR_READY = False
-
-
-def _get_tr_translator():
-	"""deep_translator varsa çevirici nesnesini döndürür; yoksa None."""
-	global _TR_TRANSLATOR, _TR_TRANSLATOR_READY
-	if _TR_TRANSLATOR_READY:
-		return _TR_TRANSLATOR
-	_TR_TRANSLATOR_READY = True
-	try:
-		deep_translator_module = importlib.import_module('deep_translator')
-		GoogleTranslator = getattr(deep_translator_module, 'GoogleTranslator', None)
-		if GoogleTranslator:
-			_TR_TRANSLATOR = GoogleTranslator(source='auto', target='tr')
-	except Exception:
-		_TR_TRANSLATOR = None
-	return _TR_TRANSLATOR
-
-
-def cevir_turkce_mumkunse(text: str) -> str:
-	"""Metni mümkünse Türkçeye çevirir, başarısız olursa orijinal metni döndürür."""
-	if not text:
-		return ''
-	normalized = str(text).strip()
-	if not normalized:
-		return ''
-
-	cache_key = 'tr_desc_' + hashlib.sha1(normalized.encode('utf-8')).hexdigest()
-	cached = cache.get(cache_key)
-	if cached:
-		return cached
-
-	translator = _get_tr_translator()
-	if not translator:
-		return normalized
-
-	try:
-		translated = translator.translate(normalized)
-		if translated:
-			cache.set(cache_key, translated, 60 * 60 * 24 * 30)
-			return translated
-	except Exception:
-		pass
-	return normalized
 
 
 def _translate_detail_label(label: str) -> str:
@@ -462,9 +413,12 @@ def urun_detay(request, slug):
 			if not line:
 				continue
 			if line.startswith('---') and line.endswith('---'):
+				heading = line.strip('- ').strip()
+				if 'description cikarim' in heading.lower():
+					continue
 				ozellikler_satirlari.append({
 					'tur': 'baslik',
-					'icerik': line.strip('- ').strip(),
+					'icerik': heading,
 				})
 				continue
 
@@ -491,13 +445,11 @@ def urun_detay(request, slug):
 	temiz_kotu = _is_garbage_description(temiz_aciklama)
 
 	gosterilecek_aciklama = ''
-	aciklama_turkce = ''
 	aciklama_orijinal_goster = False
 	show_description_card = False
 
 	if temiz_aciklama and not temiz_kotu:
 		gosterilecek_aciklama = temiz_aciklama
-		aciklama_turkce = cevir_turkce_mumkunse(temiz_aciklama)
 		show_description_card = True
 		aciklama_orijinal_goster = (
 			bool(orijinal_aciklama)
@@ -520,7 +472,6 @@ def urun_detay(request, slug):
 		'show_description_card': show_description_card,
 		'aciklama_orijinal_goster': aciklama_orijinal_goster,
 		'gosterilecek_aciklama': gosterilecek_aciklama,
-		'aciklama_turkce': aciklama_turkce,
 		'meta_title': f"{title_text} | Kolay Bul Ekspres",
 		'meta_description': meta_description,
 		'product_schema_json': mark_safe(json.dumps(product_schema, ensure_ascii=False)),
