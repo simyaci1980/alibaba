@@ -141,6 +141,28 @@ def _schema_currency_code(currency: str) -> str:
 	return code or 'TRY'
 
 
+def _extract_product_brand(urun) -> str:
+	"""Try to infer product brand from structured details or feature lines."""
+	detaylar = getattr(urun, 'detaylar', None) or {}
+	for key in ('marka', 'brand'):
+		value = str(detaylar.get(key, '') or '').strip()
+		if value and value.lower() != 'belirtilmemiş':
+			return value
+
+	if urun.ozellikler:
+		for raw_line in urun.ozellikler.splitlines():
+			line = (raw_line or '').strip()
+			if not line or ':' not in line:
+				continue
+			label_raw, value_raw = line.split(':', 1)
+			translated = _translate_detail_label(label_raw)
+			value = str(value_raw or '').strip()
+			if translated == 'Marka' and value and value.lower() != 'belirtilmemiş':
+				return value
+
+	return ''
+
+
 HOME_DETAIL_PRIORITY = [
 	'Marka',
 	'Model',
@@ -429,6 +451,13 @@ def urun_detay(request, slug):
 		'sku': urun.urun_kodu or str(urun.id),
 		'url': canonical_url,
 	}
+
+	brand_name = _extract_product_brand(urun)
+	if brand_name:
+		product_schema['brand'] = {
+			'@type': 'Brand',
+			'name': brand_name,
+		}
 
 	if image_urls:
 		product_schema['image'] = image_urls[:6]
