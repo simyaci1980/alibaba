@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}KOLAY BUL EKSPRES{% endblock %}</title>
     <meta name="description" content="{% block meta_description %}Kolay Bul Ekspres ile güvenli, hızlı ve güvenli alışveriş! Kişisel bilgi istemeden, seçilmiş Aliexpress ürünlerini Avrupa deposundan hızlı teslimat avantajıyla sunuyoruz.{% endblock %}">
+    {% if canonical_url %}<link rel="canonical" href="{{ canonical_url }}">{% endif %}
     
     <!-- Favicon - Tüm Cihazlar İçin -->
     <link rel="icon" type="image/x-icon" href="{% static 'urunler/favicon.ico' %}">

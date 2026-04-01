@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.db.models import Q, Case, When, IntegerField, Prefetch
+from django.conf import settings
 from django.core.paginator import Paginator
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 import json
@@ -104,6 +105,15 @@ def _is_garbage_description(text: str) -> bool:
 		return True
 
 	return False
+
+
+def _build_canonical_url(path: str, query_string: str = '') -> str:
+	base_url = getattr(settings, 'SITE_BASE_URL', '').rstrip('/')
+	normalized_path = path if path.startswith('/') else f'/{path}'
+	canonical_url = f'{base_url}{normalized_path}' if base_url else normalized_path
+	if query_string:
+		return f'{canonical_url}?{query_string}'
+	return canonical_url
 
 
 HOME_DETAIL_PRIORITY = [
@@ -278,6 +288,7 @@ def anasayfa(request):
 	query_params = request.GET.copy()
 	query_params.pop('page', None)
 	query_string = query_params.urlencode()
+	canonical_url = _build_canonical_url(request.path, query_string)
 
 	return render(request, 'urunler/anasayfa.html', {
 		'urunler': urunler,
@@ -286,6 +297,7 @@ def anasayfa(request):
 		'yorumlar': yorumlar,
 		'form': form,
 		'search_query': search_query,
+		'canonical_url': canonical_url,
 	})
 
 
@@ -308,7 +320,10 @@ def urun_listesi(request):
 				sifirli_idx += 1
 	urunler_sirali += sifirli_sorted[sifirli_idx:]
 	urunler = urunler_sirali
-	return render(request, 'urunler/urun_listesi.html', {'urunler': urunler})
+	return render(request, 'urunler/urun_listesi.html', {
+		'urunler': urunler,
+		'canonical_url': _build_canonical_url(request.path),
+	})
 
 
 def urun_detay(request, slug):
@@ -361,6 +376,7 @@ def urun_detay(request, slug):
 
 	meta_description_source = (urun.alt_baslik or urun.aciklama or urun.ozellikler or urun.isim or '').strip()
 	meta_description = ' '.join(meta_description_source.split())[:160]
+	canonical_url = _build_canonical_url(request.path)
 
 	product_schema = {
 		'@context': 'https://schema.org',
@@ -368,7 +384,7 @@ def urun_detay(request, slug):
 		'name': title_text,
 		'description': meta_description,
 		'sku': urun.urun_kodu or str(urun.id),
-		'url': request.build_absolute_uri(),
+		'url': canonical_url,
 	}
 
 	if image_urls:
@@ -474,6 +490,7 @@ def urun_detay(request, slug):
 		'gosterilecek_aciklama': gosterilecek_aciklama,
 		'meta_title': f"{title_text} | Kolay Bul Ekspres",
 		'meta_description': meta_description,
+		'canonical_url': canonical_url,
 		'product_schema_json': mark_safe(json.dumps(product_schema, ensure_ascii=False)),
 	}
 	return render(request, 'urunler/urun_detay.html', context)
@@ -540,6 +557,7 @@ def urun_karsilastir(request):
 		'urunler': urunler,
 		'karsilastirma_satir': karsilastirma_satir,
 		'meta_title': 'Ürün Karşılaştırması | Kolay Bul Ekspres',
+		'canonical_url': _build_canonical_url(request.path, request.GET.urlencode()),
 	}
 	
 	return render(request, 'urunler/urun_karsilastir.html', context)

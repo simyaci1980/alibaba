@@ -90,6 +90,7 @@ TEMPLATES = [
     },
 ]
 
+SITE_BASE_URL = config('SITE_BASE_URL', default='https://www.kolaybulexpres.com')
 WSGI_APPLICATION = 'urun_karsilastirma.wsgi.application'
 
 
