@@ -98,10 +98,20 @@ WSGI_APPLICATION = 'urun_karsilastirma.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+PYANYWHERE_LIVE_DB = '/home/KolayBulExpres/live.sqlite3'
+SQLITE_DB_PATH = config('SQLITE_DB_PATH', default='').strip()
+
+if SQLITE_DB_PATH:
+    DB_NAME = SQLITE_DB_PATH
+elif os.path.exists(PYANYWHERE_LIVE_DB):
+    DB_NAME = PYANYWHERE_LIVE_DB
+else:
+    DB_NAME = str(BASE_DIR / 'db.sqlite3')
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': config('SQLITE_DB_PATH', default=str(BASE_DIR / 'db.sqlite3')),
+        'NAME': DB_NAME,
     }
 }
 
