@@ -1,9 +1,27 @@
 from django.contrib.sitemaps import Sitemap
+from django.conf import settings
 from django.urls import reverse
+from urllib.parse import urlparse
 from .models import Urun
 
 
-class StaticViewSitemap(Sitemap):
+class BaseSitemap(Sitemap):
+    """Always emit sitemap URLs using configured canonical base URL."""
+
+    def get_urls(self, page=1, site=None, protocol=None):
+        base_url = str(getattr(settings, 'SITE_BASE_URL', '')).strip()
+        if base_url:
+            parsed = urlparse(base_url)
+            forced_domain = parsed.netloc
+            forced_protocol = parsed.scheme or 'https'
+            if forced_domain:
+                site = type('SiteObj', (), {'domain': forced_domain, 'name': forced_domain})()
+                protocol = forced_protocol
+
+        return super().get_urls(page=page, site=site, protocol=protocol)
+
+
+class StaticViewSitemap(BaseSitemap):
     priority = 1.0
     changefreq = 'daily'
     protocol = 'https'
@@ -15,7 +33,7 @@ class StaticViewSitemap(Sitemap):
         return reverse(item)
 
 
-class UrunSitemap(Sitemap):
+class UrunSitemap(BaseSitemap):
     priority = 0.8
     changefreq = 'daily'
     protocol = 'https'
