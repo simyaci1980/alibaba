@@ -7,6 +7,19 @@
     <title>{% block title %}KOLAY BUL EKSPRES{% endblock %}</title>
     <meta name="description" content="{% block meta_description %}Kolay Bul Ekspres ile güvenli, hızlı ve güvenli alışveriş! Kişisel bilgi istemeden, seçilmiş Aliexpress ürünlerini Avrupa deposundan hızlı teslimat avantajıyla sunuyoruz.{% endblock %}">
     {% if canonical_url %}<link rel="canonical" href="{{ canonical_url }}">{% endif %}
+    <meta property="og:type" content="{% firstof og_type 'website' %}">
+    <meta property="og:title" content="{% firstof og_title meta_title 'KOLAY BUL EKSPRES' %}">
+    <meta property="og:description" content="{% firstof og_description meta_description 'Kolay Bul Ekspres ile secilmis urunleri inceleyin.' %}">
+    {% if og_url %}
+    <meta property="og:url" content="{{ og_url }}">
+    {% elif canonical_url %}
+    <meta property="og:url" content="{{ canonical_url }}">
+    {% endif %}
+    {% if og_image %}<meta property="og:image" content="{{ og_image }}">{% endif %}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% firstof og_title meta_title 'KOLAY BUL EKSPRES' %}">
+    <meta name="twitter:description" content="{% firstof og_description meta_description 'Kolay Bul Ekspres ile secilmis urunleri inceleyin.' %}">
+    {% if og_image %}<meta name="twitter:image" content="{{ og_image }}">{% endif %}
     
     <!-- Favicon - Tüm Cihazlar İçin -->
     <link rel="icon" type="image/x-icon" href="{% static 'urunler/favicon.ico' %}">

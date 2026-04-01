@@ -116,6 +116,24 @@ def _build_canonical_url(path: str, query_string: str = '') -> str:
 	return canonical_url
 
 
+def _to_absolute_url(url: str) -> str:
+	if not url:
+		return ''
+	normalized = str(url).strip()
+	if normalized.startswith('//'):
+		return f'https:{normalized}'
+	if normalized.startswith('http://') or normalized.startswith('https://'):
+		return normalized
+	base_url = getattr(settings, 'SITE_BASE_URL', '').rstrip('/')
+	if not base_url:
+		return normalized
+	return f"{base_url}/{normalized.lstrip('/')}"
+
+
+def _default_og_image() -> str:
+	return _to_absolute_url(getattr(settings, 'SITE_OG_IMAGE', '/static/urunler/android-icon-192x192.png'))
+
+
 HOME_DETAIL_PRIORITY = [
 	'Marka',
 	'Model',
@@ -289,6 +307,8 @@ def anasayfa(request):
 	query_params.pop('page', None)
 	query_string = query_params.urlencode()
 	canonical_url = _build_canonical_url(request.path, query_string)
+	meta_title = 'Ana Sayfa | KOLAY BUL EKSPRES'
+	meta_description = 'Kolay Bul Ekspres ile secilmis urunleri karsilastirin ve guvenli sekilde inceleyin.'
 
 	return render(request, 'urunler/anasayfa.html', {
 		'urunler': urunler,
@@ -298,6 +318,12 @@ def anasayfa(request):
 		'form': form,
 		'search_query': search_query,
 		'canonical_url': canonical_url,
+		'meta_title': meta_title,
+		'meta_description': meta_description,
+		'og_title': meta_title,
+		'og_description': meta_description,
+		'og_url': canonical_url,
+		'og_image': _default_og_image(),
 	})
 
 
@@ -320,9 +346,18 @@ def urun_listesi(request):
 				sifirli_idx += 1
 	urunler_sirali += sifirli_sorted[sifirli_idx:]
 	urunler = urunler_sirali
+	canonical_url = _build_canonical_url(request.path)
+	meta_title = 'Urun Listesi | Kolay Bul Ekspres'
+	meta_description = 'Kategori ve fiyat bilgileriyle urunleri listeleyin, karsilastirin ve en uygun secenekleri bulun.'
 	return render(request, 'urunler/urun_listesi.html', {
 		'urunler': urunler,
-		'canonical_url': _build_canonical_url(request.path),
+		'canonical_url': canonical_url,
+		'meta_title': meta_title,
+		'meta_description': meta_description,
+		'og_title': meta_title,
+		'og_description': meta_description,
+		'og_url': canonical_url,
+		'og_image': _default_og_image(),
 	})
 
 
@@ -377,6 +412,7 @@ def urun_detay(request, slug):
 	meta_description_source = (urun.alt_baslik or urun.aciklama or urun.ozellikler or urun.isim or '').strip()
 	meta_description = ' '.join(meta_description_source.split())[:160]
 	canonical_url = _build_canonical_url(request.path)
+	meta_title = f"{title_text} | Kolay Bul Ekspres"
 
 	product_schema = {
 		'@context': 'https://schema.org',
@@ -488,9 +524,14 @@ def urun_detay(request, slug):
 		'show_description_card': show_description_card,
 		'aciklama_orijinal_goster': aciklama_orijinal_goster,
 		'gosterilecek_aciklama': gosterilecek_aciklama,
-		'meta_title': f"{title_text} | Kolay Bul Ekspres",
+		'meta_title': meta_title,
 		'meta_description': meta_description,
 		'canonical_url': canonical_url,
+		'og_title': meta_title,
+		'og_description': meta_description,
+		'og_url': canonical_url,
+		'og_image': _to_absolute_url(primary_image_url) or _default_og_image(),
+		'og_type': 'product',
 		'product_schema_json': mark_safe(json.dumps(product_schema, ensure_ascii=False)),
 	}
 	return render(request, 'urunler/urun_detay.html', context)
@@ -557,7 +598,12 @@ def urun_karsilastir(request):
 		'urunler': urunler,
 		'karsilastirma_satir': karsilastirma_satir,
 		'meta_title': 'Ürün Karşılaştırması | Kolay Bul Ekspres',
+		'meta_description': 'Secilen urunlerin teknik ozelliklerini ayni ekranda karsilastirin.',
 		'canonical_url': _build_canonical_url(request.path, request.GET.urlencode()),
+		'og_title': 'Ürün Karşılaştırması | Kolay Bul Ekspres',
+		'og_description': 'Secilen urunlerin teknik ozelliklerini ayni ekranda karsilastirin.',
+		'og_url': _build_canonical_url(request.path, request.GET.urlencode()),
+		'og_image': _default_og_image(),
 	}
 	
 	return render(request, 'urunler/urun_karsilastir.html', context)

@@ -91,6 +91,7 @@ TEMPLATES = [
 ]
 
 SITE_BASE_URL = config('SITE_BASE_URL', default='https://www.kolaybulexpres.com')
+SITE_OG_IMAGE = config('SITE_OG_IMAGE', default='/static/urunler/android-icon-192x192.png')
 WSGI_APPLICATION = 'urun_karsilastirma.wsgi.application'
 
 
