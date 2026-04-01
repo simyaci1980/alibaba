@@ -101,7 +101,7 @@ WSGI_APPLICATION = 'urun_karsilastirma.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': config('SQLITE_DB_PATH', default=str(BASE_DIR / 'db.sqlite3')),
     }
 }
 
