@@ -438,7 +438,7 @@ def urun_detay(request, slug):
 			'@type': 'Offer',
 			'priceCurrency': _schema_currency_code(en_dusuk_fiyat.para_birimi),
 			'price': str(en_dusuk_fiyat.fiyat),
-			'availability': 'https://schema.org/InStock' if en_dusuk_fiyat.gonderim_durumu else 'https://schema.org/OutOfStock',
+			'availability': 'https://schema.org/InStock',
 		}
 
 	# Şemaya dayalı detaylar (template'de güzel label + badge gösterimi için)
