@@ -134,6 +134,13 @@ def _default_og_image() -> str:
 	return _to_absolute_url(getattr(settings, 'SITE_OG_IMAGE', '/static/urunler/android-icon-192x192.png'))
 
 
+def _schema_currency_code(currency: str) -> str:
+	code = str(currency or '').strip().upper()
+	if code == 'TL':
+		return 'TRY'
+	return code or 'TRY'
+
+
 HOME_DETAIL_PRIORITY = [
 	'Marka',
 	'Model',
@@ -429,7 +436,7 @@ def urun_detay(request, slug):
 	if en_dusuk_fiyat:
 		product_schema['offers'] = {
 			'@type': 'Offer',
-			'priceCurrency': en_dusuk_fiyat.para_birimi,
+			'priceCurrency': _schema_currency_code(en_dusuk_fiyat.para_birimi),
 			'price': str(en_dusuk_fiyat.fiyat),
 			'availability': 'https://schema.org/InStock' if en_dusuk_fiyat.gonderim_durumu else 'https://schema.org/Discontinued',
 		}
