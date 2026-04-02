@@ -17,6 +17,10 @@ source .venv/bin/activate
 
 Bu proje, farklı mağazalardaki ürünlerin fiyatlarını karşılaştırabileceğiniz ve affiliate linklerle gelir elde edebileceğiniz bir Django tabanlı web uygulamasıdır.
 
+## Ana Takip Dosyası
+
+Güncel operasyon adımları için önce `OPERASYON_MERKEZI.md` dosyasını takip edin.
+
 ## Özellikler
 
 - Ürün ekleme, mağaza ekleme
@@ -43,20 +47,11 @@ Bu komut, CSV dosyasındaki ürünleri veritabanına ekler, fiyatı otomatik ola
 **Durum:** Site şu an PythonAnywhere'de çalışıyor (https://kolaybulexpres.pythonanywhere.com)
 **Deployment:** `PYTHONANYWHERE_DEPLOYMENT.md` dosyasındaki adımları takip edin.
 
-## SQLite3 Veritabanını GitHub'a Aktarma
+## SQLite Politikası (Güncel)
 
-Projede ürünleri veya veritabanı içeriğini doğrudan paylaşmak için db.sqlite3 dosyasını GitHub'a gönderebilirsiniz. Aşağıdaki adımları izleyin:
-
-1. db.sqlite3 dosyanızda değişiklik yaptıysanız (ör. yeni ürün eklediniz), dosyanın güncel olduğundan emin olun.
-2. Terminalde şu komutları çalıştırın:
-   ```bash
-   git add db.sqlite3
-   git commit -m "Güncel veritabanı eklendi"
-   git push
-   ```
-3. GitHub'da db.sqlite3 dosyanız güncel olarak saklanacaktır. Sunucuya (ör. PythonAnywhere) aktarmak için orada da `git pull` komutunu kullanın.
-
-> Not: db.sqlite3 dosyasını paylaşmak, tüm veritabanı içeriğini (kullanıcılar, ürünler, vs.) herkese açık hale getirir. Gizli veri varsa dikkatli olun.
+- `db.sqlite3` GitHub'a gönderilmez.
+- Canlı veritabanı repo dışında tutulur.
+- Kod güncellemesi `git pull --ff-only` ile yapılır, veritabanı dosyası bu akıştan etkilenmez.
 
 ---
 

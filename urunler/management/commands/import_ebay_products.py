@@ -149,6 +149,18 @@ class Command(BaseCommand):
             action='store_true',
             help='Translate title/category/details to Turkish when possible'
         )
+        parser.add_argument(
+            '--category-slug',
+            type=str,
+            default='retro-handheld',
+            help='Ürünlerin atanacağı kategori slug\'ı (varsayılan: retro-handheld)'
+        )
+        parser.add_argument(
+            '--category-name',
+            type=str,
+            default='Retro El Konsolu',
+            help='Kategori yoksa oluşturulacak ad (varsayılan: Retro El Konsolu)'
+        )
 
     def handle(self, *args, **options):
         search_query = options['search_query']
@@ -157,6 +169,8 @@ class Command(BaseCommand):
         use_sandbox = options['sandbox']
         campaign_id = options['campaign_id']
         translate_tr = options['translate_tr']
+        category_slug = options['category_slug']
+        category_name = options['category_name']
 
         translator = None
         translation_cache = {}
@@ -284,15 +298,32 @@ class Command(BaseCommand):
             normalized = re.sub(r'^http:///+', 'http://', normalized)
             return normalized
 
-        def ensure_retro_kategori() -> KategoriSema:
-            kategori, _ = KategoriSema.objects.update_or_create(
-                slug='retro-handheld',
-                defaults={
-                    'isim': 'Retro El Konsolu',
-                    'alanlar': RETRO_HANDHELD_SCHEMA,
-                    'aktif': True,
-                }
-            )
+        def ensure_target_kategori() -> KategoriSema:
+            resolved_slug = str(category_slug or 'retro-handheld').strip().lower() or 'retro-handheld'
+            resolved_name = str(category_name or '').strip() or resolved_slug.replace('-', ' ').title()
+
+            kategori = KategoriSema.objects.filter(slug=resolved_slug).first()
+            if not kategori:
+                return KategoriSema.objects.create(
+                    slug=resolved_slug,
+                    isim=resolved_name,
+                    alanlar=RETRO_HANDHELD_SCHEMA,
+                    aktif=True,
+                )
+
+            updated_fields = []
+            if resolved_name and kategori.isim != resolved_name:
+                kategori.isim = resolved_name
+                updated_fields.append('isim')
+            if not kategori.alanlar:
+                kategori.alanlar = RETRO_HANDHELD_SCHEMA
+                updated_fields.append('alanlar')
+            if not kategori.aktif:
+                kategori.aktif = True
+                updated_fields.append('aktif')
+
+            if updated_fields:
+                kategori.save(update_fields=updated_fields)
             return kategori
 
         def build_detaylar_from_specs(spec_lines: list[str], is_ocr_candidate: bool) -> dict:
@@ -394,7 +425,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('✓ Created eBay store'))
 
         # Import products
-        retro_kategori = ensure_retro_kategori()
+        target_kategori = ensure_target_kategori()
         imported_count = 0
         skipped_count = 0
 
@@ -451,7 +482,7 @@ class Command(BaseCommand):
                 if is_ocr_candidate:
                     ozellikler_lines.append('Not: OCR adayi (aciklama metni dusuk, gorsel agirlikli)')
 
-                ozellikler_lines.append(f"Kategori: {category_tr}")
+                ozellikler_lines.append(f"Kategori: {target_kategori.isim}")
                 ozellikler_lines.append(f"Gönderim Yeri: {item.get('shipping_origin', 'Belirtilmedi')}")
                 if shipping_is_free:
                     shipping_label = 'Ücretsiz'
@@ -506,7 +537,7 @@ class Command(BaseCommand):
                         alt_baslik=subtitle_tr,
                         etiketler=etiketler,
                         ozellikler='\n'.join(ozellikler_lines)[:5000],
-                        kategori=retro_kategori,
+                        kategori=target_kategori,
                         detaylar=detaylar,
                         durum=condition_tr,
                         resim_url=primary_image_url,
@@ -524,7 +555,7 @@ class Command(BaseCommand):
                     product.alt_baslik = subtitle_tr
                     product.etiketler = etiketler
                     product.ozellikler = '\n'.join(ozellikler_lines)[:5000]
-                    product.kategori = retro_kategori
+                    product.kategori = target_kategori
                     product.detaylar = detaylar
                     product.durum = condition_tr
                     if primary_image_url:

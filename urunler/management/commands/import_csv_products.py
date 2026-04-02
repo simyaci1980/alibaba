@@ -49,6 +49,18 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("csv_path", type=str, help="CSV dosyasının yolu")
         parser.add_argument("--subid", type=str, default="auto", help="Tracking için subid")
+        parser.add_argument(
+            "--category-slug",
+            type=str,
+            default="retro-handheld",
+            help="Ürünlerin atanacağı kategori slug'ı (varsayılan: retro-handheld)",
+        )
+        parser.add_argument(
+            "--category-name",
+            type=str,
+            default="Retro El Konsolu",
+            help="Kategori yoksa oluşturulacak ad (varsayılan: Retro El Konsolu)",
+        )
 
     def generate_unique_code(self, length=5):
         while True:
@@ -138,15 +150,32 @@ class Command(BaseCommand):
             return True
         return False
 
-    def ensure_retro_kategori(self):
-        kategori, _ = KategoriSema.objects.update_or_create(
-            slug="retro-handheld",
-            defaults={
-                "isim": "Retro El Konsolu",
-                "alanlar": RETRO_HANDHELD_SCHEMA,
-                "aktif": True,
-            },
-        )
+    def ensure_target_kategori(self, slug, name):
+        category_slug = str(slug or "retro-handheld").strip().lower() or "retro-handheld"
+        category_name = str(name or "").strip() or category_slug.replace("-", " ").title()
+
+        kategori = KategoriSema.objects.filter(slug=category_slug).first()
+        if not kategori:
+            return KategoriSema.objects.create(
+                slug=category_slug,
+                isim=category_name,
+                alanlar=RETRO_HANDHELD_SCHEMA,
+                aktif=True,
+            )
+
+        updated_fields = []
+        if category_name and kategori.isim != category_name:
+            kategori.isim = category_name
+            updated_fields.append("isim")
+        if not kategori.alanlar:
+            kategori.alanlar = RETRO_HANDHELD_SCHEMA
+            updated_fields.append("alanlar")
+        if not kategori.aktif:
+            kategori.aktif = True
+            updated_fields.append("aktif")
+
+        if updated_fields:
+            kategori.save(update_fields=updated_fields)
         return kategori
 
     def build_detaylar(self, row, shipping_from):
@@ -192,7 +221,7 @@ class Command(BaseCommand):
 
         return detaylar
 
-    def build_ozellikler(self, row, detaylar, shipping_from, shipping_fee):
+    def build_ozellikler(self, row, detaylar, shipping_from, shipping_fee, category_name="Retro El Konsolu"):
         lines = []
         seen = set()
 
@@ -223,7 +252,7 @@ class Command(BaseCommand):
                 seen.add(sig)
                 lines.append(line)
 
-        kategori_satiri = "Kategori: Retro El Konsolu"
+        kategori_satiri = f"Kategori: {category_name}"
         if kategori_satiri.lower() not in seen:
             lines.append(kategori_satiri)
 
@@ -245,7 +274,7 @@ class Command(BaseCommand):
 
         return "\n".join(lines)[:5000]
 
-    def build_aciklama(self, row):
+    def build_aciklama(self, row, category_name="Retro El Konsolu"):
         pieces = []
         for key in ["Ürün Açıklama Metni", "TL1 İçerik", "Açıklama"]:
             value = str(row.get(key) or "").strip()
@@ -253,7 +282,7 @@ class Command(BaseCommand):
                 pieces.append(value)
         if pieces:
             return "\n\n".join(pieces)[:5000]
-        return "Kategori: Retro El Konsolu"
+        return f"Kategori: {category_name}"
 
     def build_gallery_urls(self, row, primary_image_url):
         urls = []
@@ -271,6 +300,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         csv_path = options["csv_path"]
         subid = options["subid"]
+        category_slug = options["category_slug"]
+        category_name = options["category_name"]
         base_link = config("ADMITAD_BASE_LINK", default="")
         if not base_link:
             self.stdout.write(self.style.ERROR("❌ ADMITAD_BASE_LINK eksik"))
@@ -280,7 +311,7 @@ class Command(BaseCommand):
             isim="AliExpress",
             defaults={"web_adresi": "https://www.aliexpress.com"},
         )
-        retro_kategori = self.ensure_retro_kategori()
+        target_kategori = self.ensure_target_kategori(category_slug, category_name)
 
         with open(csv_path, newline="", encoding="utf-8") as csvfile:
             reader = csv.DictReader(csvfile)
@@ -290,7 +321,7 @@ class Command(BaseCommand):
                     if not name:
                         raise ValueError("Başlık boş")
 
-                    description = self.build_aciklama(row)
+                    description = self.build_aciklama(row, category_name=target_kategori.isim)
                     ana_baslik = str(self.get_first(row, "Ana Başlık", "ana_baslik", default=name)).strip() or name
                     alt_baslik = str(self.get_first(row, "Alt Başlık", "alt_baslik", default="")).strip()
                     etiketler = str(self.get_first(row, "Etiketler", "etiketler", default="")).strip()
@@ -303,7 +334,13 @@ class Command(BaseCommand):
                     shipping_fee_str = self.get_first(row, "Gönderim Ücreti", "shippingFee", default="0")
                     shipping_fee = self.parse_float(shipping_fee_str, default=0.0)
 
-                    ozellikler = self.build_ozellikler(row, detaylar, shipping_from, shipping_fee)
+                    ozellikler = self.build_ozellikler(
+                        row,
+                        detaylar,
+                        shipping_from,
+                        shipping_fee,
+                        category_name=target_kategori.isim,
+                    )
 
                     shipping_status_raw = self.get_first(row, "Durum", "status", "Gönderim Durumu", default="Gönderilebiliyor ✅")
                     shipping_status, can_deliver = self.normalize_shipping_status(shipping_status_raw)
@@ -335,7 +372,7 @@ class Command(BaseCommand):
                         urun.alt_baslik = alt_baslik or urun.alt_baslik
                         urun.etiketler = etiketler or urun.etiketler
                         urun.ozellikler = ozellikler or urun.ozellikler
-                        urun.kategori = retro_kategori
+                        urun.kategori = target_kategori
                         urun.detaylar = birlesik_detaylar
                         urun.durum = shipping_status or urun.durum
                         urun.resim_url = image_url or urun.resim_url
@@ -350,7 +387,7 @@ class Command(BaseCommand):
                             alt_baslik=alt_baslik,
                             etiketler=etiketler,
                             ozellikler=ozellikler,
-                            kategori=retro_kategori,
+                            kategori=target_kategori,
                             detaylar=birlesik_detaylar,
                             durum=shipping_status or "Gönderilebiliyor ✅",
                             resim_url=image_url or None,
