@@ -39,7 +39,7 @@ class UrunSitemap(BaseSitemap):
     protocol = 'https'
 
     def items(self):
-        return Urun.objects.filter(slug__isnull=False).exclude(slug='').order_by('-id')
+        return Urun.objects.exclude(durum__iexact='Pasif').filter(slug__isnull=False).exclude(slug='').order_by('-id')
 
     def location(self, item):
         return reverse('urun_detay', kwargs={'slug': item.slug})

@@ -83,8 +83,9 @@ class UrunAdmin(admin.ModelAdmin):
 			return "-"
 	admin_thumbnail.short_description = "Resim"
 
-	list_display = ("isim", "kategori", "slug", "ana_baslik", "alt_baslik", "sira", "admin_thumbnail")
+	list_display = ("id", "isim", "kategori", "slug", "ana_baslik", "alt_baslik", "sira", "admin_thumbnail")
 	list_editable = ("sira",)
+	search_fields = ("id", "isim", "ana_baslik", "urun_kodu", "slug")
 	fields = ("isim", "kategori", "slug", "detaylar_kart", "detaylar", "ana_baslik", "alt_baslik", "etiketler", "ozellikler", "aciklama", "resim", "resim_url", "source_url", "urun_kodu", "sira", "resim_goster")
 	inlines = [FiyatInline, UrunResimInline]
 	readonly_fields = ("slug", "resim_goster", "detaylar_kart",)

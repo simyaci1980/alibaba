@@ -269,7 +269,7 @@ def anasayfa(request):
 	"""Ana sayfa - ürün listesi ve yorumlar"""
 	search_query = request.GET.get('q', '').strip()
 	resim_prefetch = Prefetch('resimler', queryset=UrunResim.objects.order_by('sira', 'id'), to_attr='sirali_resimler')
-	base_queryset = Urun.objects.prefetch_related('fiyatlar__magaza', resim_prefetch)
+	base_queryset = Urun.objects.exclude(durum__iexact='Pasif').prefetch_related('fiyatlar__magaza', resim_prefetch)
 	
 	if search_query:
 		# Arama yapılıyorsa - ürün ismine veya urun_kodu'na göre filtrele
@@ -359,7 +359,7 @@ def anasayfa(request):
 def urun_listesi(request):
 	"""Ürün listesi sayfası"""
 	resim_prefetch = Prefetch('resimler', queryset=UrunResim.objects.order_by('sira', 'id'), to_attr='sirali_resimler')
-	urunler = list(Urun.objects.prefetch_related('fiyatlar__magaza', resim_prefetch).all())
+	urunler = list(Urun.objects.exclude(durum__iexact='Pasif').prefetch_related('fiyatlar__magaza', resim_prefetch).all())
 	numarali = {u.sira: u for u in urunler if u.sira and u.sira > 0}
 	sifirli = [u for u in urunler if not u.sira or u.sira == 0]
 	sifirli_sorted = sorted(sifirli, key=lambda u: -u.id)
@@ -393,7 +393,10 @@ def urun_listesi(request):
 def urun_detay(request, slug):
 	"""SEO odakli urun detay sayfasi"""
 	resim_prefetch = Prefetch('resimler', queryset=UrunResim.objects.order_by('sira', 'id'), to_attr='sirali_resimler')
-	urun = get_object_or_404(Urun.objects.prefetch_related('fiyatlar__magaza', resim_prefetch), slug=slug)
+	urun = get_object_or_404(
+		Urun.objects.exclude(durum__iexact='Pasif').prefetch_related('fiyatlar__magaza', resim_prefetch),
+		slug=slug
+	)
 
 	def normalize_image_url(url: str) -> str:
 		if not url:
@@ -591,7 +594,9 @@ def urun_karsilastir(request):
 	
 	# Ürünleri getir
 	resim_prefetch = Prefetch('resimler', queryset=UrunResim.objects.order_by('sira', 'id'), to_attr='sirali_resimler')
-	urunler = list(Urun.objects.prefetch_related('fiyatlar__magaza', resim_prefetch).filter(id__in=urun_ids))
+	urunler = list(
+		Urun.objects.exclude(durum__iexact='Pasif').prefetch_related('fiyatlar__magaza', resim_prefetch).filter(id__in=urun_ids)
+	)
 	
 	if not urunler:
 		messages.error(request, 'Seçilen ürünler bulunamadı.')
