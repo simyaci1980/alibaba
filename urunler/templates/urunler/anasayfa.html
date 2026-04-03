@@ -52,27 +52,29 @@
             </form>
             
             <!-- Filtre Formu -->
-            <form method="get" action="{% url 'anasayfa' %}" class="filter-form" style="display:flex; align-items:center; gap:4px; margin:0; flex:0 0 auto;">
-                {% if search_query %}
-                    <input type="hidden" name="q" value="{{ search_query }}">
-                {% endif %}
-                <select name="gonderim_yeri" style="width:140px; height:36px; padding:0 8px; border-radius:5px; border:1px solid #ddd;">
-                    <option value="">Gönderim Yeri</option>
-                    <option value="İngiltere" {% if request.GET.gonderim_yeri == 'İngiltere' %}selected{% endif %}>İngiltere</option>
-                    <option value="İspanya" {% if request.GET.gonderim_yeri == 'İspanya' %}selected{% endif %}>İspanya</option>
-                    <option value="Fransa" {% if request.GET.gonderim_yeri == 'Fransa' %}selected{% endif %}>Fransa</option>
-                    <option value="Çek Cumhuriyeti" {% if request.GET.gonderim_yeri == 'Çek Cumhuriyeti' %}selected{% endif %}>Çek Cumhuriyeti</option>
-                    <option value="İtalya" {% if request.GET.gonderim_yeri == 'İtalya' %}selected{% endif %}>İtalya</option>
-                    <option value="Polanya" {% if request.GET.gonderim_yeri == 'Polanya' %}selected{% endif %}>Polanya</option>
-                    <option value="Almanya" {% if request.GET.gonderim_yeri == 'Almanya' %}selected{% endif %}>Almanya</option>
-                </select>
-                <button type="submit" style="padding:0 15px; height:36px; border-radius:5px; background:linear-gradient(90deg,#ff9800 0%,#111 100%); color:#fff; border:none; font-weight:600;">Filtrele</button>
-                {% if request.GET.gonderim_yeri and not search_query %}
-                    <a href="{% url 'anasayfa' %}" style="padding:0 10px; height:36px; border-radius:5px; background:#f59e0b; color:#fff; text-decoration:none; display:flex; align-items:center;">Temizle</a>
-                {% elif request.GET.gonderim_yeri and search_query %}
-                    <a href="?q={{ search_query|urlencode }}" style="padding:0 10px; height:36px; border-radius:5px; background:#f59e0b; color:#fff; text-decoration:none; display:flex; align-items:center;">Temizle</a>
-                {% endif %}
-            </form>
+            {# GONDERIM_YERI_FILTER_START - Şimdilik gizli, altyapı korunuyor #}
+            {# <form method="get" action="{% url 'anasayfa' %}" class="filter-form" style="display:flex; align-items:center; gap:4px; margin:0; flex:0 0 auto;"> #}
+                {# {% if search_query %} #}
+                    {# <input type="hidden" name="q" value="{{ search_query }}"> #}
+                {# {% endif %} #}
+                {# <select name="gonderim_yeri" style="width:140px; height:36px; padding:0 8px; border-radius:5px; border:1px solid #ddd;"> #}
+                    {# <option value="">Gönderim Yeri</option> #}
+                    {# <option value="İngiltere" {% if request.GET.gonderim_yeri == 'İngiltere' %}selected{% endif %}>İngiltere</option> #}
+                    {# <option value="İspanya" {% if request.GET.gonderim_yeri == 'İspanya' %}selected{% endif %}>İspanya</option> #}
+                    {# <option value="Fransa" {% if request.GET.gonderim_yeri == 'Fransa' %}selected{% endif %}>Fransa</option> #}
+                    {# <option value="Çek Cumhuriyeti" {% if request.GET.gonderim_yeri == 'Çek Cumhuriyeti' %}selected{% endif %}>Çek Cumhuriyeti</option> #}
+                    {# <option value="İtalya" {% if request.GET.gonderim_yeri == 'İtalya' %}selected{% endif %}>İtalya</option> #}
+                    {# <option value="Polanya" {% if request.GET.gonderim_yeri == 'Polanya' %}selected{% endif %}>Polanya</option> #}
+                    {# <option value="Almanya" {% if request.GET.gonderim_yeri == 'Almanya' %}selected{% endif %}>Almanya</option> #}
+                {# </select> #}
+                {# <button type="submit" style="padding:0 15px; height:36px; border-radius:5px; background:linear-gradient(90deg,#ff9800 0%,#111 100%); color:#fff; border:none; font-weight:600;">Filtrele</button> #}
+                {# {% if request.GET.gonderim_yeri and not search_query %} #}
+                    {# <a href="{% url 'anasayfa' %}" style="padding:0 10px; height:36px; border-radius:5px; background:#f59e0b; color:#fff; text-decoration:none; display:flex; align-items:center;">Temizle</a> #}
+                {# {% elif request.GET.gonderim_yeri and search_query %} #}
+                    {# <a href="?q={{ search_query|urlencode }}" style="padding:0 10px; height:36px; border-radius:5px; background:#f59e0b; color:#fff; text-decoration:none; display:flex; align-items:center;">Temizle</a> #}
+                {# {% endif %} #}
+            {# </form> #}
+            {# GONDERIM_YERI_FILTER_END #}
         </div>
     </div>
 </div>
