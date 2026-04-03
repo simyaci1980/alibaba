@@ -21,6 +21,9 @@
     <meta name="twitter:description" content="{% firstof og_description meta_description 'Kolay Bul Ekspres ile secilmis urunleri inceleyin.' %}">
     {% if og_image %}<meta name="twitter:image" content="{{ og_image }}">{% endif %}
     
+    <!-- Organization Schema (Site-wide) -->
+    {% if organization_schema_json %}<script type="application/ld+json">{{ organization_schema_json }}</script>{% endif %}
+    
     <!-- Favicon - Tüm Cihazlar İçin -->
     <link rel="icon" type="image/x-icon" href="{% static 'urunler/favicon.ico' %}">
     <link rel="shortcut icon" type="image/x-icon" href="{% static 'urunler/favicon.ico' %}">

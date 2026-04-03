@@ -12,6 +12,37 @@ from django.http import HttpResponse
 from django.utils.safestring import mark_safe
 
 
+def _build_breadcrumb_schema(items: list) -> dict:
+	"""
+	Breadcrumb Schema JSON-LD oluştur.
+	items = [{'position': 1, 'name': 'Ana Sayfa', 'url': '/'}, ...]
+	"""
+	return {
+		'@context': 'https://schema.org',
+		'@type': 'BreadcrumbList',
+		'itemListElement': items,
+	}
+
+
+def _build_organization_schema() -> dict:
+	"""Site-wide Organization Schema"""
+	base_url = getattr(settings, 'SITE_BASE_URL', '').rstrip('/')
+	logo_url = _to_absolute_url('/static/urunler/kolaybulexpres_logo.svg')
+	
+	return {
+		'@context': 'https://schema.org',
+		'@type': 'Organization',
+		'name': 'Kolay Bul Ekspres',
+		'url': base_url or 'https://www.kolaybulexpres.com',
+		'logo': logo_url,
+		'description': 'Retro el konsolu ve oyun cihazlarında güvenli, hızlı ve uygun fiyatlı alışveriş.',
+		'sameAs': [
+			'https://www.facebook.com/kolaybulexpres',
+			'https://www.instagram.com/kolaybulexpres',
+		],
+	}
+
+
 def _translate_detail_label(label: str) -> str:
 	label_map = {
 		'mensei ulke': 'Menşei Ülke',
@@ -338,6 +369,7 @@ def anasayfa(request):
 	canonical_url = _build_canonical_url(request.path, query_string)
 	meta_title = 'Ana Sayfa | KOLAY BUL EKSPRES'
 	meta_description = 'Kolay Bul Ekspres ile secilmis urunleri karsilastirin ve guvenli sekilde inceleyin.'
+	organization_schema = _build_organization_schema()
 
 	return render(request, 'urunler/anasayfa.html', {
 		'urunler': urunler,
@@ -353,6 +385,7 @@ def anasayfa(request):
 		'og_description': meta_description,
 		'og_url': canonical_url,
 		'og_image': _default_og_image(),
+		'organization_schema_json': mark_safe(json.dumps(organization_schema, ensure_ascii=False)),
 	})
 
 
@@ -378,6 +411,7 @@ def urun_listesi(request):
 	canonical_url = _build_canonical_url(request.path)
 	meta_title = 'Urun Listesi | Kolay Bul Ekspres'
 	meta_description = 'Kategori ve fiyat bilgileriyle urunleri listeleyin, karsilastirin ve en uygun secenekleri bulun.'
+	organization_schema = _build_organization_schema()
 	return render(request, 'urunler/urun_listesi.html', {
 		'urunler': urunler,
 		'canonical_url': canonical_url,
@@ -387,6 +421,7 @@ def urun_listesi(request):
 		'og_description': meta_description,
 		'og_url': canonical_url,
 		'og_image': _default_og_image(),
+		'organization_schema_json': mark_safe(json.dumps(organization_schema, ensure_ascii=False)),
 	})
 
 
@@ -550,6 +585,15 @@ def urun_detay(request, slug):
 
 	show_notes_section = bool(ozellikler_satirlari or show_description_card)
 
+	# Breadcrumb Schema
+	breadcrumb_items = [
+		{'position': 1, 'name': 'Ana Sayfa', 'url': _to_absolute_url('/')},
+		{'position': 2, 'name': 'Ürün Listesi', 'url': _to_absolute_url('/urun-listesi/')},
+		{'position': 3, 'name': title_text, 'url': canonical_url},
+	]
+	breadcrumb_schema = _build_breadcrumb_schema(breadcrumb_items)
+	organization_schema = _build_organization_schema()
+
 	context = {
 		'urun': urun,
 		'fiyatlar': fiyatlar,
@@ -572,6 +616,8 @@ def urun_detay(request, slug):
 		'og_image': _to_absolute_url(primary_image_url) or _default_og_image(),
 		'og_type': 'product',
 		'product_schema_json': mark_safe(json.dumps(product_schema, ensure_ascii=False)),
+		'breadcrumb_schema_json': mark_safe(json.dumps(breadcrumb_schema, ensure_ascii=False)),
+		'organization_schema_json': mark_safe(json.dumps(organization_schema, ensure_ascii=False)),
 	}
 	return render(request, 'urunler/urun_detay.html', context)
 
