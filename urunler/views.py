@@ -35,7 +35,7 @@ def _build_organization_schema() -> dict:
 		'name': 'Kolay Bul Ekspres',
 		'url': base_url or 'https://www.kolaybulexpres.com',
 		'logo': logo_url,
-		'description': 'Retro el konsolu ve oyun cihazlarında güvenli, hızlı ve uygun fiyatlı alışveriş.',
+		'description': 'Curated retro handheld consoles and gaming devices. Fast shipping, safe shopping, no sign-up required.',,
 		'sameAs': [
 			'https://www.facebook.com/kolaybulexpres',
 			'https://www.instagram.com/kolaybulexpres',

@@ -1,10 +1,10 @@
 {% extends 'urunler/base.html' %}
 
-{% block title %}Ana Sayfa | KOLAY BUL EKSPRES{% endblock %}
+{% block title %}Home | KOLAY BUL EKSPRES{% endblock %}
 
 {% block content %}
 <!-- Main Heading for SEO -->
-<h1 style="position: absolute; clip: rect(0 0 0 0); width: 1px; height: 1px; overflow: hidden; white-space: nowrap;">Retro El Konsolu ve Oyun Cihazları - Kolay Bul Ekspres</h1>
+<h1 style="position: absolute; clip: rect(0 0 0 0); width: 1px; height: 1px; overflow: hidden; white-space: nowrap;">Retro Handheld Consoles &amp; Gaming Devices - Kolay Bul Ekspres</h1>
 
 <!-- Ürün Resim Carousel (En Üste) -->
 <div class="carousel-wrapper" style="overflow: hidden; margin: 24px 0 0 0; background: linear-gradient(90deg, #111 0%, #ff9800 100%); padding: 0 0 16px 0; border-radius: 12px; margin-bottom: 8px;">
@@ -42,12 +42,12 @@
                 {% if request.GET.gonderim_yeri %}
                     <input type="hidden" name="gonderim_yeri" value="{{ request.GET.gonderim_yeri }}">
                 {% endif %}
-                <input type="text" name="q" value="{{ search_query }}" placeholder="Ürün ara..." style="width:140px; height:36px; padding:0 10px; border:1px solid #ddd; border-radius:5px; font-size:0.95em;">
-                <button type="submit" style="padding:0 15px; height:36px; border-radius:5px; background:linear-gradient(90deg,#ff9800 0%,#111 100%); color:#fff; border:none; font-weight:600;">Ara</button>
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Search products..." style="width:140px; height:36px; padding:0 10px; border:1px solid #ddd; border-radius:5px; font-size:0.95em;">
+                <button type="submit" style="padding:0 15px; height:36px; border-radius:5px; background:linear-gradient(90deg,#ff9800 0%,#111 100%); color:#fff; border:none; font-weight:600;">Search</button>
                 {% if search_query and not request.GET.gonderim_yeri %}
-                    <a href="{% url 'anasayfa' %}" style="padding:0 10px; height:36px; border-radius:5px; background:#ef4444; color:#fff; text-decoration:none; display:flex; align-items:center;">Temizle</a>
+                    <a href="{% url 'anasayfa' %}" style="padding:0 10px; height:36px; border-radius:5px; background:#ef4444; color:#fff; text-decoration:none; display:flex; align-items:center;">Clear</a>
                 {% elif search_query and request.GET.gonderim_yeri %}
-                    <a href="?gonderim_yeri={{ request.GET.gonderim_yeri }}" style="padding:0 10px; height:36px; border-radius:5px; background:#ef4444; color:#fff; text-decoration:none; display:flex; align-items:center;">Temizle</a>
+                    <a href="?gonderim_yeri={{ request.GET.gonderim_yeri }}" style="padding:0 10px; height:36px; border-radius:5px; background:#ef4444; color:#fff; text-decoration:none; display:flex; align-items:center;">Clear</a>
                 {% endif %}
             </form>
             
@@ -84,7 +84,7 @@
 <div class="container" style="padding: 0; background: linear-gradient(135deg, #111 0%, #ff9800 100%); margin-top: 0;">
 
 {% if search_query %}
-<div style="text-align: center; padding: 15px 0; color: #fff; font-weight: 600;">"{{ search_query }}" için {{ urunler|length }} sonuç bulundu</div>
+<div style="text-align: center; padding: 15px 0; color: #fff; font-weight: 600;">{{ urunler|length }} result(s) for "{{ search_query }}"</div>
 {% endif %}
 
 <!-- Ürünler Grid -->
@@ -200,8 +200,8 @@
             <div class="prices" style="margin-top: auto; padding-top: 8px;">
                     {% if urun.slug and not urun.fiyatlar.all|slice:":1" %}
                 <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; align-items:center;">
-                    <a href="{% url 'urun_detay' urun.slug %}" style="display:inline-block; text-decoration:none; background:#f59e0b; color:#111; font-weight:700; font-size:0.82em; padding:6px 10px; border-radius:8px;">Ürün Detayı</a>
-                    <button type="button" class="urun-karsilastir-btn" data-urun-id="{{ urun.id }}" onclick="event.stopPropagation();" style="display:inline-block; background:#bc1111; color:#fff; border:none; font-weight:700; font-size:0.86em; line-height:1.2; padding:7px 11px; border-radius:8px; cursor:pointer; transition:background 0.18s; font-family:inherit;">Karşılaştır</button>
+                    <a href="{% url 'urun_detay' urun.slug %}" style="display:inline-block; text-decoration:none; background:#f59e0b; color:#111; font-weight:700; font-size:0.82em; padding:6px 10px; border-radius:8px;">Product Details</a>
+                    <button type="button" class="urun-karsilastir-btn" data-urun-id="{{ urun.id }}" onclick="event.stopPropagation();" style="display:inline-block; background:#bc1111; color:#fff; border:none; font-weight:700; font-size:0.86em; line-height:1.2; padding:7px 11px; border-radius:8px; cursor:pointer; transition:background 0.18s; font-family:inherit;">Compare</button>
                 </div>
                 {% endif %}
                 {% for fiyat in urun.fiyatlar.all|slice:":3" %}
@@ -212,32 +212,32 @@
                         <span style="font-size: 0.78em; font-weight: 700; background: #fff7d6; color: #7a4d00; border: 1px solid #e8b24a; border-radius: 999px; padding: 1px 7px;">{{ urun.durum }}</span>
                         {% endif %}
                     </div>
-                    <div class="price-line">Ürün: {{ fiyat.fiyat }} {{ fiyat.para_birimi }}</div>
+                    <div class="price-line">Price: {{ fiyat.fiyat }} {{ fiyat.para_birimi }}</div>
                     <div class="shipping-line{% if fiyat.ucretsiz_kargo %} free-shipping{% endif %}">
                         {% if fiyat.ucretsiz_kargo %}
-                            Ücretsiz Kargo
+                            Free Shipping
                         {% elif fiyat.gonderim_ucreti > 0 %}
-                            Kargo: {{ fiyat.gonderim_ucreti }} {{ fiyat.para_birimi }}
+                            Shipping: {{ fiyat.gonderim_ucreti }} {{ fiyat.para_birimi }}
                         {% elif fiyat.gonderim_durumu %}
-                            Kargo: Konuma göre hesaplanır
+                            Shipping: Calculated at checkout
                         {% else %}
-                            Kargo bilgisi yok
+                            No shipping info
                         {% endif %}
                     </div>
                     <div class="price-total-line">
-                        Toplam: {{ fiyat.toplam_fiyat|turkish_currency }} {{ fiyat.para_birimi }}
+                        Total: {{ fiyat.toplam_fiyat|turkish_currency }} {{ fiyat.para_birimi }}
                     </div>
                     {% if urun.slug or fiyat.affiliate_link %}
                     <div class="product-action-row" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; align-items:center;">
                         {% if urun.slug %}
                         <a href="{% url 'urun_detay' urun.slug %}" onclick="event.stopPropagation();" style="display:inline-block; text-decoration:none; background:#f59e0b; color:#111; font-weight:700; font-size:0.8em; padding:5px 9px; border-radius:8px;">
-                            Ürün Detayı
+                            Product Details
                         </a>
                         {% endif %}
-                        <button type="button" class="urun-karsilastir-btn" data-urun-id="{{ urun.id }}" onclick="event.stopPropagation();" style="display:inline-block; background:#bc1111; color:#fff; border:none; font-weight:700; font-size:0.84em; line-height:1.2; padding:6px 10px; border-radius:8px; cursor:pointer; transition:background 0.18s; font-family:inherit;">Karşılaştır</button>
+                        <button type="button" class="urun-karsilastir-btn" data-urun-id="{{ urun.id }}" onclick="event.stopPropagation();" style="display:inline-block; background:#bc1111; color:#fff; border:none; font-weight:700; font-size:0.84em; line-height:1.2; padding:6px 10px; border-radius:8px; cursor:pointer; transition:background 0.18s; font-family:inherit;">Compare</button>
                         {% if fiyat.affiliate_link %}
                         <a href="{% url 'fiyat_affiliate_redirect' fiyat.id %}" target="_blank" rel="noopener sponsored nofollow" onclick="event.stopPropagation();" class="magazada-incele-btn" style="display:inline-block; background:#16a34a; color:#fff; text-decoration:none; font-weight:700; font-size:0.8em; padding:5px 9px; border-radius:8px;">
-                            Mağazada İncele
+                            View in Store
                         </a>
                         {% endif %}
                     </div>
@@ -254,36 +254,36 @@
 {% if page_obj and page_obj.paginator.num_pages > 1 %}
 <div style="max-width: 1400px; margin: 0 auto 24px auto; padding: 0 20px; display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
     {% if page_obj.has_previous %}
-    <a href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.previous_page_number }}" style="background:#111827; color:#fff; text-decoration:none; border-radius:8px; padding:8px 12px; font-weight:700; font-size:0.9em;">Onceki</a>
+    <a href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.previous_page_number }}" style="background:#111827; color:#fff; text-decoration:none; border-radius:8px; padding:8px 12px; font-weight:700; font-size:0.9em;">Previous</a>
     {% endif %}
 
     <span style="background:#fff; color:#111827; border-radius:8px; padding:8px 12px; font-weight:700; font-size:0.9em;">
-        Sayfa {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+        Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
     </span>
 
     {% if page_obj.has_next %}
-    <a href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.next_page_number }}" style="background:#f59e0b; color:#fff; text-decoration:none; border-radius:8px; padding:8px 12px; font-weight:700; font-size:0.9em;">Daha Fazla Urun</a>
+    <a href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.next_page_number }}" style="background:#f59e0b; color:#fff; text-decoration:none; border-radius:8px; padding:8px 12px; font-weight:700; font-size:0.9em;">More Products</a>
     {% endif %}
 </div>
 {% endif %}
 
 <!-- Yorum Bölümü -->
 <div style="max-width: 600px; margin: 40px auto 0 auto; padding: 0 20px;">
-    <button id="yorumAcBtn" style="background:#fff; color:#222; border:none; border-radius:8px; padding:12px 24px; font-size:1em; font-weight:700; cursor:pointer; width:100%; max-width:300px; display:block; margin:0 auto; box-shadow:0 2px 8px rgba(0,0,0,0.1);">Yorum Bırakmak İster misiniz?</button>
+    <button id="yorumAcBtn" style="background:#fff; color:#222; border:none; border-radius:8px; padding:12px 24px; font-size:1em; font-weight:700; cursor:pointer; width:100%; max-width:300px; display:block; margin:0 auto; box-shadow:0 2px 8px rgba(0,0,0,0.1);">Would you like to leave a review?</button>
     
     <div id="yorumFormKapsayici" style="display:none; margin-top:20px; padding: 24px; background: #f9fafb; border-radius: 10px;">
-        <h3 style="text-align:center; margin-bottom:20px;">Yorum Bırakın</h3>
+        <h3 style="text-align:center; margin-bottom:20px;">Leave a Review</h3>
         <form method="post" style="display:flex; flex-direction:column; gap:15px;">
             {% csrf_token %}
             {{ form.as_p }}
-            <button type="submit" style="background:#f59e0b; color:#fff; border:none; border-radius:5px; padding:10px; font-size:1em; font-weight:700; cursor:pointer;">Gönder</button>
+            <button type="submit" style="background:#f59e0b; color:#fff; border:none; border-radius:5px; padding:10px; font-size:1em; font-weight:700; cursor:pointer;">Submit</button>
         </form>
     </div>
 </div>
 
 <!-- Son Yorumlar -->
 <div style="max-width: 600px; margin: 40px auto; padding: 0 20px;">
-    <h3 style="text-align:center; color:#fff; margin-bottom:20px;">Son Yorumlar</h3>
+    <h3 style="text-align:center; color:#fff; margin-bottom:20px;">Recent Reviews</h3>
     {% for yorum in yorumlar|slice:":5" %}
     <div style="background:#fff; border-radius:8px; padding:15px; margin-bottom:10px;">
         <div style="font-weight:600; color:#374151;">{{ yorum.isim }}</div>
@@ -291,7 +291,7 @@
         <div style="font-size:0.8em; color:#888; text-align:right;">{{ yorum.eklenme_tarihi|date:"d.m.Y H:i" }}</div>
     </div>
     {% empty %}
-    <div style="text-align:center; color:#fff;">Henüz yorum yok.</div>
+    <div style="text-align:center; color:#fff;">No reviews yet.</div>
     {% endfor %}
 </div>
 

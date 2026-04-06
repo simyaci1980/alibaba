@@ -1,15 +1,15 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}KOLAY BUL EKSPRES{% endblock %}</title>
-    <meta name="description" content="{% block meta_description %}Kolay Bul Ekspres ile güvenli, hızlı ve güvenli alışveriş! Kişisel bilgi istemeden, seçilmiş Aliexpress ürünlerini Avrupa deposundan hızlı teslimat avantajıyla sunuyoruz.{% endblock %}">
+    <meta name="description" content="{% block meta_description %}Kolay Bul Ekspres — Curated retro handheld consoles and gaming devices. Fast shipping, safe shopping, no personal info required.{% endblock %}">
     {% if canonical_url %}<link rel="canonical" href="{{ canonical_url }}">{% endif %}
     <meta property="og:type" content="{% firstof og_type 'website' %}">
     <meta property="og:title" content="{% firstof og_title meta_title 'KOLAY BUL EKSPRES' %}">
-    <meta property="og:description" content="{% firstof og_description meta_description 'Kolay Bul Ekspres ile secilmis urunleri inceleyin.' %}">
+    <meta property="og:description" content="{% firstof og_description meta_description 'Explore curated products on Kolay Bul Ekspres.' %}">
     {% if og_url %}
     <meta property="og:url" content="{{ og_url }}">
     {% elif canonical_url %}
@@ -18,7 +18,7 @@
     {% if og_image %}<meta property="og:image" content="{{ og_image }}">{% endif %}
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{% firstof og_title meta_title 'KOLAY BUL EKSPRES' %}">
-    <meta name="twitter:description" content="{% firstof og_description meta_description 'Kolay Bul Ekspres ile secilmis urunleri inceleyin.' %}">
+    <meta name="twitter:description" content="{% firstof og_description meta_description 'Explore curated products on Kolay Bul Ekspres.' %}">
     {% if og_image %}<meta name="twitter:image" content="{{ og_image }}">{% endif %}
     
     <!-- Organization Schema (Site-wide) -->
@@ -257,27 +257,27 @@
         <span class="navbar-center-text" style="flex: 1;">KOLAY BUL EKSPRES</span>
         <button class="navbar-hamburger" id="navbarHamburger" aria-label="Menüyü Aç/Kapat">&#9776;</button>
         <div class="navbar-content" id="navbarMenu">
-            <button class="navbar-btn navbar-btn-blue" id="btnAvrupaDeposu" style="display:none;">🚚 Aliexpress'in Avrupa deposu olduğunu biliyor muydunuz?</button>
+            <button class="navbar-btn navbar-btn-blue" id="btnAvrupaDeposu" style="display:none;">🚚 Did you know AliExpress has European warehouses?</button>
             <div id="avrupaDeposuInfo" class="info-popup" style="display:none; color:#fff; background:#1e90ff; border-radius:6px; margin:8px 0 0 0; padding:18px 22px; font-size:0.98em; text-align:justify;">
-                Aliexpress'te bazı ürünler Avrupa'daki depolardan gönderilmektedir. Bu sayede ürünler çok daha hızlı ve gümrük sorunu olmadan elinize ulaşır.<br><br>
-                <b>Biz tam burada devreye giriyoruz:</b> Avrupa deposundan gelen ürünleri sizin için listeliyoruz. Böylece hızlı ve güvenli alışveriş yapabilirsiniz!
+                Some AliExpress products are shipped directly from European warehouses — faster delivery with no customs issues.<br><br>
+                <b>That's where we come in:</b> We list products available from European warehouses so you can shop quickly and safely!
             </div>
-            <button class="navbar-btn navbar-btn-yellow" id="btnKomisyon">🤝 Affiliate ortaklık nedir?</button>
+            <button class="navbar-btn navbar-btn-yellow" id="btnKomisyon">🤝 What is affiliate partnership?</button>
             <div id="komisyonInfo" class="info-popup" style="display:none; color:#222; background:#f0ec09; border-radius:6px; margin:8px 0 0 0; padding:18px 22px; font-size:0.98em; text-align:justify;">
-                Affiliate (ortaklık) sistemi, bir web sitesinin yönlendirdiği satışlardan komisyon alması esasına dayanır.<br><br>
-                Siz sitemizden bir ürüne tıkladığınızda, sizi güvenli mağazaya yönlendiriyoruz. Eğer alışveriş yaparsanız, güvenli mağaza bize küçük bir komisyon ödüyor.<br><br>
-                <b>Sizin ödediğiniz fiyat değişmez</b>, ekstra ücret ödemezsiniz. Hatta bazen mobil uygulamada daha uygun fiyatlar görebilirsiniz.<br><br>
-                Bu sistem sayesinde hem siz güvenli alışveriş yaparsınız hem de biz sitemizi sürdürebiliriz.
+                The affiliate system means a website earns a commission on sales it refers.<br><br>
+                When you click a product on our site, we redirect you to the trusted store. If you make a purchase, the store pays us a small commission.<br><br>
+                <b>You pay exactly the same price</b> — no extra charges. Sometimes you may even find lower prices in the mobile app.<br><br>
+                This system lets you shop safely while helping us keep the site running.
             </div>
-            <button class="navbar-btn" id="btnGuvenlik">🔒 Güvenlik & Gizlilik</button>
+            <button class="navbar-btn" id="btnGuvenlik">🔒 Security & Privacy</button>
             <div id="guvenlikInfo" class="info-popup" style="display:none; color:#fff; background:#16a34a; border-radius:6px; margin:8px 0 0 0; padding:18px 22px; font-size:0.98em; text-align:justify; max-height:180px; overflow-y:auto;">
-                <b>Gizliliğiniz ve güvenliğiniz bizim için çok önemli!</b><br><br>
-                Sitemizde <b>hiçbir şekilde üyelik, telefon, ad, soyad, e-posta veya kişisel bilgi</b> talep edilmez.<br>
-                Alışverişinizi doğrudan <b>dünyaca ünlü güvenli mağaza</b> üzerinden yaparsınız.<br><br>
-                Bizim yaptığımız sadece, seçtiğiniz ürünü <b>affiliate (ortaklık) linki</b> ile sizi güvenli mağazaya yönlendirmektir.<br>
-                Tüm ödeme, teslimat ve müşteri hizmetleri işlemleri güvenli mağazanın kendi güvenli altyapısı üzerinden gerçekleşir.<br><br>
-                <b>Kısacası:</b> Sitemiz üzerinden hiçbir kişisel veri paylaşmaz, doğrudan güvenli mağazanın güvenli ortamında alışverişinizi tamamlarsınız.<br>
-                <span style="color:#d1fae5; font-size:0.98em;">Gönül rahatlığıyla alışveriş yapabilirsiniz!</span>
+                <b>Your privacy and security matter to us!</b><br><br>
+                We <b>never ask for</b> membership, phone number, name, email, or any personal information.<br>
+                You shop directly on the <b>world's trusted stores</b>.<br><br>
+                All we do is redirect you to the store via an <b>affiliate link</b>.<br>
+                All payments, delivery, and customer service are handled entirely by the store's own secure infrastructure.<br><br>
+                <b>In short:</b> No personal data is shared through our site. You complete your purchase safely on the store's platform.<br>
+                <span style="color:#d1fae5; font-size:0.98em;">Shop with complete peace of mind!</span>
             </div>
         </div>
         <div class="navbar-overlay" id="navbarOverlay"></div>
@@ -369,7 +369,7 @@
         <div style="max-width:900px; margin:0 auto;">
             <strong>KOLAY BUL EKSPRES</strong> &copy; 2026
             <br>
-            <span style="font-size:0.95em; color:#bbb;">Avrupa deposundan seçilmiş Aliexpress ürünleri, hızlı teslimat ve güvenli alışveriş.</span>
+            <span style="font-size:0.95em; color:#bbb;">Curated retro handheld gaming devices — fast shipping, safe shopping, no sign-up required.</span>
         </div>
     </footer>
 

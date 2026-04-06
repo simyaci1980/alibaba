@@ -248,7 +248,7 @@
 {% block content %}
 <div style="max-width: 1100px; margin: 24px auto; padding: 0 16px;">
     <nav style="margin-bottom: 14px; font-size: 0.9em;">
-        <a href="{% url 'anasayfa' %}" style="color:#fff; text-decoration:none; background:#111; padding:6px 10px; border-radius:8px;">Ana Sayfa</a>
+        <a href="{% url 'anasayfa' %}" style="color:#fff; text-decoration:none; background:#111; padding:6px 10px; border-radius:8px;">Home</a>
     </nav>
 
     <article style="background:#fff; border-radius:14px; padding:18px; box-shadow:0 8px 25px rgba(0,0,0,0.12);">
@@ -293,16 +293,16 @@
                 {% if urun.kategori or urun.durum %}
                 <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
                     {% if urun.kategori %}
-                    <div style="display:inline-block; background:#111827; color:#fff; border-radius:999px; padding:5px 10px; font-size:0.82em;">Kategori: {{ urun.kategori.isim }}</div>
+                    <div style="display:inline-block; background:#111827; color:#fff; border-radius:999px; padding:5px 10px; font-size:0.82em;">Category: {{ urun.kategori.isim }}</div>
                     {% endif %}
                     {% if urun.durum %}
-                    <div style="display:inline-block; background:#ecfeff; color:#155e75; border:1px solid #a5f3fc; border-radius:999px; padding:5px 10px; font-size:0.82em; font-weight:600;">Durum: {{ urun.durum }}</div>
+                    <div style="display:inline-block; background:#ecfeff; color:#155e75; border:1px solid #a5f3fc; border-radius:999px; padding:5px 10px; font-size:0.82em; font-weight:600;">Status: {{ urun.durum }}</div>
                     {% endif %}
                 </div>
                 {% endif %}
 
                 {% if detaylar_schema %}
-                <h2 style="font-size:1.05em; margin:8px 0 6px;">Teknik Özellikler</h2>
+                <h2 style="font-size:1.05em; margin:8px 0 6px;">Technical Specifications</h2>
                 <div style="border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; margin-bottom:14px; background:#fff; box-shadow:0 1px 0 rgba(15,23,42,0.02);">
                     <table class="detay-table" style="width:100%; border-collapse:collapse;">
                         <tbody>
@@ -321,7 +321,7 @@
                     </table>
                 </div>
                 {% elif urun.detaylar %}
-                <h2 style="font-size:1.05em; margin:8px 0;">Teknik Özellikler</h2>
+                <h2 style="font-size:1.05em; margin:8px 0;">Technical Specifications</h2>
                 <div style="border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; margin-bottom:14px;">
                     <table class="detay-table" style="width:100%; border-collapse:collapse;">
                         <tbody>
@@ -341,7 +341,7 @@
 
         {% if show_notes_section %}
         <section style="margin-top:14px;">
-            <h2 style="font-size:1.1em; margin:0 0 8px 0; color:#0f172a;">Açıklama ve Notlar</h2>
+            <h2 style="font-size:1.1em; margin:0 0 8px 0; color:#0f172a;">Description &amp; Notes</h2>
 
             {% if ozellikler_satirlari %}
             <div class="detay-kart">
@@ -366,11 +366,11 @@
 
             {% if show_description_card %}
             <div class="detay-kart" style="background:linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%);">
-                <h3>Ürün Açıklaması</h3>
+                <h3>Product Description</h3>
                 <div class="detay-aciklama">{{ gosterilecek_aciklama }}</div>
                 {% if aciklama_orijinal_goster %}
                 <details style="margin-top:10px;">
-                    <summary class="detay-orijinal-toggle">Orijinal metni göster/gizle</summary>
+                    <summary class="detay-orijinal-toggle">Show/hide original text</summary>
                     <div class="detay-aciklama">{{ urun.aciklama }}</div>
                 </details>
                 {% endif %}
@@ -380,7 +380,7 @@
         {% endif %}
 
         <section style="margin-top:16px;">
-            <h2 style="font-size:1.05em; margin-bottom:10px;">Magaza Teklifleri</h2>
+            <h2 style="font-size:1.05em; margin-bottom:10px;">Store Offers</h2>
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:10px;">
                 {% for fiyat in fiyatlar %}
                 {% if fiyat.magaza.isim == 'eBay' %}
@@ -389,20 +389,20 @@
                 <div style="border:1px solid #e5e7eb; border-radius:10px; padding:10px; background:#f8fbff;">
                 {% endif %}
                     <div style="font-weight:700; color:#111827;">{{ fiyat.magaza.isim }}</div>
-                    <div style="margin-top:4px; color:#1f2937;">Fiyat: {{ fiyat.fiyat }} {{ fiyat.para_birimi }}</div>
+                    <div style="margin-top:4px; color:#1f2937;">Price: {{ fiyat.fiyat }} {{ fiyat.para_birimi }}</div>
                     <div style="margin-top:2px; color:#4b5563;">
                         {% if fiyat.ucretsiz_kargo %}
-                        Ucretsiz kargo
+                        Free shipping
                         {% elif fiyat.gonderim_ucreti > 0 %}
-                        Kargo: {{ fiyat.gonderim_ucreti }} {{ fiyat.para_birimi }}
+                        Shipping: {{ fiyat.gonderim_ucreti }} {{ fiyat.para_birimi }}
                         {% else %}
-                        Kargo: Konuma gore
+                        Shipping: By location
                         {% endif %}
                     </div>
-                    <a href="{% url 'fiyat_affiliate_redirect' fiyat.id %}" target="_blank" rel="noopener sponsored nofollow" style="display:inline-block; margin-top:8px; text-decoration:none; background:#111827; color:#fff; border-radius:8px; padding:6px 10px; font-weight:700; font-size:0.86em;">Magazada Incele</a>
+                    <a href="{% url 'fiyat_affiliate_redirect' fiyat.id %}" target="_blank" rel="noopener sponsored nofollow" style="display:inline-block; margin-top:8px; text-decoration:none; background:#111827; color:#fff; border-radius:8px; padding:6px 10px; font-weight:700; font-size:0.86em;">View in Store</a>
                 </div>
                 {% empty %}
-                <div style="color:#374151;">Bu urun icin fiyat bilgisi bulunamadi.</div>
+                <div style="color:#374151;">No pricing information found for this product.</div>
                 {% endfor %}
             </div>
         </section>
