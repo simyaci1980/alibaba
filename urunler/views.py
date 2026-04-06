@@ -177,7 +177,7 @@ def _extract_product_brand(urun) -> str:
 	detaylar = getattr(urun, 'detaylar', None) or {}
 	for key in ('marka', 'brand'):
 		value = str(detaylar.get(key, '') or '').strip()
-		if value and value.lower() != 'belirtilmemiş':
+		if value and value.lower() != 'not specified':
 			return value
 
 	if urun.ozellikler:
@@ -188,7 +188,7 @@ def _extract_product_brand(urun) -> str:
 			label_raw, value_raw = line.split(':', 1)
 			translated = _translate_detail_label(label_raw)
 			value = str(value_raw or '').strip()
-			if translated == 'Marka' and value and value.lower() != 'belirtilmemiş':
+			if translated == 'Marka' and value and value.lower() != 'not specified':
 				return value
 
 	return ''
@@ -229,7 +229,7 @@ HOME_DETAIL_KEY_ALIASES = {
 def _set_home_detail_candidate(candidates: dict, label: str, value: str):
 	translated_label = _translate_detail_label(label)
 	clean_value = str(value or '').strip()
-	if not translated_label or not clean_value or clean_value.lower() == 'belirtilmemiş':
+	if not translated_label or not clean_value or clean_value.lower() == 'not specified':
 		return
 	candidates.setdefault(translated_label.casefold(), {'label': translated_label, 'value': clean_value})
 
@@ -264,7 +264,7 @@ def _build_home_detail_rows(urun) -> list[dict]:
 		for label, aliases in HOME_DETAIL_KEY_ALIASES.items():
 			for key in aliases:
 				value = detaylar.get(key, '')
-				if str(value or '').strip() and str(value).strip() != 'Belirtilmemiş':
+				if str(value or '').strip() and str(value).strip() != 'Not specified':
 					_set_home_detail_candidate(candidates, label, value)
 					break
 
@@ -367,8 +367,8 @@ def anasayfa(request):
 	query_params.pop('page', None)
 	query_string = query_params.urlencode()
 	canonical_url = _build_canonical_url(request.path, query_string)
-	meta_title = 'Ana Sayfa | KOLAY BUL EKSPRES'
-	meta_description = 'Kolay Bul Ekspres ile secilmis urunleri karsilastirin ve guvenli sekilde inceleyin.'
+	meta_title = 'Home | KOLAY BUL EKSPRES'
+	meta_description = 'Browse curated retro handheld consoles and gaming devices. Compare prices and shop safely.'
 	organization_schema = _build_organization_schema()
 
 	return render(request, 'urunler/anasayfa.html', {
@@ -409,8 +409,8 @@ def urun_listesi(request):
 	urunler_sirali += sifirli_sorted[sifirli_idx:]
 	urunler = urunler_sirali
 	canonical_url = _build_canonical_url(request.path)
-	meta_title = 'Urun Listesi | Kolay Bul Ekspres'
-	meta_description = 'Kategori ve fiyat bilgileriyle urunleri listeleyin, karsilastirin ve en uygun secenekleri bulun.'
+	meta_title = 'Product List | Kolay Bul Ekspres'
+	meta_description = 'Browse all products with category and price info. Compare and find the best deals.'
 	organization_schema = _build_organization_schema()
 	return render(request, 'urunler/urun_listesi.html', {
 		'urunler': urunler,
@@ -522,7 +522,7 @@ def urun_detay(request, slug):
 			_val_raw = mevcut_detaylar.get(_key, '')
 			_val = str(_val_raw).strip() if _val_raw is not None else ''
 			if not _val:
-				_val = 'Belirtilmemiş'
+				_val = 'Not specified'
 			detaylar_schema.append({
 				'key': _key,
 				'label': _alan.get('label', _key.replace('_', ' ').title()),
@@ -551,7 +551,7 @@ def urun_detay(request, slug):
 			if ':' in line:
 				label_raw, value_raw = line.split(':', 1)
 				label_raw = label_raw.strip()
-				value_raw = value_raw.strip() or 'Belirtilmemiş'
+				value_raw = value_raw.strip() or 'Not specified'
 				label = f"{label_raw[:1].upper()}{label_raw[1:]}" if label_raw else 'Bilgi'
 				ozellikler_satirlari.append({
 					'tur': 'satir',
@@ -587,8 +587,8 @@ def urun_detay(request, slug):
 
 	# Breadcrumb Schema
 	breadcrumb_items = [
-		{'position': 1, 'name': 'Ana Sayfa', 'url': _to_absolute_url('/')},
-		{'position': 2, 'name': 'Ürün Listesi', 'url': _to_absolute_url('/urun-listesi/')},
+		{'position': 1, 'name': 'Home', 'url': _to_absolute_url('/')},
+		{'position': 2, 'name': 'Products', 'url': _to_absolute_url('/urun-listesi/')},
 		{'position': 3, 'name': title_text, 'url': canonical_url},
 	]
 	breadcrumb_schema = _build_breadcrumb_schema(breadcrumb_items)
@@ -677,18 +677,18 @@ def urun_karsilastir(request):
 			'degerler': []
 		}
 		for urun in urunler:
-			val = str(urun.detaylar.get(key, '') if urun.detaylar else '').strip() or 'Belirtilmemiş'
+			val = str(urun.detaylar.get(key, '') if urun.detaylar else '').strip() or 'Not specified'
 			row['degerler'].append(val)
 		karsilastirma_satir.append(row)
 	
 	context = {
 		'urunler': urunler,
 		'karsilastirma_satir': karsilastirma_satir,
-		'meta_title': 'Ürün Karşılaştırması | Kolay Bul Ekspres',
-		'meta_description': 'Secilen urunlerin teknik ozelliklerini ayni ekranda karsilastirin.',
+		'meta_title': 'Product Comparison | Kolay Bul Ekspres',
+		'meta_description': 'Compare technical specs of selected products side by side.',
 		'canonical_url': _build_canonical_url(request.path, request.GET.urlencode()),
-		'og_title': 'Ürün Karşılaştırması | Kolay Bul Ekspres',
-		'og_description': 'Secilen urunlerin teknik ozelliklerini ayni ekranda karsilastirin.',
+		'og_title': 'Product Comparison | Kolay Bul Ekspres',
+		'og_description': 'Compare technical specs of selected products side by side.',
 		'og_url': _build_canonical_url(request.path, request.GET.urlencode()),
 		'og_image': _default_og_image(),
 	}
