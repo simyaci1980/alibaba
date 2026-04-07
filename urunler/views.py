@@ -994,3 +994,12 @@ def aliexpress_callback_view(request):
         f"  python test_advanced_api.py\n",
         content_type='text/plain; charset=utf-8',
     )
+
+
+def privacy_policy(request):
+	"""Privacy Policy page"""
+	return render(request, 'urunler/privacy_policy.html', {
+		'meta_title': 'Privacy Policy | Kolay Bul Ekspres',
+		'meta_description': 'Privacy Policy and data protection practices at Kolay Bul Ekspres.',
+		'canonical_url': _build_canonical_url(request.path),
+	})
