@@ -34,6 +34,15 @@
 </div>
 
 <!-- Sticky Arama ve Filtreleme -->
+<style>
+@media (min-width: 992px) {
+    .sticky-search .search-filter-row {
+        overflow-x: visible !important;
+        overflow-y: visible !important;
+        flex-wrap: wrap !important;
+    }
+}
+</style>
 <div class="sticky-search" style="position:sticky; top:0; z-index:1000; isolation:isolate; background:#111; padding:8px 0; margin:0; box-shadow:0 2px 8px rgba(0,0,0,0.03); width:100%; left:0;">
     <div style="max-width: 600px; margin: 0 auto; padding: 0 10px; box-sizing: border-box;">
         <div class="search-filter-row" style="display:flex; gap:10px; align-items:center; flex-wrap:nowrap; justify-content:flex-start; overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; scrollbar-width:thin; padding-bottom:2px;">
@@ -42,39 +51,52 @@
                 {% if request.GET.gonderim_yeri %}
                     <input type="hidden" name="gonderim_yeri" value="{{ request.GET.gonderim_yeri }}">
                 {% endif %}
+                {% if selected_magaza %}
+                    <input type="hidden" name="magaza" value="{{ selected_magaza }}">
+                {% endif %}
                 <input type="text" name="q" value="{{ search_query }}" placeholder="Search products..." style="width:140px; height:36px; padding:0 10px; border:1px solid #ddd; border-radius:5px; font-size:0.95em;">
                 <button type="submit" style="padding:0 15px; height:36px; border-radius:5px; background:linear-gradient(90deg,#ff9800 0%,#111 100%); color:#fff; border:none; font-weight:600;">Search</button>
-                {% if search_query and not request.GET.gonderim_yeri %}
-                    <a href="{% url 'anasayfa' %}" style="padding:0 10px; height:36px; border-radius:5px; background:#ef4444; color:#fff; text-decoration:none; display:flex; align-items:center;">Clear</a>
-                {% elif search_query and request.GET.gonderim_yeri %}
-                    <a href="?gonderim_yeri={{ request.GET.gonderim_yeri }}" style="padding:0 10px; height:36px; border-radius:5px; background:#ef4444; color:#fff; text-decoration:none; display:flex; align-items:center;">Clear</a>
+                {% if search_query %}
+                    <a href="{% if clear_search_query %}?{{ clear_search_query }}{% else %}{% url 'anasayfa' %}{% endif %}" style="padding:0 10px; height:36px; border-radius:5px; background:#ef4444; color:#fff; text-decoration:none; display:flex; align-items:center;">Clear</a>
                 {% endif %}
             </form>
-            
-            <!-- Filtre Formu -->
-            {# GONDERIM_YERI_FILTER_START - Şimdilik gizli, altyapı korunuyor #}
-            {# <form method="get" action="{% url 'anasayfa' %}" class="filter-form" style="display:flex; align-items:center; gap:4px; margin:0; flex:0 0 auto;"> #}
-                {# {% if search_query %} #}
-                    {# <input type="hidden" name="q" value="{{ search_query }}"> #}
-                {# {% endif %} #}
-                {# <select name="gonderim_yeri" style="width:140px; height:36px; padding:0 8px; border-radius:5px; border:1px solid #ddd;"> #}
-                    {# <option value="">Gönderim Yeri</option> #}
-                    {# <option value="İngiltere" {% if request.GET.gonderim_yeri == 'İngiltere' %}selected{% endif %}>İngiltere</option> #}
-                    {# <option value="İspanya" {% if request.GET.gonderim_yeri == 'İspanya' %}selected{% endif %}>İspanya</option> #}
-                    {# <option value="Fransa" {% if request.GET.gonderim_yeri == 'Fransa' %}selected{% endif %}>Fransa</option> #}
-                    {# <option value="Çek Cumhuriyeti" {% if request.GET.gonderim_yeri == 'Çek Cumhuriyeti' %}selected{% endif %}>Çek Cumhuriyeti</option> #}
-                    {# <option value="İtalya" {% if request.GET.gonderim_yeri == 'İtalya' %}selected{% endif %}>İtalya</option> #}
-                    {# <option value="Polanya" {% if request.GET.gonderim_yeri == 'Polanya' %}selected{% endif %}>Polanya</option> #}
-                    {# <option value="Almanya" {% if request.GET.gonderim_yeri == 'Almanya' %}selected{% endif %}>Almanya</option> #}
-                {# </select> #}
-                {# <button type="submit" style="padding:0 15px; height:36px; border-radius:5px; background:linear-gradient(90deg,#ff9800 0%,#111 100%); color:#fff; border:none; font-weight:600;">Filtrele</button> #}
-                {# {% if request.GET.gonderim_yeri and not search_query %} #}
-                    {# <a href="{% url 'anasayfa' %}" style="padding:0 10px; height:36px; border-radius:5px; background:#f59e0b; color:#fff; text-decoration:none; display:flex; align-items:center;">Temizle</a> #}
-                {# {% elif request.GET.gonderim_yeri and search_query %} #}
-                    {# <a href="?q={{ search_query|urlencode }}" style="padding:0 10px; height:36px; border-radius:5px; background:#f59e0b; color:#fff; text-decoration:none; display:flex; align-items:center;">Temizle</a> #}
-                {# {% endif %} #}
-            {# </form> #}
-            {# GONDERIM_YERI_FILTER_END #}
+
+            <!-- Mağaza + Fiyat Filtreleri -->
+            <form method="get" action="{% url 'anasayfa' %}" class="filter-form" style="display:flex; align-items:center; gap:6px; margin:0; flex:0 0 auto;">
+                {% if search_query %}
+                    <input type="hidden" name="q" value="{{ search_query }}">
+                {% endif %}
+                {% if request.GET.gonderim_yeri %}
+                    <input type="hidden" name="gonderim_yeri" value="{{ request.GET.gonderim_yeri }}">
+                {% endif %}
+                <select name="magaza" onchange="this.form.submit()" style="width:132px; height:36px; padding:0 8px; border-radius:5px; border:1px solid #ddd;">
+                    <option value="">Store</option>
+                    {% for magaza_adi in available_magazalar %}
+                        <option value="{{ magaza_adi }}" {% if selected_magaza == magaza_adi %}selected{% endif %}>{{ magaza_adi }}</option>
+                    {% endfor %}
+                </select>
+                {% if selected_magaza %}
+                    <a href="{% if search_query %}?q={{ search_query|urlencode }}{% else %}{% url 'anasayfa' %}{% endif %}" style="padding:0 10px; height:36px; border-radius:5px; background:#ef4444; color:#fff; text-decoration:none; display:flex; align-items:center;">Reset</a>
+                {% endif %}
+            </form>
+
+            <form method="get" action="{% url 'anasayfa' %}" class="filter-form" style="display:flex; align-items:center; gap:6px; margin:0; flex:0 0 auto;">
+                {% if search_query %}
+                    <input type="hidden" name="q" value="{{ search_query }}">
+                {% endif %}
+                {% if request.GET.gonderim_yeri %}
+                    <input type="hidden" name="gonderim_yeri" value="{{ request.GET.gonderim_yeri }}">
+                {% endif %}
+                <select name="price_sort" style="width:180px; height:36px; padding:0 8px; border-radius:5px; border:1px solid #ddd;">
+                    <option value="">Price Sort</option>
+                    <option value="price_asc" {% if price_sort == 'price_asc' %}selected{% endif %}>Lowest to Highest</option>
+                    <option value="price_desc" {% if price_sort == 'price_desc' %}selected{% endif %}>Highest to Lowest</option>
+                </select>
+                <button type="submit" style="padding:0 14px; height:36px; border-radius:5px; background:linear-gradient(90deg,#ff9800 0%,#111 100%); color:#fff; border:none; font-weight:600;">Sort</button>
+                {% if price_sort %}
+                    <a href="{% if search_query %}?q={{ search_query|urlencode }}{% else %}{% url 'anasayfa' %}{% endif %}" style="padding:0 10px; height:36px; border-radius:5px; background:#ef4444; color:#fff; text-decoration:none; display:flex; align-items:center;">Reset</a>
+                {% endif %}
+            </form>
         </div>
     </div>
 </div>
@@ -127,18 +149,18 @@
                     {% endif %}
                 </div>
 
-                <button class="gallery-nav prev" type="button" aria-label="Önceki resim">←</button>
-                <button class="gallery-nav next" type="button" aria-label="Sonraki resim">→</button>
+                <button class="gallery-nav prev" type="button" aria-label="Previous image">←</button>
+                <button class="gallery-nav next" type="button" aria-label="Next image">→</button>
                 <div class="gallery-counter"></div>
             </div>
 
             <div class="gallery-thumbnails">
                 {% if urun.resim_url %}
-                <button class="gallery-thumb" type="button" data-index="0" aria-label="1. resmi göster">
+                <button class="gallery-thumb" type="button" data-index="0" aria-label="Show image 1">
                     <img src="{{ urun.resim_url }}" alt="{{ urun.isim }} küçük görsel">
                 </button>
                 {% elif urun.resim and urun.resim.name %}
-                <button class="gallery-thumb" type="button" data-index="0" aria-label="1. resmi göster">
+                <button class="gallery-thumb" type="button" data-index="0" aria-label="Show image 1">
                     <img src="{{ urun.resim.url }}" alt="{{ urun.isim }} küçük görsel">
                 </button>
                 {% endif %}
@@ -146,11 +168,11 @@
                 {% if urun.resim_url or urun.resim %}
                     {% for resim in urun.sirali_resimler %}
                         {% if resim.resim_url %}
-                        <button class="gallery-thumb" type="button" data-index="{{ forloop.counter }}" aria-label="{{ forloop.counter|add:1 }}. resmi göster">
+                        <button class="gallery-thumb" type="button" data-index="{{ forloop.counter }}" aria-label="Show image {{ forloop.counter|add:1 }}">
                             <img src="{{ resim.resim_url }}" alt="{{ urun.isim }} küçük görsel {{ forloop.counter|add:1 }}">
                         </button>
                         {% elif resim.resim and resim.resim.name %}
-                        <button class="gallery-thumb" type="button" data-index="{{ forloop.counter }}" aria-label="{{ forloop.counter|add:1 }}. resmi göster">
+                        <button class="gallery-thumb" type="button" data-index="{{ forloop.counter }}" aria-label="Show image {{ forloop.counter|add:1 }}">
                             <img src="{{ resim.resim.url }}" alt="{{ urun.isim }} küçük görsel {{ forloop.counter|add:1 }}">
                         </button>
                         {% endif %}
@@ -158,11 +180,11 @@
                 {% else %}
                     {% for resim in urun.sirali_resimler %}
                         {% if resim.resim_url %}
-                        <button class="gallery-thumb" type="button" data-index="{{ forloop.counter0 }}" aria-label="{{ forloop.counter }}. resmi göster">
+                        <button class="gallery-thumb" type="button" data-index="{{ forloop.counter0 }}" aria-label="Show image {{ forloop.counter }}">
                             <img src="{{ resim.resim_url }}" alt="{{ urun.isim }} küçük görsel {{ forloop.counter }}">
                         </button>
                         {% elif resim.resim and resim.resim.name %}
-                        <button class="gallery-thumb" type="button" data-index="{{ forloop.counter0 }}" aria-label="{{ forloop.counter }}. resmi göster">
+                        <button class="gallery-thumb" type="button" data-index="{{ forloop.counter0 }}" aria-label="Show image {{ forloop.counter }}">
                             <img src="{{ resim.resim.url }}" alt="{{ urun.isim }} küçük görsel {{ forloop.counter }}">
                         </button>
                         {% endif %}
@@ -209,7 +231,7 @@
                     <div class="price-store-row">
                         <span>{{ fiyat.magaza.isim }}</span>
                         {% if fiyat.magaza.isim == 'eBay' and urun.durum %}
-                        <span style="font-size: 0.78em; font-weight: 700; background: #fff7d6; color: #7a4d00; border: 1px solid #e8b24a; border-radius: 999px; padding: 1px 7px;">{{ urun.durum }}</span>
+                        <span style="font-size: 0.78em; font-weight: 700; background: #fff7d6; color: #7a4d00; border: 1px solid #e8b24a; border-radius: 999px; padding: 1px 7px;">{{ urun.status_en|default:urun.durum }}</span>
                         {% endif %}
                     </div>
                     <div class="price-line">Price: {{ fiyat.fiyat }} {{ fiyat.para_birimi }}</div>
@@ -997,11 +1019,11 @@ document.addEventListener('DOMContentLoaded', function() {
 <div id="comparison-sticky-bar" style="position: fixed; bottom: 0; left: 0; right: 0; background: #111; color: #fff; padding: 12px 16px; box-shadow: 0 -2px 8px rgba(0,0,0,0.2); z-index: 999; display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;" class="comparison-sticky-bar">
     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;" class="comparison-sticky-info">
         <span id="selected-count" style="font-weight: 700; font-size: 1.1em;">0</span>
-        <span class="comparison-sticky-text">ürün seçildi (maksimum 5)</span>
+        <span class="comparison-sticky-text">product selected (maximum 5)</span>
     </div>
     <div style="display: flex; gap: 8px; flex-wrap: wrap;" class="comparison-sticky-actions">
-        <button id="clear-selection-btn" style="background: #ef4444; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.95em;">Temizle</button>
-        <button id="compare-btn" style="background: #ff9800; color: #111; border: none; padding: 8px 18px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.95em;" disabled>Karşılaştır</button>
+        <button id="clear-selection-btn" style="background: #ef4444; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.95em;">Clear</button>
+        <button id="compare-btn" style="background: #ff9800; color: #111; border: none; padding: 8px 18px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.95em;" disabled>Compare</button>
     </div>
 </div>
 
@@ -1036,10 +1058,10 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.urun-karsilastir-btn').forEach(btn => {
             const id = Number(btn.dataset.urunId);
             if (selectedIds.has(id)) {
-                btn.textContent = '✓ Seçildi';
+                btn.textContent = '✓ Selected';
                 btn.style.background = '#059669';
             } else {
-                btn.textContent = 'Karşılaştır';
+                btn.textContent = 'Compare';
                 btn.style.background = '#bc1111';
             }
         });
@@ -1056,7 +1078,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 selectedIds.delete(id);
             } else {
                 if (selectedIds.size >= MAX_SELECTED) {
-                    alert(`Maksimum ${MAX_SELECTED} ürün seçebilirsiniz.`);
+                    alert(`You can select up to ${MAX_SELECTED} products.`);
                     return;
                 }
                 selectedIds.add(id);

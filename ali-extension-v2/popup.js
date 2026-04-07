@@ -55,6 +55,22 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function normalizeCurrencyCode(code) {
+  const raw = String(code || "").trim().toUpperCase();
+  if (!raw) return "USD";
+  if (["US$", "$", "USD"].includes(raw)) return "USD";
+  if (["TL", "TRY", "₺"].includes(raw)) return "TRY";
+  if (["€", "EUR"].includes(raw)) return "EUR";
+  if (["£", "GBP"].includes(raw)) return "GBP";
+  return raw;
+}
+
+function formatMoney(amount, currencyCode, fallback = "-") {
+  const numeric = Number.parseFloat(amount);
+  if (Number.isNaN(numeric)) return fallback;
+  return `${numeric.toFixed(2)} ${normalizeCurrencyCode(currencyCode)}`;
+}
+
 async function getPageProductCount(maxAttempts = 8, delayMs = 450) {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab) return null;
@@ -260,57 +276,155 @@ document.getElementById("findBtn").addEventListener("click", async () => {
       
       // Her tab için bekle ve veri çek
       await new Promise((resolve) => {
-        chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
-          if (tabId === newTab.id && info.status === 'complete') {
-            chrome.tabs.onUpdated.removeListener(listener);
-            
-            setTimeout(async () => {
-              try {
-                const priceResult = await chrome.scripting.executeScript({
+        let settled = false;
+        let extractionTimer = null;
+        let loadTimeout = null;
+
+        const finalize = () => {
+          if (settled) return;
+          settled = true;
+          if (extractionTimer) clearTimeout(extractionTimer);
+          if (loadTimeout) clearTimeout(loadTimeout);
+          chrome.tabs.onUpdated.removeListener(listener);
+          resolve();
+        };
+
+        const runExtraction = (reason) => {
+          if (settled) return;
+          extractionTimer = setTimeout(async () => {
+            try {
+              addLog(`[Popup] Ürün ${i + 1} veri çekimi başlıyor (${reason})`);
+              const priceResult = await chrome.scripting.executeScript({
                   target: { tabId: newTab.id },
                   func: () => {
-                    // Fiyatı çek
-                    const priceSpan = document.querySelector('span[class*="price-default--current"]');
-                    let price = 'Bulunamadı';
-                    
-                    if (priceSpan) {
-                      const priceText = priceSpan.textContent.trim();
-                      const cleanPrice = priceText.replace('TL', '').trim();
-                      const formattedPrice = cleanPrice.replace(/\./g, '').replace(',', '.');
-                      price = formattedPrice;
+                    function normalizeCurrencyCode(code) {
+                      const raw = String(code || '').trim().toUpperCase();
+                      if (!raw) return 'USD';
+                      if (['US$', '$', 'USD'].includes(raw)) return 'USD';
+                      if (['TL', 'TRY', '₺'].includes(raw)) return 'TRY';
+                      if (['€', 'EUR'].includes(raw)) return 'EUR';
+                      if (['£', 'GBP'].includes(raw)) return 'GBP';
+                      return raw;
                     }
-                    
-                    // Gönderim durumunu kontrol et
-                    const deliveryText = document.body.textContent;
-                    const cannotDeliver = deliveryText.includes('Bu ürün adresinize gönderilemiyor');
-                    
-                    // Gönderim ücretini çek
-                    let shippingFee = 0;
-                    let shippingFrom = 'Çin';
-                    
-                    if (!cannotDeliver) {
-                      // "Gönderim: X TL" pattern'ini ara
-                      const shippingMatch = deliveryText.match(/Gönderim:\s*([\d.,]+)\s*TL/);
-                      if (shippingMatch) {
-                        const shippingText = shippingMatch[1];
-                        const cleanShipping = shippingText.replace(/\./g, '').replace(',', '.');
-                        shippingFee = parseFloat(cleanShipping) || 0;
-                      }
-                      
-                      // "Gönderildiği yer X" pattern'ini ara
-                      const originMatch = deliveryText.match(/Gönderildiği yer\s+([A-Za-z\s]+)/);
-                      if (originMatch) {
-                        shippingFrom = originMatch[1].trim();
-                      }
-                    }
-                    
-                    // Başlık ve açıklama çek
-                    const titleEl = document.querySelector("h1") || document.querySelector('[data-pl="product-title"]') || document.querySelector('meta[property="og:title"]');
-                    const title = titleEl ? (titleEl.content || titleEl.textContent || "").trim() : "";
 
+                    function parseLocalizedAmount(text) {
+                      let raw = String(text || '').replace(/[^\d,.-]/g, '').trim();
+                      if (!raw) return null;
+                      if (raw.includes(',') && raw.includes('.')) {
+                        if (raw.lastIndexOf(',') > raw.lastIndexOf('.')) {
+                          raw = raw.replace(/\./g, '').replace(',', '.');
+                        } else {
+                          raw = raw.replace(/,/g, '');
+                        }
+                      } else if (raw.includes(',')) {
+                        const parts = raw.split(',');
+                        raw = parts.length === 2 && parts[1].length <= 2
+                          ? `${parts[0].replace(/\./g, '')}.${parts[1]}`
+                          : raw.replace(/,/g, '');
+                      }
+                      const parsed = Number.parseFloat(raw);
+                      return Number.isFinite(parsed) ? parsed : null;
+                    }
+
+                    function parseMoneyText(text, fallbackCurrency = 'USD') {
+                      const raw = String(text || '').replace(/\s+/g, ' ').trim();
+                      let currencyCode = normalizeCurrencyCode(fallbackCurrency);
+                      if (/(US\$|\$|USD)/i.test(raw)) currencyCode = 'USD';
+                      else if (/(₺|TL|TRY)/i.test(raw)) currencyCode = 'TRY';
+                      else if (/(€|EUR)/i.test(raw)) currencyCode = 'EUR';
+                      else if (/(£|GBP)/i.test(raw)) currencyCode = 'GBP';
+
+                      const amountMatch = raw.match(/-?\d[\d.,]*/);
+                      const amount = amountMatch ? parseLocalizedAmount(amountMatch[0]) : null;
+                      return {
+                        amount,
+                        amountText: amount === null ? '' : amount.toFixed(2),
+                        currencyCode,
+                      };
+                    }
+
+                    function firstText(selectors) {
+                      for (const selector of selectors) {
+                        const el = document.querySelector(selector);
+                        const text = (el?.content || el?.textContent || '').replace(/\s+/g, ' ').trim();
+                        if (text) return text;
+                      }
+                      return '';
+                    }
+
+                    const priceText = firstText([
+                      'span[class*="price-default--current"]',
+                      'div[class*="price"] span',
+                      '[data-pl="product-price"]',
+                      'meta[property="product:price:amount"]',
+                      'meta[property="og:price:amount"]'
+                    ]);
+                    const priceInfo = parseMoneyText(priceText, 'USD');
+                    const price = priceInfo.amountText || 'Not found';
+                    const currencyCode = priceInfo.currencyCode;
+
+                    const deliveryText = (document.body.innerText || document.body.textContent || '').replace(/\s+/g, ' ');
+                    const cannotDeliver = [
+                      /bu ürün adresinize gönderilemiyor/i,
+                      /this item can(?:'|’)t be shipped to your address/i,
+                      /this product can(?:'|’)t be shipped to your address/i,
+                      /cannot be shipped to your address/i,
+                    ].some((pattern) => pattern.test(deliveryText));
+
+                    let shippingFee = 0;
+                    let shippingFrom = 'China';
+
+                    if (!cannotDeliver) {
+                      const shippingText = firstText([
+                        '[class*="shipping"] [class*="price"]',
+                        '[data-pl="delivery"]',
+                        '[class*="delivery"]',
+                        '[class*="shipping"]'
+                      ]);
+                      const shippingInfo = parseMoneyText(shippingText || deliveryText, currencyCode);
+                      if (shippingInfo.amount !== null) {
+                        shippingFee = shippingInfo.amount;
+                      }
+                      if (/(free shipping|free delivery|ücretsiz kargo)/i.test(shippingText || deliveryText)) {
+                        shippingFee = 0;
+                      }
+
+                      const originMatch = deliveryText.match(/(?:ships from|ship from|gönderildiği yer|gonderildigi yer)\s*[:\-]?\s*([A-Za-z][A-Za-z\s-]{1,40})/i);
+                      if (originMatch) {
+                        shippingFrom = originMatch[1].replace(/\s+/g, ' ').trim();
+                      }
+                    }
+                    
                     const descMeta = document.querySelector('meta[name="description"]') || document.querySelector('meta[property="og:description"]');
                     const descEl = document.querySelector(".detail-desc" ) || document.querySelector(".description" );
                     let description = descMeta ? (descMeta.content || "").trim() : (descEl ? descEl.textContent.trim() : "");
+
+                    function cleanProductTitle(rawTitle) {
+                      let text = String(rawTitle || '').replace(/\s+/g, ' ').trim();
+                      if (!text) return '';
+                      text = text.replace(/^buy\s+/i, '');
+                      text = text.replace(/\s+at\s+aliexpress.*$/i, '');
+                      text = text.replace(/\s+for\s*\.?\s*find more.*$/i, '');
+                      text = text.replace(/\s*\|\s*AliExpress.*$/i, '');
+                      text = text.replace(/^AliExpress\s*[-:|]?\s*/i, '');
+                      return text.trim(' -|');
+                    }
+
+                    function isGenericTitle(text) {
+                      const norm = String(text || '').replace(/\s+/g, ' ').trim().toLowerCase();
+                      return !norm || norm === 'aliexpress' || norm === 'buy at aliexpress' || norm.length < 8;
+                    }
+
+                    const titleCandidates = [
+                      document.querySelector("h1")?.textContent,
+                      document.querySelector('[data-pl="product-title"]')?.textContent,
+                      document.querySelector('meta[property="og:title"]')?.content,
+                      document.querySelector('meta[name="twitter:title"]')?.content,
+                      document.title,
+                      description,
+                    ].map(cleanProductTitle).filter(Boolean);
+
+                    const title = titleCandidates.find((candidate) => !isGenericTitle(candidate)) || titleCandidates[0] || '';
 
                     // #tl_1 metinlerini (urun aciklamasi) description'a ekle ve ayri tut
                     let tl1Content = "";
@@ -601,6 +715,16 @@ document.getElementById("findBtn").addEventListener("click", async () => {
                       return "";
                     }
 
+                    function normalizeTechValue(value, fallbackLabel = '') {
+                      const raw = String(value || '').replace(/\s+/g, ' ').trim();
+                      return raw || fallbackLabel;
+                    }
+
+                    function extractByRegex(regex, fallbackLabel = '') {
+                      const match = fullText.match(regex);
+                      return match ? normalizeTechValue(match[0]) : fallbackLabel;
+                    }
+
                     const specPairs = parseSpecificationPairs();
 
                     const brandCandidates = ['AYANEO', 'ANBERNIC', 'POWKIDDY', 'RETROID', 'MIYOO', 'TRIMUI'];
@@ -627,9 +751,32 @@ document.getElementById("findBtn").addEventListener("click", async () => {
                     const specDepolama = findSpecValue(specPairs, ["Veri depolama kapasitesi", "Data Storage Capacity", "Genişletilebilir depolama", "Expandable storage", "Depolama"]);
                     const specBatarya = findSpecValue(specPairs, ["Pil Kapasitesi[mAh]", "Battery Capacity[mAh]", "Batarya", "Pil"]);
                     const specCpu = findSpecValue(specPairs, ["CPU", "İşlemci", "Islemci", "SoC", "Chipset"]);
-                    const specBaglanti = findSpecValue(specPairs, ["Harici Denetleyici Arayüzü", "External Controller Interface", "Bağlantı", "Baglanti", "Şarj arayüzü türü", "Sarj arayuzu turu"]);
+                    const specBaglanti = findSpecValue(specPairs, ["Harici Denetleyici Arayüzü", "External Controller Interface", "Bağlantı", "Baglanti", "Şarj arayüzü türü", "Sarj arayuzu turu", "Connectivity", "Wireless", "Communication", "Charging Port", "Charging Interface Type", "Interface Type"]);
+                    const specWifi = findSpecValue(specPairs, ["Wi-Fi", "Wifi", "WiFi", "Wireless"]);
+                    const specBluetooth = findSpecValue(specPairs, ["Bluetooth", "Bluetooth-compatible"]);
+                    const specUsbC = findSpecValue(specPairs, ["USB-C", "USB Type-C", "Type-C", "Charging Port", "Charging Interface Type"]);
                     const specIsletimSistemi = findSpecValue(specPairs, ["İşletim sistemi", "Isletim sistemi", "Operating System"]);
                     const specHdmi = findSpecValue(specPairs, ["HDMI", "HDMI Çıkışı", "HDMI Cikisi"]);
+
+                    const wifiValue = normalizeTechValue(
+                      specWifi || extractByRegex(/\b(?:wi[\s-]?fi(?:\s*[-/:]?\s*[A-Za-z0-9. ]+)?|802\.11(?:\s*[A-Za-z0-9./-]+)?)\b/i, /\b(?:wi[\s-]?fi|802\.11)\b/i.test(fullText) ? 'Wi-Fi' : '')
+                    ).replace(/^wifi$/i, 'Wi-Fi');
+                    const bluetoothValue = normalizeTechValue(
+                      specBluetooth || extractByRegex(/\bbluetooth(?:\s*[0-9.]+)?\b/i, /\bbluetooth\b/i.test(fullText) ? 'Bluetooth' : '')
+                    );
+                    let usbCValue = normalizeTechValue(
+                      specUsbC || extractByRegex(/\b(?:usb[\s-]?c|type[\s-]?c)\b/i, /\b(?:usb[\s-]?c|type[\s-]?c)\b/i.test(fullText) ? 'USB-C' : '')
+                    );
+                    if (/^type[\s-]?c$/i.test(usbCValue) || /^usb[\s-]?c$/i.test(usbCValue)) {
+                      usbCValue = 'USB-C';
+                    }
+
+                    const connectivityParts = Array.from(new Set([
+                      specBaglanti,
+                      wifiValue,
+                      bluetoothValue,
+                      usbCValue,
+                    ].map((value) => normalizeTechValue(value)).filter(Boolean)));
 
                     const detailSpecs = {
                       marka: specMarka || brand || '',
@@ -640,7 +787,10 @@ document.getElementById("findBtn").addEventListener("click", async () => {
                       depolama: specDepolama || pick(/\b\d{2,4}\s*(?:GB|TB)\s*(?:ROM|Storage|Depolama)?\b/i),
                       batarya: specBatarya || pick(/\b\d{3,5}\s*mAh\b/i),
                       cpu: specCpu || pick(/\b(?:MTK|Snapdragon|Unisoc|Allwinner|RK\d{3,4}|Helio\s*[A-Z0-9]+)\b/i),
-                      baglanti: specBaglanti || '',
+                      baglanti: connectivityParts.join(', '),
+                      wifi: wifiValue,
+                      bluetooth: bluetoothValue,
+                      usb_c: usbCValue,
                       isletim_sistemi: specIsletimSistemi || '',
                       hdmi_cikisi: specHdmi || '',
                       gonderim_yeri: shippingFrom || ''
@@ -656,10 +806,11 @@ document.getElementById("findBtn").addEventListener("click", async () => {
                     const priceNum = parseFloat(price) || 0;
                     const totalPrice = priceNum + shippingFee;
                     
-                    console.log("[Price] Fiyat:", price, "Gönderim:", shippingFee, "Toplam:", totalPrice, "Nereden:", shippingFrom);
+                    console.log("[Price] Fiyat:", price, currencyCode, "Gönderim:", shippingFee, "Toplam:", totalPrice, "Nereden:", shippingFrom);
                     
                     return { 
                       price: price, 
+                      currencyCode: currencyCode,
                       shippingFee: shippingFee.toFixed(2),
                       totalPrice: totalPrice.toFixed(2),
                       shippingFrom: shippingFrom,
@@ -678,7 +829,10 @@ document.getElementById("findBtn").addEventListener("click", async () => {
                   }
                 });
                 
-                const result = priceResult[0].result;
+                const result = priceResult?.[0]?.result;
+                if (!result) {
+                  throw new Error('Sayfadan veri donmedi');
+                }
                 // Oncelik urun detay sayfasindan cekilen gorsellerde olsun.
                 const detailImages = Array.isArray(result.imageUrls) ? result.imageUrls : [];
                 const mergedImageUrls = Array.from(new Set([
@@ -689,6 +843,7 @@ document.getElementById("findBtn").addEventListener("click", async () => {
                 results.push({
                   index: i + 1,
                   price: result.price,
+                  currencyCode: result.currencyCode || 'USD',
                   shippingFee: result.shippingFee,
                   totalPrice: result.totalPrice,
                   shippingFrom: result.shippingFrom,
@@ -713,18 +868,43 @@ document.getElementById("findBtn").addEventListener("click", async () => {
                   const nowDone = doneCount + 1;
                   progressMsg.textContent = `Tamamlandi: urun ${visualIndex} (${nowDone}/${endIndex - startIndex + 1})`;
                 }
-                resolve();
+                finalize();
                 
               } catch (error) {
                 console.error(`[Popup] Ürün ${i + 1} hatası:`, error);
+                addLog(`[Popup] Ürün ${i + 1} hata: ${error?.message || error}`);
                 chrome.tabs.remove(newTab.id);
                 if (progressMsg) {
                   const nowDone = doneCount + 1;
                   progressMsg.textContent = `Hata gecildi: urun ${visualIndex} (${nowDone}/${endIndex - startIndex + 1})`;
                 }
-                resolve();
+                finalize();
               }
             }, 3000);
+        };
+
+        function listener(tabId, info) {
+          if (tabId === newTab.id && info.status === 'complete') {
+            runExtraction('load-complete');
+          }
+        }
+
+        chrome.tabs.onUpdated.addListener(listener);
+
+        loadTimeout = setTimeout(() => {
+          addLog(`[Popup] Ürün ${i + 1} yükleme zaman aşımı, mevcut içerikle devam ediliyor`);
+          runExtraction('load-timeout');
+        }, 20000);
+
+        chrome.tabs.get(newTab.id, (tabInfo) => {
+          if (settled) return;
+          if (chrome.runtime.lastError) {
+            addLog(`[Popup] Ürün ${i + 1} tab kontrol hatası: ${chrome.runtime.lastError.message}`);
+            finalize();
+            return;
+          }
+          if (tabInfo && tabInfo.status === 'complete') {
+            runExtraction('already-complete');
           }
         });
       });
@@ -778,15 +958,20 @@ function buildCsv(rows) {
     "Depolama",
     "Batarya",
     "Bağlantı",
+    "Wi-Fi",
+    "Bluetooth",
+    "USB-C",
     "İşletim Sistemi",
     "HDMI Çıkışı",
     "Gönderim Yeri",
+    "Para Birimi",
     "Fiyat",
     "Gönderim Ücreti",
     "Toplam Fiyat",
     "Durum",
     "Resim URL",
     "Tüm Resim URL'leri",
+    "Ham Özellikler",
     "Detay Specs JSON",
     "Spec Pairs JSON",
     "Spec Table JSON",
@@ -819,9 +1004,13 @@ function buildCsv(rows) {
       specs.depolama || "",
       specs.batarya || "",
       specs.baglanti || "",
+      specs.wifi || "",
+      specs.bluetooth || "",
+      specs.usb_c || "",
       specs.isletim_sistemi || "",
       specs.hdmi_cikisi || "",
       specs.gonderim_yeri || r.shippingFrom || "",
+      r.currencyCode || "USD",
       r.price,
       r.shippingFee,
       r.totalPrice,
@@ -975,6 +1164,7 @@ function displayResult(index) {
   }
   
   const isError = result.status.includes('âŒ');
+  const currencyCode = normalizeCurrencyCode(result.currencyCode);
   
   // Basit HTML oluştur
   let html = `
@@ -999,17 +1189,17 @@ function displayResult(index) {
       </div>
       ` : ''}
       <div style="margin: 8px 0; font-size: 13px;">
-        <strong>Fiyat:</strong> ${result.price} TL
+        <strong>Fiyat:</strong> ${formatMoney(result.price, currencyCode, result.price || '-')}
       </div>
   `;
   
   if (parseFloat(result.shippingFee) > 0) {
     html += `
       <div style="margin: 8px 0; font-size: 13px;">
-        <strong>Gönderim:</strong> ${result.shippingFee} TL (${result.shippingFrom})
+        <strong>Gönderim:</strong> ${formatMoney(result.shippingFee, currencyCode, result.shippingFee || '-')} (${result.shippingFrom})
       </div>
       <div style="margin: 8px 0; font-size: 13px;">
-        <strong>Toplam:</strong> <span style="font-weight: bold; color: #dc3545;">${result.totalPrice} TL</span>
+        <strong>Toplam:</strong> <span style="font-weight: bold; color: #dc3545;">${formatMoney(result.totalPrice, currencyCode, result.totalPrice || '-')}</span>
       </div>
     `;
   } else {

@@ -422,8 +422,53 @@ window.gGalerTab=function(tab){{
 
 	def _map_aspects_to_detaylar(self, aspects: list) -> dict:
 		mapped = {}
+
+		def normalize_bool_text(value: str) -> str:
+			text = str(value or '').strip().lower()
+			if text in {'yes', 'y', 'true', '1', 'evet', 'var'}:
+				return 'Yes'
+			if text in {'no', 'n', 'false', '0', 'hayir', 'hayır', 'yok'}:
+				return 'No'
+			return ''
+
+		def enrich_connectivity_fields(payload: dict):
+			source = ' '.join([
+				str(payload.get('baglanti') or ''),
+				str(payload.get('wifi') or ''),
+				str(payload.get('bluetooth') or ''),
+				str(payload.get('usb_c') or ''),
+				str(payload.get('hdmi') or ''),
+			]).lower()
+			if not payload.get('wifi'):
+				if 'wi-fi' in source or ' wifi' in f' {source}' or 'wlan' in source:
+					payload['wifi'] = 'Yes'
+				elif 'no wifi' in source:
+					payload['wifi'] = 'No'
+			if not payload.get('bluetooth') and 'bluetooth' in source:
+				payload['bluetooth'] = 'No' if 'no bluetooth' in source else 'Yes'
+			if not payload.get('usb_c'):
+				if 'type-c' in source or 'usb-c' in source:
+					payload['usb_c'] = 'Yes'
+				elif 'micro usb' in source or 'mini usb' in source:
+					payload['usb_c'] = 'No'
+			if not payload.get('hdmi') and 'hdmi' in source:
+				payload['hdmi'] = 'Yes'
+			parts = []
+			if payload.get('wifi') == 'Yes':
+				parts.append('Wi-Fi')
+			if payload.get('bluetooth') == 'Yes':
+				parts.append('Bluetooth')
+			if payload.get('usb_c') == 'Yes':
+				parts.append('USB-C')
+			if payload.get('hdmi') == 'Yes':
+				parts.append('HDMI')
+			if parts:
+				payload['baglanti'] = ', '.join(parts)
 		# eBay aspect adlarındaki varyasyonlar için basit eşleme tablosu
 		aspect_key_map = {
+			'model': 'model',
+			'anbernic model': 'model',
+			'retroid pocket model': 'model',
 			'ekran': 'ekran_boyutu',
 			'ekran boyutu': 'ekran_boyutu',
 			'screen size': 'ekran_boyutu',
@@ -454,11 +499,17 @@ window.gGalerTab=function(tab){{
 			'bağlantı': 'baglanti',
 			'baglanti': 'baglanti',
 			'connectivity': 'baglanti',
-			'bluetooth': 'baglanti',
-			'wifi': 'baglanti',
-			'wi-fi': 'baglanti',
-			'usb': 'baglanti',
+			'bluetooth': 'bluetooth',
+			'bluetooth-compatible': 'bluetooth',
+			'wifi': 'wifi',
+			'wi-fi': 'wifi',
+			'usb': 'usb_c',
+			'usb-c': 'usb_c',
+			'type-c': 'usb_c',
+			'charging interface type': 'usb_c',
+			'external controller interface': 'usb_c',
 			'hdmi': 'hdmi',
+			'ships from': 'gonderim_yeri',
 		}
 
 		for asp in aspects or []:
@@ -472,7 +523,12 @@ window.gGalerTab=function(tab){{
 				continue
 			dst = aspect_key_map.get(name)
 			if dst:
-				mapped[dst] = value_text
+				if dst in {'wifi', 'bluetooth', 'usb_c', 'hdmi'}:
+					mapped[dst] = normalize_bool_text(value_text) or value_text
+				else:
+					mapped[dst] = value_text
+
+		enrich_connectivity_fields(mapped)
 
 		return mapped
 
@@ -523,10 +579,15 @@ window.gGalerTab=function(tab){{
 			pairs.append((l, v))
 
 		mapping_table = {
+			'model': 'model',
+			'anbernic model': 'model',
+			'retroid pocket model': 'model',
 			'ekran': 'ekran_boyutu',
 			'ekran boyutu': 'ekran_boyutu',
 			'screen size': 'ekran_boyutu',
 			'display size': 'ekran_boyutu',
+			'oge yuksekligi': 'ekran_boyutu',
+			'item height': 'ekran_boyutu',
 			'cozunurluk': 'cozunurluk',
 			'resolution': 'cozunurluk',
 			'islemci': 'cpu',
@@ -543,11 +604,17 @@ window.gGalerTab=function(tab){{
 			'battery': 'batarya',
 			'baglanti': 'baglanti',
 			'connectivity': 'baglanti',
-			'wifi bluetooth': 'baglanti',
+			'wifi': 'wifi',
+			'wi fi': 'wifi',
+			'bluetooth': 'bluetooth',
+			'usb c': 'usb_c',
+			'usb': 'usb_c',
+			'type c': 'usb_c',
 			'isletim sistemi': 'isletim_sistemi',
 			'operating system': 'isletim_sistemi',
 			'system': 'isletim_sistemi',
 			'hdmi': 'hdmi',
+			'ships from': 'gonderim_yeri',
 		}
 
 		mapped = {}
@@ -563,6 +630,36 @@ window.gGalerTab=function(tab){{
 				continue
 			if dst not in mapped:
 				mapped[dst] = value.strip()
+
+		if mapped:
+			source = ' '.join([
+				str(mapped.get('baglanti') or ''),
+				str(mapped.get('wifi') or ''),
+				str(mapped.get('bluetooth') or ''),
+				str(mapped.get('usb_c') or ''),
+				str(mapped.get('hdmi') or ''),
+			]).lower()
+			parts = []
+			if str(mapped.get('wifi') or '').strip().lower() in {'yes', 'wifi'} or 'wi-fi' in source or ' wifi' in f' {source}' or 'wlan' in source:
+				mapped['wifi'] = 'Yes'
+				parts.append('Wi-Fi')
+			elif 'no wifi' in source:
+				mapped['wifi'] = 'No'
+			if str(mapped.get('bluetooth') or '').strip().lower() == 'yes' or 'bluetooth' in source:
+				mapped['bluetooth'] = 'Yes'
+				parts.append('Bluetooth')
+			elif 'no bluetooth' in source:
+				mapped['bluetooth'] = 'No'
+			if 'type-c' in source or 'usb-c' in source:
+				mapped['usb_c'] = 'Yes'
+				parts.append('USB-C')
+			elif 'micro usb' in source or 'mini usb' in source:
+				mapped['usb_c'] = 'No'
+			if 'hdmi' in source:
+				mapped['hdmi'] = 'Yes'
+				parts.append('HDMI')
+			if parts:
+				mapped['baglanti'] = ', '.join(dict.fromkeys(parts))
 
 		return mapped
 

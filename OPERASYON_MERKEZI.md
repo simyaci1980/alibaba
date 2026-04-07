@@ -49,6 +49,23 @@ python manage.py shell -c "from urunler.models import Urun; print(Urun.objects.c
 python manage.py import_ebay_products "retro handheld console" --limit 30 --translate-tr --category-slug retro-handheld --category-name "Retro El Konsolu"
 ```
 
+### eBay import (5'li batch + offset)
+
+```bash
+# 1-5
+python manage.py import_ebay_products "retro handheld console" --limit 5 --offset 0 --translate-tr --category-slug retro-handheld --category-name "Retro El Konsolu"
+
+# 6-10
+python manage.py import_ebay_products "retro handheld console" --limit 5 --offset 5 --translate-tr --category-slug retro-handheld --category-name "Retro El Konsolu"
+
+# 11-15
+python manage.py import_ebay_products "retro handheld console" --limit 5 --offset 10 --translate-tr --category-slug retro-handheld --category-name "Retro El Konsolu"
+```
+
+Kural:
+
+- Her yeni 5'li batch icin `--offset` degeri 5 artirilir (0, 5, 10, 15 ...).
+
 ### AliExpress (Admitad CSV) import (kategori secimli)
 
 ```bash
@@ -56,6 +73,7 @@ python manage.py import_csv_products Aliexpress_WW_Basic_sample_100.csv --catego
 ```
 
 Not:
+
 - category-slug teknik kimliktir.
 - category-name gorunen addir.
 - Slug yoksa otomatik olusturulur.
@@ -87,6 +105,7 @@ curl -s "https://www.kolaybulexpres.com/urun/SLUG/" | tr -d '\n' | grep -Eo '"br
 - Diger md dosyalari: Arsiv veya konu-bazli not.
 
 Kural:
+
 - Yeni operasyon bilgisi once bu dosyaya eklenir.
 - Diger md dosyalarina sadece konuya ozel detay yazilir.
 
@@ -99,4 +118,5 @@ Kural:
 5. Canli DB sayim kontrolu
 
 ---
+
 Son guncelleme: 2026-04-02

@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 RETRO_HANDHELD_SCHEMA = [
+    {"key": "model",          "label": "Model",              "zorunlu": False, "kaynak": "description"},
     {"key": "ekran_boyutu",   "label": "Ekran Boyutu",       "zorunlu": True,  "kaynak": "description"},
     {"key": "cozunurluk",     "label": "Çözünürlük",         "zorunlu": True,  "kaynak": "description"},
     {"key": "cpu",            "label": "İşlemci (CPU)",      "zorunlu": True,  "kaynak": "description"},
@@ -27,23 +28,39 @@ RETRO_HANDHELD_SCHEMA = [
     {"key": "depolama",       "label": "Depolama",           "zorunlu": True,  "kaynak": "description"},
     {"key": "batarya",        "label": "Batarya",            "zorunlu": False, "kaynak": "description"},
     {"key": "baglanti",       "label": "Bağlantı",           "zorunlu": False, "kaynak": "description"},
+    {"key": "wifi",           "label": "Wi-Fi",              "zorunlu": False, "kaynak": "description"},
+    {"key": "bluetooth",      "label": "Bluetooth",          "zorunlu": False, "kaynak": "description"},
+    {"key": "usb_c",          "label": "USB-C",              "zorunlu": False, "kaynak": "description"},
     {"key": "isletim_sistemi","label": "İşletim Sistemi",    "zorunlu": False, "kaynak": "description"},
     {"key": "hdmi",           "label": "HDMI Çıkışı",        "zorunlu": False, "kaynak": "description"},
+    {"key": "gonderim_yeri",  "label": "Gönderim Yeri",      "zorunlu": False, "kaynak": "description"},
     {"key": "ocr_adayi",      "label": "OCR Adayı (Görsel)", "zorunlu": False, "kaynak": "pipeline"},
 ]
 
 
 DETAIL_KEY_MAP = {
+    'model': 'model',
     'ekran': 'ekran_boyutu',
+    'öğe yüksekliği': 'ekran_boyutu',
+    'oge yuksekligi': 'ekran_boyutu',
+    'item height': 'ekran_boyutu',
     'cozunurluk': 'cozunurluk',
     'cpu': 'cpu',
     'ram': 'ram',
     'depolama': 'depolama',
     'batarya': 'batarya',
     'baglanti': 'baglanti',
+    'wifi': 'wifi',
+    'wi-fi': 'wifi',
+    'bluetooth': 'bluetooth',
+    'usb c': 'usb_c',
+    'usb-c': 'usb_c',
+    'type c': 'usb_c',
     'isletim sistemi': 'isletim_sistemi',
     'isletim_sistemi': 'isletim_sistemi',
     'cikis': 'hdmi',
+    'gonderim yeri': 'gonderim_yeri',
+    'ships from': 'gonderim_yeri',
     'kontrolcu': 'kontrolcu',
     'oyun': 'oyun_sayisi',
     'kutu icerigi': 'kutu_icerigi',
@@ -51,8 +68,12 @@ DETAIL_KEY_MAP = {
 
 
 ASPECT_KEY_MAP = {
+    'model': 'model',
+    'anbernic model': 'model',
+    'retroid pocket model': 'model',
     'screen size': 'ekran_boyutu',
     'display size': 'ekran_boyutu',
+    'item height': 'ekran_boyutu',
     'resolution': 'cozunurluk',
     'processor': 'cpu',
     'cpu model': 'cpu',
@@ -64,9 +85,14 @@ ASPECT_KEY_MAP = {
     'operating system': 'isletim_sistemi',
     'os': 'isletim_sistemi',
     'connectivity': 'baglanti',
-    'bluetooth': 'baglanti',
-    'wifi': 'baglanti',
+    'bluetooth': 'bluetooth',
+    'bluetooth-compatible': 'bluetooth',
+    'wifi': 'wifi',
+    'wi-fi': 'wifi',
+    'charging interface type': 'usb_c',
+    'external controller interface': 'usb_c',
     'hdmi': 'hdmi',
+    'ships from': 'gonderim_yeri',
     'controller': 'kontrolcu',
 }
 
@@ -161,6 +187,12 @@ class Command(BaseCommand):
             default='Retro El Konsolu',
             help='Kategori yoksa oluşturulacak ad (varsayılan: Retro El Konsolu)'
         )
+        parser.add_argument(
+            '--ship-to',
+            type=str,
+            default='US',
+            help='Kargo hedef ülke kodu (varsayılan: US)'
+        )
 
     def handle(self, *args, **options):
         search_query = options['search_query']
@@ -171,6 +203,7 @@ class Command(BaseCommand):
         translate_tr = options['translate_tr']
         category_slug = options['category_slug']
         category_name = options['category_name']
+        ship_to_country = options['ship_to'].upper()
 
         translator = None
         translation_cache = {}
@@ -214,6 +247,95 @@ class Command(BaseCommand):
             raw_text = raw_text.replace('&nbsp;', ' ')
             cleaned = re.sub(r'<[^>]+>', ' ', raw_text)
             return re.sub(r'\s+', ' ', cleaned).strip()
+
+        def normalize_bool_text(value: str) -> str:
+            normalized = str(value or '').strip().lower()
+            if normalized in {'yes', 'y', 'true', '1', 'evet', 'var'}:
+                return 'Yes'
+            if normalized in {'no', 'n', 'false', '0', 'hayir', 'hayır', 'yok'}:
+                return 'No'
+            return ''
+
+        def infer_model_from_text(text: str) -> str:
+            normalized = str(text or '').replace('Ⅱ', '2').replace('III', '3')
+            patterns = [
+                r'\b(RG40XX\s*[HV])\b',
+                r'\b(RG35XX)\b',
+                r'\b(RG353V)\b',
+                r'\b(R36S)\b',
+                r'\b(R40S\s*PRO)\b',
+                r'\b(R40)\b',
+                r'\b(X55)\b',
+                r'\b(X9)\b',
+                r'\b(X6)\b',
+                r'\b(K36)\b',
+                r'\b(SF3500)\b',
+                r'\b(RGB20SX)\b',
+                r'\b(RGB10MAX3)\b',
+                r'\b(Trimui\s+Smart\s+Pro)\b',
+                r'\b(Miyoo\s+Mini\s+Plus)\b',
+                r'\b(Miyoo\s+Mini\s+V?2)\b',
+                r'\b(Retroid\s+Pocket\s+5)\b',
+                r'\b(Retroid\s+Pocket\s+Flip2)\b',
+            ]
+            for pattern in patterns:
+                match = re.search(pattern, normalized, re.IGNORECASE)
+                if match:
+                    return re.sub(r'\s+', ' ', match.group(1)).strip()
+            return ''
+
+        def enrich_connectivity_fields(detaylar: dict):
+            source = ' '.join([
+                str(detaylar.get('baglanti') or ''),
+                str(detaylar.get('wifi') or ''),
+                str(detaylar.get('bluetooth') or ''),
+                str(detaylar.get('usb_c') or ''),
+                str(detaylar.get('hdmi') or ''),
+            ]).lower()
+
+            wifi_value = normalize_bool_text(detaylar.get('wifi'))
+            if not wifi_value:
+                if 'wi-fi' in source or ' wifi' in f' {source}' or 'wlan' in source:
+                    wifi_value = 'Yes'
+                elif 'no wifi' in source:
+                    wifi_value = 'No'
+            if wifi_value:
+                detaylar['wifi'] = wifi_value
+
+            bluetooth_value = normalize_bool_text(detaylar.get('bluetooth'))
+            if not bluetooth_value and 'bluetooth' in source:
+                bluetooth_value = 'No' if 'no bluetooth' in source else 'Yes'
+            if bluetooth_value:
+                detaylar['bluetooth'] = bluetooth_value
+
+            usb_c_value = normalize_bool_text(detaylar.get('usb_c'))
+            if not usb_c_value:
+                if 'type-c' in source or 'usb-c' in source:
+                    usb_c_value = 'Yes'
+                elif 'micro usb' in source or 'mini usb' in source:
+                    usb_c_value = 'No'
+            if usb_c_value:
+                detaylar['usb_c'] = usb_c_value
+
+            hdmi_value = normalize_bool_text(detaylar.get('hdmi'))
+            if not hdmi_value and 'hdmi' in source:
+                hdmi_value = 'Yes'
+            if hdmi_value:
+                detaylar['hdmi'] = hdmi_value
+
+            parts = []
+            if detaylar.get('wifi') == 'Yes':
+                parts.append('Wi-Fi')
+            if detaylar.get('bluetooth') == 'Yes':
+                parts.append('Bluetooth')
+            if detaylar.get('usb_c') == 'Yes':
+                parts.append('USB-C')
+            if detaylar.get('hdmi') == 'Yes':
+                parts.append('HDMI')
+            if parts:
+                detaylar['baglanti'] = ', '.join(parts)
+            elif normalize_bool_text(detaylar.get('baglanti')) == 'No':
+                detaylar['baglanti'] = 'No'
 
         def parse_description_specs(description_html: str, already_seen: set[str]) -> tuple[list[str], bool]:
             """
@@ -339,6 +461,7 @@ class Command(BaseCommand):
                 value = value_part.strip()
                 if value:
                     detaylar[dst_key] = value
+            enrich_connectivity_fields(detaylar)
             if is_ocr_candidate:
                 detaylar['ocr_adayi'] = True
             return detaylar
@@ -349,7 +472,19 @@ class Command(BaseCommand):
             normalized_key = key.strip().lower()
             mapped = ASPECT_KEY_MAP.get(normalized_key)
             if mapped and mapped not in detaylar:
-                detaylar[mapped] = value.strip()
+                clean_value = value.strip()
+                if mapped in {'wifi', 'bluetooth', 'usb_c', 'hdmi'}:
+                    normalized_bool = normalize_bool_text(clean_value)
+                    if mapped == 'usb_c' and not normalized_bool:
+                        lower_value = clean_value.lower()
+                        if 'type-c' in lower_value or 'usb-c' in lower_value:
+                            normalized_bool = 'Yes'
+                        elif 'micro usb' in lower_value or 'mini usb' in lower_value:
+                            normalized_bool = 'No'
+                    detaylar[mapped] = normalized_bool or clean_value
+                else:
+                    detaylar[mapped] = clean_value
+            enrich_connectivity_fields(detaylar)
 
         # Get credentials from settings or environment
         if use_sandbox:
@@ -372,7 +507,8 @@ class Command(BaseCommand):
         connector = EbayAPIConnector(
             client_id=client_id,
             client_secret=client_secret,
-            sandbox=use_sandbox
+            sandbox=use_sandbox,
+            ship_to_country=ship_to_country
         )
 
         self.stdout.write(f'Searching for: "{search_query}" (limit: {limit})')
@@ -476,6 +612,13 @@ class Command(BaseCommand):
 
                 extracted_specs, is_ocr_candidate = parse_description_specs(description_html, seen_specs)
                 detaylar.update(build_detaylar_from_specs(extracted_specs, is_ocr_candidate))
+                if item.get('shipping_origin') and not detaylar.get('gonderim_yeri'):
+                    detaylar['gonderim_yeri'] = item.get('shipping_origin')
+                if not detaylar.get('model'):
+                    inferred_model = infer_model_from_text(title)
+                    if inferred_model:
+                        detaylar['model'] = inferred_model
+                enrich_connectivity_fields(detaylar)
                 if extracted_specs:
                     ozellikler_lines.append('--- Description Cikarimlari ---')
                     ozellikler_lines.extend([tr_text(x) for x in extracted_specs])

@@ -271,8 +271,8 @@
                         {% endfor %}
                     </div>
                     {% if all_image_urls|length > 1 %}
-                    <button class="urun-gallery-nav urun-gallery-prev" type="button" id="urunGalleryPrev" aria-label="Onceki gorsel">&#8249;</button>
-                    <button class="urun-gallery-nav urun-gallery-next" type="button" id="urunGalleryNext" aria-label="Sonraki gorsel">&#8250;</button>
+                    <button class="urun-gallery-nav urun-gallery-prev" type="button" id="urunGalleryPrev" aria-label="Previous image">&#8249;</button>
+                    <button class="urun-gallery-nav urun-gallery-next" type="button" id="urunGalleryNext" aria-label="Next image">&#8250;</button>
                     {% endif %}
                     <div class="urun-gallery-counter" id="urunGalleryCounter">1 / {{ all_image_urls|length }}</div>
                 </div>
@@ -280,7 +280,7 @@
                 {% if all_image_urls|length > 1 %}
                 <div class="urun-thumbs" id="urunThumbs">
                     {% for img in all_image_urls %}
-                    <button class="urun-thumb-btn{% if forloop.first %} active{% endif %}" type="button" data-index="{{ forloop.counter0 }}" aria-label="{{ forloop.counter }}. gorseli goster">
+                    <button class="urun-thumb-btn{% if forloop.first %} active{% endif %}" type="button" data-index="{{ forloop.counter0 }}" aria-label="Show image {{ forloop.counter }}">
                         <img src="{{ img }}" alt="{{ urun.isim }} thumbnail {{ forloop.counter }}" onerror="this.style.display='none';">
                     </button>
                     {% endfor %}
@@ -293,10 +293,10 @@
                 {% if urun.kategori or urun.durum %}
                 <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
                     {% if urun.kategori %}
-                    <div style="display:inline-block; background:#111827; color:#fff; border-radius:999px; padding:5px 10px; font-size:0.82em;">Category: {{ urun.kategori.isim }}</div>
+                    <div style="display:inline-block; background:#111827; color:#fff; border-radius:999px; padding:5px 10px; font-size:0.82em;">Category: {{ category_display_name|default:urun.kategori.isim }}</div>
                     {% endif %}
                     {% if urun.durum %}
-                    <div style="display:inline-block; background:#ecfeff; color:#155e75; border:1px solid #a5f3fc; border-radius:999px; padding:5px 10px; font-size:0.82em; font-weight:600;">Status: {{ urun.durum }}</div>
+                    <div style="display:inline-block; background:#ecfeff; color:#155e75; border:1px solid #a5f3fc; border-radius:999px; padding:5px 10px; font-size:0.82em; font-weight:600;">Status: {{ status_label|default:urun.durum }}</div>
                     {% endif %}
                 </div>
                 {% endif %}

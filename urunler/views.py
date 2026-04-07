@@ -6,7 +6,7 @@ from django.core.paginator import Paginator
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 import json
 import re
-from .models import Urun, UrunResim, Fiyat, ClickLog, Yorum
+from .models import Urun, UrunResim, Fiyat, ClickLog, Yorum, Magaza
 from .forms import YorumForm
 from django.http import HttpResponse
 from django.utils.safestring import mark_safe
@@ -35,7 +35,7 @@ def _build_organization_schema() -> dict:
 		'name': 'Kolay Bul Ekspres',
 		'url': base_url or 'https://www.kolaybulexpres.com',
 		'logo': logo_url,
-		'description': 'Curated retro handheld consoles and gaming devices. Fast shipping, safe shopping, no sign-up required.',,
+		'description': 'Curated retro handheld consoles and gaming devices. Fast shipping, safe shopping, no sign-up required.',
 		'sameAs': [
 			'https://www.facebook.com/kolaybulexpres',
 			'https://www.instagram.com/kolaybulexpres',
@@ -45,39 +45,83 @@ def _build_organization_schema() -> dict:
 
 def _translate_detail_label(label: str) -> str:
 	label_map = {
-		'mensei ulke': 'Menşei Ülke',
-		'mensei ulkesi': 'Menşei Ülke',
-		'brand': 'Marka',
-		'marka': 'Marka',
-		'style': 'Stil',
-		'stil': 'Stil',
-		'tip': 'Tip',
-		'type': 'Tip',
-		'bolge kodu': 'Bölge Kodu',
-		'region code': 'Bölge Kodu',
+		'mensei ulke': 'Country of Origin',
+		'mensei ulkesi': 'Country of Origin',
+		'brand': 'Brand',
+		'marka': 'Brand',
+		'style': 'Style',
+		'stil': 'Style',
+		'tip': 'Type',
+		'type': 'Type',
+		'bolge kodu': 'Region Code',
+		'region code': 'Region Code',
 		'platformu': 'Platform',
 		'platform': 'Platform',
-		'color': 'Renk',
-		'renk': 'Renk',
+		'color': 'Color',
+		'renk': 'Color',
 		'model': 'Model',
 		'modeli': 'Model',
-		'connectivity': 'Bağlantı',
-		'gonderim yeri': 'Gönderim Yeri',
-		'gonderim yerinden': 'Gönderim Yeri',
-		'ship from': 'Gönderim Yeri',
-		'ships from': 'Gönderim Yeri',
-		'year manufactured': 'Üretim Yılı',
-		'features': 'Özellikler',
-		'unit quantity': 'Adet',
-		'country/region of manufacture': 'Üretim Yeri',
+		'connectivity': 'Connectivity',
+		'baglanti': 'Connectivity',
+		'gönderim yeri': 'Ships From',
+		'gonderim yeri': 'Ships From',
+		'gonderim yerinden': 'Ships From',
+		'gönderim yerinden': 'Ships From',
+		'g�nderim yeri': 'Ships From',
+		'g�nderim yerinden': 'Ships From',
+		'kategori': 'Category',
+		'kargo': 'Shipping',
+		'ship from': 'Ships From',
+		'ships from': 'Ships From',
+		'year manufactured': 'Year Manufactured',
+		'features': 'Features',
+		'unit quantity': 'Quantity',
+		'country/region of manufacture': 'Manufactured In',
 	}
-	normalized = re.sub(r'\s+', ' ', (label or '').strip().lower())
+	raw_label = str(label or '').strip().lower()
+	normalized = re.sub(r'\s+', ' ', raw_label)
 	translated = label_map.get(normalized)
 	if translated:
 		return translated
+
+	# Aksan/mojibake varyantlarını normalize ederek tekrar dene
+	normalized_ascii = normalized
+	for old, new in (
+		('ç', 'c'), ('ğ', 'g'), ('ı', 'i'), ('ö', 'o'), ('ş', 's'), ('ü', 'u'),
+		('�', 'o'),
+	):
+		normalized_ascii = normalized_ascii.replace(old, new)
+	translated = label_map.get(normalized_ascii)
+	if translated:
+		return translated
 	if not normalized:
-		return 'Bilgi'
+		return 'Info'
 	return (label or '').strip()
+
+
+def _translate_detail_value(value: str) -> str:
+	text = str(value or '').strip()
+	if not text:
+		return 'Not specified'
+
+	normalized = re.sub(r'\s+', ' ', text).strip().casefold()
+	value_map = {
+		'evet': 'Yes',
+		'hayir': 'No',
+		'hayır': 'No',
+		'belirtilmemiş': 'Not specified',
+		'cin': 'China',
+		'çin': 'China',
+		'konuma gore': 'By location',
+		'konuma göre': 'By location',
+		'ucretsiz': 'Free',
+		'ücretsiz': 'Free',
+		'retro el konsolu': 'Retro Handheld Console',
+		'retro el konsollari': 'Retro Handheld Consoles',
+	}
+	if normalized in value_map:
+		return value_map[normalized]
+	return text
 
 
 def _normalize_description_text(text: str) -> str:
@@ -172,6 +216,24 @@ def _schema_currency_code(currency: str) -> str:
 	return code or 'TRY'
 
 
+def _translate_status_text(status: str) -> str:
+	status_text = str(status or '').strip()
+	if not status_text:
+		return ''
+
+	normalized = status_text.casefold()
+	if 'gonderilebiliyor' in normalized:
+		return 'Shippable'
+	if 'gonderilemiyor' in normalized:
+		return 'Not shippable'
+	if normalized == 'aktif':
+		return 'Active'
+	if normalized == 'pasif':
+		return 'Passive'
+
+	return status_text
+
+
 def _extract_product_brand(urun) -> str:
 	"""Try to infer product brand from structured details or feature lines."""
 	detaylar = getattr(urun, 'detaylar', None) or {}
@@ -188,41 +250,41 @@ def _extract_product_brand(urun) -> str:
 			label_raw, value_raw = line.split(':', 1)
 			translated = _translate_detail_label(label_raw)
 			value = str(value_raw or '').strip()
-			if translated == 'Marka' and value and value.lower() != 'not specified':
+			if translated == 'Brand' and value and value.lower() != 'not specified':
 				return value
 
 	return ''
 
 
 HOME_DETAIL_PRIORITY = [
-	'Marka',
+	'Brand',
 	'Model',
-	'Gönderim Yeri',
+	'Ships From',
 ]
 
 
 HOME_DETAIL_KEY_ALIASES = {
-	'Marka': ['marka', 'brand'],
+	'Brand': ['marka', 'brand'],
 	'Model': ['model', 'modeli'],
-	'Stil': ['stil', 'style'],
-	'Renk': ['renk', 'color'],
-	'Tip': ['tip', 'type'],
+	'Style': ['stil', 'style'],
+	'Color': ['renk', 'color'],
+	'Type': ['tip', 'type'],
 	'Platform': ['platform'],
-	'Bölge Kodu': ['bolge_kodu', 'region_code'],
-	'Bağlantı': ['baglanti', 'connectivity'],
-	'Ekran Boyutu': ['ekran_boyutu'],
-	'Çözünürlük': ['cozunurluk'],
-	'İşlemci': ['cpu', 'islemci', 'processor'],
+	'Region Code': ['bolge_kodu', 'region_code'],
+	'Connectivity': ['baglanti', 'connectivity'],
+	'Screen Size': ['ekran_boyutu'],
+	'Resolution': ['cozunurluk'],
+	'Processor': ['cpu', 'islemci', 'processor'],
 	'RAM': ['ram', 'memory'],
-	'Depolama': ['depolama', 'storage'],
-	'Batarya': ['batarya', 'battery'],
-	'İşletim Sistemi': ['isletim_sistemi', 'operating_system'],
-	'HDMI Çıkışı': ['hdmi'],
-	'Menşei Ülke': ['mensei_ulke', 'ulke', 'origin_country'],
-	'Üretim Yeri': ['uretim_yeri', 'manufacture_country'],
-	'Üretim Yılı': ['uretim_yili', 'year_manufactured'],
-	'Özellikler': ['ozellikler', 'features'],
-	'Adet': ['adet', 'unit_quantity'],
+	'Storage': ['depolama', 'storage'],
+	'Battery': ['batarya', 'battery'],
+	'Operating System': ['isletim_sistemi', 'operating_system'],
+	'HDMI Output': ['hdmi'],
+	'Country of Origin': ['mensei_ulke', 'ulke', 'origin_country'],
+	'Manufactured In': ['uretim_yeri', 'manufacture_country'],
+	'Year Manufactured': ['uretim_yili', 'year_manufactured'],
+	'Features': ['ozellikler', 'features'],
+	'Quantity': ['adet', 'unit_quantity'],
 }
 
 
@@ -270,7 +332,7 @@ def _build_home_detail_rows(urun) -> list[dict]:
 
 	shipping_origin = _get_home_shipping_origin(urun)
 	if shipping_origin:
-		_set_home_detail_candidate(candidates, 'Gönderim Yeri', shipping_origin)
+		_set_home_detail_candidate(candidates, 'Ships From', shipping_origin)
 
 	rows = []
 	seen_labels = set()
@@ -299,8 +361,18 @@ def _build_home_detail_rows(urun) -> list[dict]:
 def anasayfa(request):
 	"""Ana sayfa - ürün listesi ve yorumlar"""
 	search_query = request.GET.get('q', '').strip()
+	selected_magaza = request.GET.get('magaza', '').strip()
+	price_sort = request.GET.get('price_sort', '').strip().lower()
+	if price_sort not in {'price_asc', 'price_desc'}:
+		price_sort = ''
+
 	resim_prefetch = Prefetch('resimler', queryset=UrunResim.objects.order_by('sira', 'id'), to_attr='sirali_resimler')
 	base_queryset = Urun.objects.exclude(durum__iexact='Pasif').prefetch_related('fiyatlar__magaza', resim_prefetch)
+
+	if selected_magaza:
+		base_queryset = base_queryset.filter(fiyatlar__magaza__isim__iexact=selected_magaza)
+
+	base_queryset = base_queryset.distinct()
 	
 	if search_query:
 		# Arama yapılıyorsa - ürün ismine veya urun_kodu'na göre filtrele
@@ -348,6 +420,28 @@ def anasayfa(request):
 					sifirli_idx += 1
 		urunler_sirali += sifirli_sorted[sifirli_idx:]
 		urunler = urunler_sirali
+
+	# Fiyat sıralama filtresi (bağımsız): ürünün en düşük toplam fiyatına göre
+	if price_sort:
+		urunler = list(urunler)
+		min_total_cache = {}
+
+		def _min_total(urun):
+			if urun.id in min_total_cache:
+				return min_total_cache[urun.id]
+			totals = []
+			for fiyat in urun.fiyatlar.all():
+				try:
+					totals.append(float((fiyat.fiyat or 0) + (fiyat.gonderim_ucreti or 0)))
+				except (TypeError, ValueError):
+					continue
+			min_total_cache[urun.id] = min(totals) if totals else None
+			return min_total_cache[urun.id]
+
+		if price_sort == 'price_asc':
+			urunler.sort(key=lambda u: (_min_total(u) is None, _min_total(u) or 0))
+		else:
+			urunler.sort(key=lambda u: (_min_total(u) is None, -(_min_total(u) or 0)))
 	
 	yorumlar = Yorum.objects.filter(onayli=True).order_by('-eklenme_tarihi')[:10]
 	form = YorumForm(request.POST or None)
@@ -362,14 +456,19 @@ def anasayfa(request):
 	urunler = page_obj.object_list
 	for urun in urunler:
 		urun.home_detail_rows = _build_home_detail_rows(urun)
+		urun.status_en = _translate_status_text(urun.durum)
 
 	query_params = request.GET.copy()
 	query_params.pop('page', None)
 	query_string = query_params.urlencode()
+	clear_search_params = request.GET.copy()
+	clear_search_params.pop('q', None)
+	clear_search_query = clear_search_params.urlencode()
 	canonical_url = _build_canonical_url(request.path, query_string)
 	meta_title = 'Home | KOLAY BUL EKSPRES'
 	meta_description = 'Browse curated retro handheld consoles and gaming devices. Compare prices and shop safely.'
 	organization_schema = _build_organization_schema()
+	available_magazalar = list(Magaza.objects.order_by('isim').values_list('isim', flat=True))
 
 	return render(request, 'urunler/anasayfa.html', {
 		'urunler': urunler,
@@ -378,6 +477,10 @@ def anasayfa(request):
 		'yorumlar': yorumlar,
 		'form': form,
 		'search_query': search_query,
+		'selected_magaza': selected_magaza,
+		'price_sort': price_sort,
+		'available_magazalar': available_magazalar,
+		'clear_search_query': clear_search_query,
 		'canonical_url': canonical_url,
 		'meta_title': meta_title,
 		'meta_description': meta_description,
@@ -525,8 +628,8 @@ def urun_detay(request, slug):
 				_val = 'Not specified'
 			detaylar_schema.append({
 				'key': _key,
-				'label': _alan.get('label', _key.replace('_', ' ').title()),
-				'value': _val,
+				'label': _translate_detail_label(_alan.get('label', _key.replace('_', ' ').title())),
+				'value': _translate_detail_value(_val),
 				'kaynak': _alan.get('kaynak', 'description'),
 				'zorunlu': _alan.get('zorunlu', False),
 			})
@@ -552,11 +655,11 @@ def urun_detay(request, slug):
 				label_raw, value_raw = line.split(':', 1)
 				label_raw = label_raw.strip()
 				value_raw = value_raw.strip() or 'Not specified'
-				label = f"{label_raw[:1].upper()}{label_raw[1:]}" if label_raw else 'Bilgi'
+				label = _translate_detail_label(label_raw) if label_raw else 'Info'
 				ozellikler_satirlari.append({
 					'tur': 'satir',
 					'label': label,
-					'value': value_raw,
+					'value': _translate_detail_value(value_raw),
 				})
 			else:
 				ozellikler_satirlari.append({
@@ -596,6 +699,8 @@ def urun_detay(request, slug):
 
 	context = {
 		'urun': urun,
+		'category_display_name': _translate_detail_value(getattr(getattr(urun, 'kategori', None), 'isim', '')),
+		'status_label': _translate_status_text(urun.durum),
 		'fiyatlar': fiyatlar,
 		'en_dusuk_fiyat': en_dusuk_fiyat,
 		'all_image_urls': image_urls,
@@ -626,7 +731,35 @@ def urun_karsilastir(request):
 	"""Seçilen ürünleri karşılaştır"""
 	ids_str = request.GET.get('ids', '').strip()
 	urun_ids = []
-	
+
+	def _normalized_text(value):
+		return str(value or '').strip().lower()
+
+	def _display_label(key, default_label):
+		label_overrides = {
+			'wifi': 'Wi-Fi',
+			'bluetooth': 'Bluetooth',
+			'usb_c': 'USB-C',
+			'gonderim_yeri': 'Ships From',
+			'marka': 'Brand',
+		}
+		if key in label_overrides:
+			return label_overrides[key]
+		return _translate_detail_label(default_label)
+
+	def _display_value(key, value):
+		text = str(value or '').strip()
+		norm = _normalized_text(text)
+		if not norm or norm in {'-', 'belirtilmemiş', 'not specified'}:
+			return 'Not specified'
+		if norm in {'evet', 'yes', 'true'}:
+			return 'Yes'
+		if norm in {'hayir', 'hayır', 'no', 'false'}:
+			return 'No'
+		if key == 'wifi' and norm == 'wifi':
+			return 'Wi-Fi'
+		return text
+
 	if ids_str:
 		try:
 			urun_ids = [int(uid) for uid in ids_str.split(',') if uid.strip()]
@@ -635,7 +768,7 @@ def urun_karsilastir(request):
 			urun_ids = []
 	
 	if not urun_ids:
-		messages.info(request, 'Lütfen karşılaştırmak için ürün seçin.')
+		messages.info(request, 'Please select products to compare.')
 		return redirect('anasayfa')
 	
 	# Ürünleri getir
@@ -645,12 +778,12 @@ def urun_karsilastir(request):
 	)
 	
 	if not urunler:
-		messages.error(request, 'Seçilen ürünler bulunamadı.')
+		messages.error(request, 'Selected products could not be found.')
 		return redirect('anasayfa')
 	
 	# Teknik özellik alanlarını topla (birleşim)
 	all_keys = set()
-	excluded_keys = {'kontrolcu', 'oyun_sayisi', 'kutu_icerigi'}
+	excluded_keys = {'kontrolcu', 'oyun_sayisi', 'kutu_icerigi', 'ocr_adayi'}
 	
 	for urun in urunler:
 		if urun.kategori and urun.kategori.alanlar:
@@ -673,11 +806,12 @@ def urun_karsilastir(request):
 	for key in sorted(all_keys):
 		row = {
 			'key': key,
-			'label': label_map.get(key, key.replace('_', ' ').title()),
+			'label': _display_label(key, label_map.get(key, key.replace('_', ' ').title())),
 			'degerler': []
 		}
 		for urun in urunler:
-			val = str(urun.detaylar.get(key, '') if urun.detaylar else '').strip() or 'Not specified'
+			raw_val = urun.detaylar.get(key, '') if urun.detaylar else ''
+			val = _display_value(key, raw_val)
 			row['degerler'].append(val)
 		karsilastirma_satir.append(row)
 	

@@ -14,6 +14,9 @@ const RETRO_SPECS_ORDER = [
   { key: "batarya", label: "Batarya" },
   { key: "cpu", label: "Islemci" },
   { key: "baglanti", label: "Baglanti" },
+  { key: "wifi", label: "Wi-Fi" },
+  { key: "bluetooth", label: "Bluetooth" },
+  { key: "usb_c", label: "USB-C" },
   { key: "isletim_sistemi", label: "Isletim Sistemi" },
   { key: "hdmi_cikisi", label: "HDMI Cikisi" },
   { key: "gonderim_yeri", label: "Gonderim Yeri" }
@@ -29,10 +32,29 @@ const SPEC_FIELD_KEYS = [
   "depolama",
   "batarya",
   "baglanti",
+  "wifi",
+  "bluetooth",
+  "usb_c",
   "isletim_sistemi",
   "hdmi_cikisi",
   "gonderim_yeri"
 ];
+
+function normalizeCurrencyCode(code) {
+  const raw = String(code || "").trim().toUpperCase();
+  if (!raw) return "USD";
+  if (["US$", "$", "USD"].includes(raw)) return "USD";
+  if (["TL", "TRY", "₺"].includes(raw)) return "TRY";
+  if (["€", "EUR"].includes(raw)) return "EUR";
+  if (["£", "GBP"].includes(raw)) return "GBP";
+  return raw;
+}
+
+function formatMoney(amount, currencyCode, fallback = "-") {
+  const numeric = Number.parseFloat(amount);
+  if (Number.isNaN(numeric)) return fallback;
+  return `${numeric.toFixed(2)} ${normalizeCurrencyCode(currencyCode)}`;
+}
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -380,14 +402,15 @@ function displayProduct(index) {
   statusBadge.className = isError ? "status-badge error" : "status-badge ok";
   
   // Fiyatlar ve gönderim (salt okunur)
-  document.getElementById("priceDetail").textContent = product.price + " TL" || "-";
+  const currencyCode = normalizeCurrencyCode(product.currencyCode);
+  document.getElementById("priceDetail").textContent = formatMoney(product.price, currencyCode, "-");
   
   if (product.shippingFee && parseFloat(product.shippingFee) > 0) {
-    document.getElementById("shippingFeeDetail").textContent = product.shippingFee + " TL";
-    document.getElementById("totalPriceDetail").textContent = product.totalPrice + " TL";
+    document.getElementById("shippingFeeDetail").textContent = formatMoney(product.shippingFee, currencyCode, "-");
+    document.getElementById("totalPriceDetail").textContent = formatMoney(product.totalPrice, currencyCode, "-");
   } else {
     document.getElementById("shippingFeeDetail").textContent = "Ücretsiz";
-    document.getElementById("totalPriceDetail").textContent = product.price + " TL";
+    document.getElementById("totalPriceDetail").textContent = formatMoney(product.price, currencyCode, "-");
   }
   
   // Link
@@ -436,9 +459,13 @@ function buildCsv(results) {
     "Depolama",
     "Batarya",
     "Bağlantı",
+    "Wi-Fi",
+    "Bluetooth",
+    "USB-C",
     "İşletim Sistemi",
     "HDMI Çıkışı",
     "Gönderim Yeri",
+    "Para Birimi",
     "Fiyat",
     "Gönderim Ücreti",
     "Toplam Fiyat",
@@ -488,9 +515,13 @@ function buildCsv(results) {
       specs.depolama || "",
       specs.batarya || "",
       specs.baglanti || "",
+      specs.wifi || "",
+      specs.bluetooth || "",
+      specs.usb_c || "",
       specs.isletim_sistemi || "",
       specs.hdmi_cikisi || "",
       specs.gonderim_yeri || r.shippingFrom || "",
+      r.currencyCode || "USD",
       r.price,
       r.shippingFee,
       r.totalPrice,
