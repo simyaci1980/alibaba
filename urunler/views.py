@@ -474,6 +474,12 @@ def anasayfa(request):
 	clear_search_params = request.GET.copy()
 	clear_search_params.pop('q', None)
 	clear_search_query = clear_search_params.urlencode()
+	clear_magaza_params = request.GET.copy()
+	clear_magaza_params.pop('magaza', None)
+	clear_magaza_query = clear_magaza_params.urlencode()
+	clear_price_sort_params = request.GET.copy()
+	clear_price_sort_params.pop('price_sort', None)
+	clear_price_sort_query = clear_price_sort_params.urlencode()
 	canonical_url = _build_canonical_url(request.path, query_string)
 	meta_title = 'Kolay Bul Ekspres | Retro Handheld Consoles'
 	meta_description = 'Browse curated retro handheld consoles and gaming devices. Compare prices and shop safely.'
@@ -491,6 +497,8 @@ def anasayfa(request):
 		'price_sort': price_sort,
 		'available_magazalar': available_magazalar,
 		'clear_search_query': clear_search_query,
+		'clear_magaza_query': clear_magaza_query,
+		'clear_price_sort_query': clear_price_sort_query,
 		'canonical_url': canonical_url,
 		'meta_title': meta_title,
 		'meta_description': meta_description,

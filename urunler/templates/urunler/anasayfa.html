@@ -55,6 +55,9 @@
                 {% if selected_magaza %}
                     <input type="hidden" name="magaza" value="{{ selected_magaza }}">
                 {% endif %}
+                {% if price_sort %}
+                    <input type="hidden" name="price_sort" value="{{ price_sort }}">
+                {% endif %}
                 <input type="text" name="q" value="{{ search_query }}" placeholder="Search products..." style="width:140px; height:36px; padding:0 10px; border:1px solid #ddd; border-radius:5px; font-size:0.95em;">
                 <button type="submit" style="padding:0 15px; height:36px; border-radius:5px; background:linear-gradient(90deg,#ff9800 0%,#111 100%); color:#fff; border:none; font-weight:600;">Search</button>
                 {% if search_query %}
@@ -70,6 +73,9 @@
                 {% if request.GET.gonderim_yeri %}
                     <input type="hidden" name="gonderim_yeri" value="{{ request.GET.gonderim_yeri }}">
                 {% endif %}
+                {% if price_sort %}
+                    <input type="hidden" name="price_sort" value="{{ price_sort }}">
+                {% endif %}
                 <select name="magaza" onchange="this.form.submit()" style="width:132px; height:36px; padding:0 8px; border-radius:5px; border:1px solid #ddd;">
                     <option value="">Store</option>
                     {% for magaza_adi in available_magazalar %}
@@ -77,7 +83,7 @@
                     {% endfor %}
                 </select>
                 {% if selected_magaza %}
-                    <a href="{% if search_query %}?q={{ search_query|urlencode }}{% else %}{% url 'anasayfa' %}{% endif %}" style="padding:0 10px; height:36px; border-radius:5px; background:#ef4444; color:#fff; text-decoration:none; display:flex; align-items:center;">Reset</a>
+                    <a href="{% if clear_magaza_query %}?{{ clear_magaza_query }}{% else %}{% url 'anasayfa' %}{% endif %}" style="padding:0 10px; height:36px; border-radius:5px; background:#ef4444; color:#fff; text-decoration:none; display:flex; align-items:center;">Reset</a>
                 {% endif %}
             </form>
 
@@ -88,6 +94,9 @@
                 {% if request.GET.gonderim_yeri %}
                     <input type="hidden" name="gonderim_yeri" value="{{ request.GET.gonderim_yeri }}">
                 {% endif %}
+                {% if selected_magaza %}
+                    <input type="hidden" name="magaza" value="{{ selected_magaza }}">
+                {% endif %}
                 <select name="price_sort" style="width:180px; height:36px; padding:0 8px; border-radius:5px; border:1px solid #ddd;">
                     <option value="">Price Sort</option>
                     <option value="price_asc" {% if price_sort == 'price_asc' %}selected{% endif %}>Lowest to Highest</option>
@@ -95,7 +104,7 @@
                 </select>
                 <button type="submit" style="padding:0 14px; height:36px; border-radius:5px; background:linear-gradient(90deg,#ff9800 0%,#111 100%); color:#fff; border:none; font-weight:600;">Sort</button>
                 {% if price_sort %}
-                    <a href="{% if search_query %}?q={{ search_query|urlencode }}{% else %}{% url 'anasayfa' %}{% endif %}" style="padding:0 10px; height:36px; border-radius:5px; background:#ef4444; color:#fff; text-decoration:none; display:flex; align-items:center;">Reset</a>
+                    <a href="{% if clear_price_sort_query %}?{{ clear_price_sort_query }}{% else %}{% url 'anasayfa' %}{% endif %}" style="padding:0 10px; height:36px; border-radius:5px; background:#ef4444; color:#fff; text-decoration:none; display:flex; align-items:center;">Reset</a>
                 {% endif %}
             </form>
         </div>
