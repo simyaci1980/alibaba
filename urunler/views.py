@@ -718,7 +718,6 @@ def urun_detay(request, slug):
 	context = {
 		'urun': urun,
 		'category_display_name': _translate_detail_value(getattr(getattr(urun, 'kategori', None), 'isim', '')),
-		'status_label': _translate_status_text(urun.durum),
 		'fiyatlar': fiyatlar,
 		'en_dusuk_fiyat': en_dusuk_fiyat,
 		'all_image_urls': image_urls,

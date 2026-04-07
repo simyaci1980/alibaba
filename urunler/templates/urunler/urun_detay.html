@@ -290,13 +290,10 @@
             </section>
 
             <section>
-                {% if urun.kategori or urun.durum %}
+                {% if urun.kategori %}
                 <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
                     {% if urun.kategori %}
                     <div style="display:inline-block; background:#111827; color:#fff; border-radius:999px; padding:5px 10px; font-size:0.82em;">Category: {{ category_display_name|default:urun.kategori.isim }}</div>
-                    {% endif %}
-                    {% if urun.durum %}
-                    <div style="display:inline-block; background:#ecfeff; color:#155e75; border:1px solid #a5f3fc; border-radius:999px; padding:5px 10px; font-size:0.82em; font-weight:600;">Status: {{ status_label|default:urun.durum }}</div>
                     {% endif %}
                 </div>
                 {% endif %}
