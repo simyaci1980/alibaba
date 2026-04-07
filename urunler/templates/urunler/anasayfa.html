@@ -118,7 +118,7 @@
     <div class="product-card" data-urun-id="{{ urun.id }}" style="position: relative; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column;">
         
         <!-- Resim Galerisi Container -->
-        <div class="product-gallery" data-affiliate-url="{% url 'urun_affiliate_redirect' urun.id %}" role="link" tabindex="0" aria-label="{{ urun.isim }} urununu magazada incele" style="position: relative; overflow: hidden; cursor: pointer;">
+        <div class="product-gallery" data-affiliate-url="{% url 'urun_affiliate_redirect' urun.id %}" role="link" tabindex="0" aria-label="{{ urun.isim }} — view in store" style="position: relative; overflow: hidden; cursor: pointer;">
             <div class="gallery-stage">
                 <div class="gallery-track">
                     {% if urun.resim_url %}
@@ -158,11 +158,11 @@
             <div class="gallery-thumbnails">
                 {% if urun.resim_url %}
                 <button class="gallery-thumb" type="button" data-index="0" aria-label="Show image 1">
-                    <img src="{{ urun.resim_url }}" alt="{{ urun.isim }} küçük görsel">
+                    <img src="{{ urun.resim_url }}" alt="{{ urun.isim }} thumbnail">
                 </button>
                 {% elif urun.resim and urun.resim.name %}
                 <button class="gallery-thumb" type="button" data-index="0" aria-label="Show image 1">
-                    <img src="{{ urun.resim.url }}" alt="{{ urun.isim }} küçük görsel">
+                    <img src="{{ urun.resim.url }}" alt="{{ urun.isim }} thumbnail">
                 </button>
                 {% endif %}
 
@@ -170,11 +170,11 @@
                     {% for resim in urun.sirali_resimler %}
                         {% if resim.resim_url %}
                         <button class="gallery-thumb" type="button" data-index="{{ forloop.counter }}" aria-label="Show image {{ forloop.counter|add:1 }}">
-                            <img src="{{ resim.resim_url }}" alt="{{ urun.isim }} küçük görsel {{ forloop.counter|add:1 }}">
+                            <img src="{{ resim.resim_url }}" alt="{{ urun.isim }} thumbnail {{ forloop.counter|add:1 }}">
                         </button>
                         {% elif resim.resim and resim.resim.name %}
                         <button class="gallery-thumb" type="button" data-index="{{ forloop.counter }}" aria-label="Show image {{ forloop.counter|add:1 }}">
-                            <img src="{{ resim.resim.url }}" alt="{{ urun.isim }} küçük görsel {{ forloop.counter|add:1 }}">
+                            <img src="{{ resim.resim.url }}" alt="{{ urun.isim }} thumbnail {{ forloop.counter|add:1 }}">
                         </button>
                         {% endif %}
                     {% endfor %}
@@ -182,11 +182,11 @@
                     {% for resim in urun.sirali_resimler %}
                         {% if resim.resim_url %}
                         <button class="gallery-thumb" type="button" data-index="{{ forloop.counter0 }}" aria-label="Show image {{ forloop.counter }}">
-                            <img src="{{ resim.resim_url }}" alt="{{ urun.isim }} küçük görsel {{ forloop.counter }}">
+                            <img src="{{ resim.resim_url }}" alt="{{ urun.isim }} thumbnail {{ forloop.counter }}">
                         </button>
                         {% elif resim.resim and resim.resim.name %}
                         <button class="gallery-thumb" type="button" data-index="{{ forloop.counter0 }}" aria-label="Show image {{ forloop.counter }}">
-                            <img src="{{ resim.resim.url }}" alt="{{ urun.isim }} küçük görsel {{ forloop.counter }}">
+                            <img src="{{ resim.resim.url }}" alt="{{ urun.isim }} thumbnail {{ forloop.counter }}">
                         </button>
                         {% endif %}
                     {% endfor %}

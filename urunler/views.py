@@ -230,6 +230,16 @@ def _translate_status_text(status: str) -> str:
 		return 'Active'
 	if normalized == 'pasif':
 		return 'Passive'
+	if normalized in ('yeni', 'new'):
+		return 'New'
+	if normalized in ('kullanılmış', 'kullanilmis', 'used'):
+		return 'Used'
+	if normalized in ('kutuyu aç', 'kutuyu ac', 'açık kutu', 'acik kutu', 'open box'):
+		return 'Open Box'
+	if 'yeniden ko' in normalized or 'refurb' in normalized:
+		return 'Refurbished'
+	if 'satıcı tarafından' in normalized or 'satici tarafindan' in normalized:
+		return 'Seller Refurbished'
 
 	return status_text
 
