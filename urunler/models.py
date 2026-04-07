@@ -2,6 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
+import re
 
 class Magaza(models.Model):
 	isim = models.CharField(max_length=100)
@@ -43,16 +44,37 @@ class Urun(models.Model):
 	item_id = models.CharField(max_length=50, unique=True, blank=True, null=True, help_text='eBay ürün ID')
 	sira = models.PositiveIntegerField(default=0, blank=True, null=True, help_text="Ürün sırası (küçükten büyüğe önde)")
 
+	SLUG_STALE_PATTERN = re.compile(
+		r'\b(el-tipi|oyun-konsolu|elde-tasinabilir|yeni|ucretsiz|ekran|cozunurluk|isletim-sistemi|baglanti|gonderim|kargo|abd)\b',
+		re.IGNORECASE,
+	)
+
+	def _slug_source_text(self):
+		return self.ana_baslik or self.isim or self.urun_kodu or 'urun'
+
+	def _build_unique_slug(self, source_text=None):
+		base_text = source_text or self._slug_source_text()
+		base_slug = slugify(base_text)[:230] or f"urun-{self.urun_kodu or 'x'}"
+		candidate = base_slug
+		i = 2
+		while Urun.objects.exclude(pk=self.pk).filter(slug=candidate).exists():
+			candidate = f"{base_slug[:220]}-{i}"
+			i += 1
+		return candidate
+
+	def _should_refresh_slug(self):
+		current_slug = str(self.slug or '').strip()
+		if not current_slug:
+			return True
+		fresh_slug = self._build_unique_slug()
+		if fresh_slug == current_slug:
+			return False
+		# Only auto-refresh slugs that still reflect stale Turkish wording.
+		return bool(self.SLUG_STALE_PATTERN.search(current_slug))
+
 	def save(self, *args, **kwargs):
-		if not self.slug:
-			base_text = self.ana_baslik or self.isim or self.urun_kodu or 'urun'
-			base_slug = slugify(base_text)[:230] or f"urun-{self.urun_kodu or 'x'}"
-			candidate = base_slug
-			i = 2
-			while Urun.objects.exclude(pk=self.pk).filter(slug=candidate).exists():
-				candidate = f"{base_slug[:220]}-{i}"
-				i += 1
-			self.slug = candidate
+		if self._should_refresh_slug():
+			self.slug = self._build_unique_slug()
 		super().save(*args, **kwargs)
 
 	def __str__(self):
