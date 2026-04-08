@@ -549,10 +549,11 @@ def urun_listesi(request):
 def urun_detay(request, slug):
 	"""SEO odakli urun detay sayfasi"""
 	resim_prefetch = Prefetch('resimler', queryset=UrunResim.objects.order_by('sira', 'id'), to_attr='sirali_resimler')
-	urun = get_object_or_404(
-		Urun.objects.exclude(durum__iexact='Pasif').prefetch_related('fiyatlar__magaza', resim_prefetch),
-		slug=slug
-	)
+	try:
+		urun = Urun.objects.exclude(durum__iexact='Pasif').prefetch_related('fiyatlar__magaza', resim_prefetch).get(slug=slug)
+	except Urun.DoesNotExist:
+		# Removed/old slugs should not show a hard error page to users.
+		return redirect('anasayfa', permanent=True)
 
 	def normalize_image_url(url: str) -> str:
 		if not url:
