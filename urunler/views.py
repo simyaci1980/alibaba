@@ -481,7 +481,7 @@ def anasayfa(request):
 	clear_price_sort_params.pop('price_sort', None)
 	clear_price_sort_query = clear_price_sort_params.urlencode()
 	canonical_url = _build_canonical_url(request.path, query_string)
-	meta_title = 'Kolay Bul Ekspres | Retro Handheld Consoles'
+	meta_title = 'KOLAYBULEXPRES | Retro Handheld Consoles'
 	meta_description = 'Browse curated retro handheld consoles and gaming devices. Compare prices and shop safely.'
 	organization_schema = _build_organization_schema()
 	available_magazalar = list(Magaza.objects.order_by('isim').values_list('isim', flat=True))
