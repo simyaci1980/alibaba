@@ -182,6 +182,39 @@ def _is_garbage_description(text: str) -> bool:
 	return False
 
 
+def _looks_turkish_text(text: str) -> bool:
+	content = str(text or '').strip()
+	if not content:
+		return False
+
+	lower_text = content.casefold()
+	if re.search(r'[çğıöşü]', lower_text):
+		return True
+
+	common_tr_tokens = [
+		've', 'ile', 'için', 'ozellik', 'özellik', 'gonderim', 'gönderim',
+		'belirtilmemis', 'belirtilmemiş', 'konsolu', 'oyun', 'ekran', 'kategori', 'tipi',
+	]
+	token_hits = sum(1 for token in common_tr_tokens if token in lower_text)
+	return token_hits >= 2
+
+
+def _build_english_meta_description(title_text: str, urun, detaylar_schema: list) -> str:
+	brand = _extract_product_brand(urun) or 'Premium'
+	category_name = _translate_detail_value(getattr(getattr(urun, 'kategori', None), 'isim', '')).strip()
+
+	parts = [title_text]
+	if category_name and category_name != 'Not specified':
+		parts.append(category_name)
+	parts.append(f'by {brand}')
+	parts.append('Technical specifications')
+	parts.append('Store offers')
+
+	meta = '. '.join(parts) + '.'
+	meta = re.sub(r'\s+', ' ', meta).strip()
+	return meta[:160]
+
+
 def _build_canonical_url(path: str, query_string: str = '') -> str:
 	base_url = getattr(settings, 'SITE_BASE_URL', '').rstrip('/')
 	normalized_path = path if path.startswith('/') else f'/{path}'
@@ -530,7 +563,7 @@ def urun_listesi(request):
 	urunler_sirali += sifirli_sorted[sifirli_idx:]
 	urunler = urunler_sirali
 	canonical_url = _build_canonical_url(request.path)
-	meta_title = 'Product List | Kolay Bul Ekspres'
+	meta_title = 'Product List | KOLAYBULEXPRES'
 	meta_description = 'Browse all products with category and price info. Compare and find the best deals.'
 	organization_schema = _build_organization_schema()
 	return render(request, 'urunler/urun_listesi.html', {
@@ -601,7 +634,7 @@ def urun_detay(request, slug):
 	meta_description_source = (urun.alt_baslik or urun.aciklama or urun.ozellikler or urun.isim or '').strip()
 	meta_description = ' '.join(meta_description_source.split())[:160]
 	canonical_url = _build_canonical_url(request.path)
-	meta_title = f"{title_text} | Kolay Bul Ekspres"
+	meta_title = f"{title_text} | KOLAYBULEXPRES"
 
 	product_schema = {
 		'@context': 'https://schema.org',
@@ -652,6 +685,9 @@ def urun_detay(request, slug):
 				'kaynak': _alan.get('kaynak', 'description'),
 				'zorunlu': _alan.get('zorunlu', False),
 			})
+
+	if not meta_description or _looks_turkish_text(meta_description):
+		meta_description = _build_english_meta_description(title_text, urun, detaylar_schema)
 
 	# Açıklama/not alanını satır satır görselleştirmek için ayrıştır
 	ozellikler_satirlari = []
