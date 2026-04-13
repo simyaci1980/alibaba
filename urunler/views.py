@@ -12,6 +12,77 @@ from django.http import HttpResponse
 from django.utils.safestring import mark_safe
 
 
+ATTRIBUTION_QUERY_KEYS = (
+	'gclid',
+	'gbraid',
+	'wbraid',
+	'utm_source',
+	'utm_medium',
+	'utm_campaign',
+	'utm_term',
+	'utm_content',
+)
+
+
+def _clip(value, max_len=255):
+	text = str(value or '').strip()
+	if not text:
+		return None
+	return text[:max_len]
+
+
+def _capture_marketing_attribution(request):
+	"""Landing URL'deki UTM/GCLID değerlerini session'da sakla."""
+	if not hasattr(request, 'session'):
+		return {}
+
+	existing = request.session.get('marketing_attribution', {}) or {}
+	incoming = {}
+	for key in ATTRIBUTION_QUERY_KEYS:
+		val = _clip(request.GET.get(key), 200)
+		if val:
+			incoming[key] = val
+
+	if incoming:
+		merged = dict(existing)
+		merged.update(incoming)
+		merged['landing_path'] = _clip(existing.get('landing_path') or request.get_full_path(), 500)
+		merged['updated_at'] = timezone.now().isoformat(timespec='seconds')
+		request.session['marketing_attribution'] = merged
+		request.session.modified = True
+		return merged
+
+	return existing
+
+
+def _extract_client_ip(request):
+	xff = request.META.get('HTTP_X_FORWARDED_FOR', '')
+	if xff:
+		return _clip(xff.split(',')[0], 64)
+	return _clip(request.META.get('REMOTE_ADDR'), 64)
+
+
+def _build_click_context(request):
+	"""ClickLog için attribution + request metadata hazırla."""
+	stored = _capture_marketing_attribution(request)
+
+	def _pick(key, max_len):
+		return _clip(request.GET.get(key) or stored.get(key), max_len)
+
+	return {
+		'gclid': _pick('gclid', 120),
+		'utm_source': _pick('utm_source', 150),
+		'utm_medium': _pick('utm_medium', 150),
+		'utm_campaign': _pick('utm_campaign', 200),
+		'utm_term': _pick('utm_term', 200),
+		'utm_content': _pick('utm_content', 200),
+		'landing_path': _clip(stored.get('landing_path'), 500),
+		'referrer': _clip(request.META.get('HTTP_REFERER'), 1000),
+		'client_ip': _extract_client_ip(request),
+		'user_agent': _clip(request.META.get('HTTP_USER_AGENT'), 255),
+	}
+
+
 def _build_breadcrumb_schema(items: list) -> dict:
 	"""
 	Breadcrumb Schema JSON-LD oluştur.
@@ -403,6 +474,7 @@ def _build_home_detail_rows(urun) -> list[dict]:
 
 def anasayfa(request):
 	"""Ana sayfa - ürün listesi ve yorumlar"""
+	_capture_marketing_attribution(request)
 	search_query = request.GET.get('q', '').strip()
 	selected_magaza = request.GET.get('magaza', '').strip()
 	price_sort = request.GET.get('price_sort', '').strip().lower()
@@ -545,6 +617,7 @@ def anasayfa(request):
 
 def urun_listesi(request):
 	"""Ürün listesi sayfası"""
+	_capture_marketing_attribution(request)
 	resim_prefetch = Prefetch('resimler', queryset=UrunResim.objects.order_by('sira', 'id'), to_attr='sirali_resimler')
 	urunler = list(Urun.objects.exclude(durum__iexact='Pasif').prefetch_related('fiyatlar__magaza', resim_prefetch).all())
 	numarali = {u.sira: u for u in urunler if u.sira and u.sira > 0}
@@ -581,6 +654,7 @@ def urun_listesi(request):
 
 def urun_detay(request, slug):
 	"""SEO odakli urun detay sayfasi"""
+	_capture_marketing_attribution(request)
 	resim_prefetch = Prefetch('resimler', queryset=UrunResim.objects.order_by('sira', 'id'), to_attr='sirali_resimler')
 	try:
 		urun = Urun.objects.exclude(durum__iexact='Pasif').prefetch_related('fiyatlar__magaza', resim_prefetch).get(slug=slug)
@@ -783,6 +857,7 @@ def urun_detay(request, slug):
 
 def urun_karsilastir(request):
 	"""Seçilen ürünleri karşılaştır"""
+	_capture_marketing_attribution(request)
 	ids_str = request.GET.get('ids', '').strip()
 	urun_ids = []
 
@@ -890,6 +965,7 @@ def amazon_redirect(request):
 		user=request.user if request.user.is_authenticated else None,
 		link_type='amazon',
 		subid='navbar',
+		**_build_click_context(request),
 		timestamp=timezone.now()
 	)
 	return redirect('https://www.amazon.com/b?node=53629917011&linkCode=ll2&tag=kolaybulekspr-20&linkId=8150ea1ccd7fe92bfd1f94652a6d69e4&language=en_US&ref_=as_li_ss_tl')
@@ -901,6 +977,7 @@ def aliexpress_redirect(request):
 		user=request.user if request.user.is_authenticated else None,
 		link_type='aliexpress',
 		subid='navbar',
+		**_build_click_context(request),
 		timestamp=timezone.now()
 	)
 	return redirect('https://rzekl.com/g/1e8d11449462ceef436f16525dc3e8/')
@@ -908,6 +985,7 @@ def aliexpress_redirect(request):
 
 def urun_affiliate_redirect(request, urun_id):
 	"""Ürün affiliate redirect - her ürün için kendi linki"""
+	_capture_marketing_attribution(request)
 	urun = get_object_or_404(Urun, id=urun_id)
 	# İlk fiyatın affiliate linkini al
 	fiyat = urun.fiyatlar.first()
@@ -918,7 +996,8 @@ def urun_affiliate_redirect(request, urun_id):
 		user=request.user if request.user.is_authenticated else None,
 		link_type='urun_affiliate',
 		urun=urun,
-		subid=f"u{urun.id}_c"
+		subid=f"u{urun.id}_c",
+		**_build_click_context(request),
 	)
 
 	target_link = fiyat.affiliate_link
@@ -944,6 +1023,7 @@ def urun_affiliate_redirect(request, urun_id):
 
 def fiyat_affiliate_redirect(request, fiyat_id):
 	"""Fiyat (mağaza teklifi) bazlı affiliate redirect - her buton kendi linkine gider"""
+	_capture_marketing_attribution(request)
 	fiyat = get_object_or_404(Fiyat.objects.select_related('urun', 'magaza'), id=fiyat_id)
 	urun = fiyat.urun
 
@@ -951,7 +1031,8 @@ def fiyat_affiliate_redirect(request, fiyat_id):
 		user=request.user if request.user.is_authenticated else None,
 		link_type='urun_affiliate',
 		urun=urun,
-		subid=f"u{urun.id}_f{fiyat.id}"
+		subid=f"u{urun.id}_f{fiyat.id}",
+		**_build_click_context(request),
 	)
 
 	target_link = fiyat.affiliate_link

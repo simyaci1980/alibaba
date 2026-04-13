@@ -136,6 +136,16 @@ class ClickLog(models.Model):
 	link_type = models.CharField(max_length=20)  # 'amazon', 'aliexpress', 'urun_affiliate' vb.
 	urun = models.ForeignKey(Urun, null=True, blank=True, on_delete=models.SET_NULL)
 	subid = models.CharField(max_length=100, blank=True, null=True, help_text="Alt kimlik (ör: otomatik_0, admin, vs.)")
+	gclid = models.CharField(max_length=120, blank=True, null=True, db_index=True)
+	utm_source = models.CharField(max_length=150, blank=True, null=True)
+	utm_medium = models.CharField(max_length=150, blank=True, null=True)
+	utm_campaign = models.CharField(max_length=200, blank=True, null=True)
+	utm_term = models.CharField(max_length=200, blank=True, null=True)
+	utm_content = models.CharField(max_length=200, blank=True, null=True)
+	landing_path = models.CharField(max_length=500, blank=True, null=True)
+	referrer = models.CharField(max_length=1000, blank=True, null=True)
+	client_ip = models.CharField(max_length=64, blank=True, null=True)
+	user_agent = models.CharField(max_length=255, blank=True, null=True)
 	timestamp = models.DateTimeField(auto_now_add=True)
 
 	def __str__(self):

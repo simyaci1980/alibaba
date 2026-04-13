@@ -394,3 +394,37 @@
 
     });
     </script>
+
+    <script>
+    // Affiliate tiklamalarini istemci tarafinda da olc (gtag mevcutsa).
+    document.addEventListener('click', function(event) {
+        var link = event.target.closest('a[href]');
+        if (!link) {
+            return;
+        }
+
+        var href = link.getAttribute('href') || '';
+        var isAffiliateRedirect = href.indexOf('/fiyat-affiliate-redirect/') !== -1 || href.indexOf('/urun-affiliate-redirect/') !== -1;
+        if (!isAffiliateRedirect) {
+            return;
+        }
+
+        if (typeof gtag !== 'function') {
+            return;
+        }
+
+        var storeText = '';
+        var storeNode = link.closest('.price-item');
+        if (storeNode) {
+            var storeSpan = storeNode.querySelector('.price-store-row span');
+            storeText = storeSpan ? (storeSpan.textContent || '').trim() : '';
+        }
+
+        gtag('event', 'affiliate_click', {
+            event_category: 'affiliate',
+            event_label: href,
+            store_name: storeText || 'unknown',
+            transport_type: 'beacon'
+        });
+    }, { capture: true });
+    </script>
