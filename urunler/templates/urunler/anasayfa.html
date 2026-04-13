@@ -162,6 +162,7 @@
                 <button class="gallery-nav prev" type="button" aria-label="Previous image">←</button>
                 <button class="gallery-nav next" type="button" aria-label="Next image">→</button>
                 <div class="gallery-counter"></div>
+                <div class="gallery-shop-hint" style="position:absolute; bottom:6px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.55); color:#fff; font-size:0.72em; font-weight:700; padding:3px 10px; border-radius:20px; pointer-events:none; white-space:nowrap; letter-spacing:0.03em;">🛒 Tap to Shop</div>
             </div>
 
             <div class="gallery-thumbnails">
@@ -237,7 +238,7 @@
                 </div>
                 {% endif %}
                 {% for fiyat in urun.fiyatlar.all|slice:":3" %}
-                <div class="price-item"{% if fiyat.affiliate_link %} role="link" tabindex="0" onclick="window.open('{% url 'fiyat_affiliate_redirect' fiyat.id %}', '_blank', 'noopener');" onkeydown="if(event.key==='Enter' || event.key===' '){event.preventDefault(); window.open('{% url 'fiyat_affiliate_redirect' fiyat.id %}', '_blank', 'noopener');}"{% endif %} style="background: {% if fiyat.magaza.isim == 'eBay' %}#fef08a{% else %}#f0f4ff{% endif %}; padding: 6px; border-radius: 6px; margin-bottom: 4px; border-left: 3px solid {% if fiyat.magaza.isim == 'eBay' %}#e7900a{% else %}#6366f1{% endif %};{% if fiyat.affiliate_link %} cursor: pointer;{% endif %}">
+                <div class="price-item" style="background: {% if fiyat.magaza.isim == 'eBay' %}#fef08a{% else %}#f0f4ff{% endif %}; padding: 6px; border-radius: 6px; margin-bottom: 4px; border-left: 3px solid {% if fiyat.magaza.isim == 'eBay' %}#e7900a{% else %}#6366f1{% endif %}; cursor: default;">
                     <div class="price-store-row">
                         <span>{{ fiyat.magaza.isim }}</span>
                         {% if fiyat.magaza.isim == 'eBay' and urun.durum %}
@@ -259,19 +260,19 @@
                     <div class="price-total-line">
                         Total: {{ fiyat.toplam_fiyat|turkish_currency }} {{ fiyat.para_birimi }}
                     </div>
+                    {% if fiyat.affiliate_link %}
+                    <a href="{% url 'fiyat_affiliate_redirect' fiyat.id %}" target="_blank" rel="noopener sponsored nofollow" onclick="event.stopPropagation();" class="magazada-incele-btn" style="display:block; width:100%; box-sizing:border-box; text-align:center; background:linear-gradient(90deg,#16a34a 0%,#15803d 100%); color:#fff; text-decoration:none; font-weight:800; font-size:1em; padding:11px 0; border-radius:9px; box-shadow:0 2px 8px rgba(22,163,74,0.35); margin-top:8px; letter-spacing:0.01em; transition:background 0.18s;">
+                        🛒 Buy Now — {{ fiyat.magaza.isim }} →
+                    </a>
+                    {% endif %}
                     {% if urun.slug or fiyat.affiliate_link %}
-                    <div class="product-action-row" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; align-items:center;">
+                    <div class="product-action-row" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; align-items:center;">
                         {% if urun.slug %}
                         <a href="{% url 'urun_detay' urun.slug %}" onclick="event.stopPropagation();" style="display:inline-block; text-decoration:none; background:#f59e0b; color:#111; font-weight:700; font-size:0.8em; padding:5px 9px; border-radius:8px;">
                             Product Details
                         </a>
                         {% endif %}
                         <button type="button" class="urun-karsilastir-btn" data-urun-id="{{ urun.id }}" onclick="event.stopPropagation();" style="display:inline-block; background:#bc1111; color:#fff; border:none; font-weight:700; font-size:0.84em; line-height:1.2; padding:6px 10px; border-radius:8px; cursor:pointer; transition:background 0.18s; font-family:inherit;">Compare</button>
-                        {% if fiyat.affiliate_link %}
-                        <a href="{% url 'fiyat_affiliate_redirect' fiyat.id %}" target="_blank" rel="noopener sponsored nofollow" onclick="event.stopPropagation();" class="magazada-incele-btn" style="display:inline-block; background:#16a34a; color:#fff; text-decoration:none; font-weight:700; font-size:0.8em; padding:5px 9px; border-radius:8px;">
-                            View in Store
-                        </a>
-                        {% endif %}
                     </div>
                     {% endif %}
                 </div>
@@ -423,7 +424,14 @@ document.addEventListener('DOMContentLoaded', function() {
             if (event.target.closest('.gallery-nav, .gallery-thumb')) {
                 return;
             }
-            window.open(affiliateUrl, '_blank', 'noopener');
+            // Popup engelleyicisini atlatmak için gerçek <a> elementi kullan
+            const a = document.createElement('a');
+            a.href = affiliateUrl;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
 
         gallery.addEventListener('click', openAffiliateIfAllowed);
