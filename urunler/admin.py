@@ -1780,9 +1780,51 @@ class FiyatAdmin(admin.ModelAdmin):
 
 @admin.register(ClickLog)
 class ClickLogAdmin(admin.ModelAdmin):
-	list_display = ("id", "timestamp", "user", "link_type", "urun")
-	list_filter = ("link_type", "timestamp")
-	search_fields = ("urun__isim", "subid", "user__username")
+	list_display = (
+		"id",
+		"timestamp",
+		"user",
+		"link_type",
+		"urun",
+		"utm_source",
+		"utm_medium",
+		"utm_campaign",
+		"gclid",
+		"referrer_host",
+	)
+	list_filter = ("link_type", "timestamp", "utm_source", "utm_medium")
+	search_fields = (
+		"urun__isim",
+		"subid",
+		"user__username",
+		"utm_campaign",
+		"gclid",
+		"referrer",
+	)
+	readonly_fields = (
+		"user",
+		"link_type",
+		"urun",
+		"subid",
+		"gclid",
+		"utm_source",
+		"utm_medium",
+		"utm_campaign",
+		"utm_term",
+		"utm_content",
+		"landing_path",
+		"referrer",
+		"client_ip",
+		"user_agent",
+		"timestamp",
+	)
 	ordering = ("-timestamp",)
 	date_hierarchy = "timestamp"
+
+	def referrer_host(self, obj):
+		value = (obj.referrer or '').strip()
+		if not value:
+			return '-'
+		return value.split('/')[2] if '://' in value and len(value.split('/')) > 2 else value[:60]
+	referrer_host.short_description = "Referrer"
 
