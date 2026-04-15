@@ -83,6 +83,15 @@ def _build_click_context(request):
 	}
 
 
+def _no_cache_redirect(url):
+	"""Ensure affiliate redirects are never served from cache."""
+	response = redirect(url)
+	response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+	response['Pragma'] = 'no-cache'
+	response['Expires'] = '0'
+	return response
+
+
 def _build_breadcrumb_schema(items: list) -> dict:
 	"""
 	Breadcrumb Schema JSON-LD oluştur.
@@ -968,7 +977,7 @@ def amazon_redirect(request):
 		**_build_click_context(request),
 		timestamp=timezone.now()
 	)
-	return redirect('https://www.amazon.com/b?node=53629917011&linkCode=ll2&tag=kolaybulekspr-20&linkId=8150ea1ccd7fe92bfd1f94652a6d69e4&language=en_US&ref_=as_li_ss_tl')
+	return _no_cache_redirect('https://www.amazon.com/b?node=53629917011&linkCode=ll2&tag=kolaybulekspr-20&linkId=8150ea1ccd7fe92bfd1f94652a6d69e4&language=en_US&ref_=as_li_ss_tl')
 
 
 def aliexpress_redirect(request):
@@ -980,7 +989,7 @@ def aliexpress_redirect(request):
 		**_build_click_context(request),
 		timestamp=timezone.now()
 	)
-	return redirect('https://rzekl.com/g/1e8d11449462ceef436f16525dc3e8/')
+	return _no_cache_redirect('https://rzekl.com/g/1e8d11449462ceef436f16525dc3e8/')
 
 
 def urun_affiliate_redirect(request, urun_id):
@@ -990,7 +999,7 @@ def urun_affiliate_redirect(request, urun_id):
 	# İlk fiyatın affiliate linkini al
 	fiyat = urun.fiyatlar.first()
 	if not fiyat:
-		return redirect('/')  # Fiyat yoksa ana sayfaya yönlendir
+		return _no_cache_redirect('/')  # Fiyat yoksa ana sayfaya yönlendir
 	
 	click = ClickLog.objects.create(
 		user=request.user if request.user.is_authenticated else None,
@@ -1018,7 +1027,7 @@ def urun_affiliate_redirect(request, urun_id):
 		click.subid = urun.urun_kodu or str(urun.id)
 		click.save(update_fields=['subid'])
 
-	return redirect(target_link)
+	return _no_cache_redirect(target_link)
 
 
 def fiyat_affiliate_redirect(request, fiyat_id):
@@ -1053,7 +1062,7 @@ def fiyat_affiliate_redirect(request, fiyat_id):
 		click.subid = urun.urun_kodu or str(urun.id)
 		click.save(update_fields=['subid'])
 
-	return redirect(target_link)
+	return _no_cache_redirect(target_link)
 
 def aliexpress_callback_view(request):
     import json
